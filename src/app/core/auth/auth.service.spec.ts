@@ -310,6 +310,49 @@ describe('AuthService', () => {
       }
     });
 
+    it('a refresh succeeding after the timed-out logout/ triggers a second logout/', async () => {
+      vi.useFakeTimers();
+      try {
+        const { service, ctrl } = setup();
+        service['startSession']({ access: 'A', user });
+        service.refresh().subscribe({ error: () => undefined });
+        const refresh = ctrl.expectOne(`${auth}/refresh/`);
+        service.logout();
+        await vi.advanceTimersByTimeAsync(LOGOUT_WAIT_MS);
+        ctrl.expectOne(`${auth}/logout/`).flush(null, { status: 204, statusText: 'No Content' });
+
+        // The server rotated the cookie after the first logout/: blacklist the new one too.
+        refresh.flush({ access: 'B' });
+        expect(service.accessToken()).toBeNull();
+        const again = ctrl.expectOne(`${auth}/logout/`);
+        expectCookieMode(again);
+        again.flush(null, { status: 204, statusText: 'No Content' });
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('no second logout/ when the user signed in again before the late refresh succeeded', async () => {
+      vi.useFakeTimers();
+      try {
+        const { service, ctrl } = setup();
+        service['startSession']({ access: 'A', user });
+        service.refresh().subscribe({ error: () => undefined });
+        const refresh = ctrl.expectOne(`${auth}/refresh/`);
+        service.logout();
+        await vi.advanceTimersByTimeAsync(LOGOUT_WAIT_MS);
+        ctrl.expectOne(`${auth}/logout/`).flush(null, { status: 204, statusText: 'No Content' });
+
+        service['startSession']({ access: 'NEW', user });
+        refresh.flush({ access: 'B' });
+        ctrl.expectNone(`${auth}/logout/`);
+        expect(service.accessToken()).toBe('NEW');
+        expect(service.isAuthenticated()).toBe(true);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
     it('a stale 401 from a refresh started before logout does not clear a newer session', () => {
       const { service, ctrl } = setup();
       service['startSession']({ access: 'A', user });

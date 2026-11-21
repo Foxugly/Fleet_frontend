@@ -28,6 +28,14 @@ export const LOGOUT_WAIT_MS = 8_000;
 
 /** 401/403 from refresh/ = the refresh token was rejected (absent, expired,
  * blacklisted). Anything else (network, 5xx, 429) is transient. */
+/** A refresh whose response arrived after its session ended: the server did
+ * rotate the cookie, but the token is discarded. */
+export class SessionEndedError extends Error {
+  constructor() {
+    super('session ended during refresh');
+  }
+}
+
 export function isRejectedRefresh(err: unknown): boolean {
   return err instanceof HttpErrorResponse && (err.status === 401 || err.status === 403);
 }
@@ -60,8 +68,8 @@ export class AuthService {
    * the presented token, so a second concurrent refresh would log the user out). */
   private refreshInFlight: Observable<string> | null = null;
 
-  /** Bumped by clearSession(): a response that started before it (a refresh, the
-   * boot-time me/) belongs to an ended session and is discarded. */
+  /** Bumped by clearSession() and startSession(): a response that started before
+   * it (a refresh, the boot-time me/) belongs to an ended session and is discarded. */
   private generation = 0;
 
   accessToken(): string | null {
@@ -129,7 +137,7 @@ export class AuthService {
           map((res) => {
             // Logged out (or restore timed out) meanwhile: never resurrect the session,
             // and fail so no caller replays a request with this token.
-            if (generation !== this.generation) throw new Error('session ended during refresh');
+            if (generation !== this.generation) throw new SessionEndedError();
             this.access.set(res.access);
             return res.access;
           }),
@@ -179,20 +187,38 @@ export class AuthService {
    * and if the refresh's Set-Cookie (the rotated, non-blacklisted token) landed
    * after the logout's, a reload would restore the session. The wait is bounded
    * (LOGOUT_WAIT_MS): a logout/ sent after a re-login would carry the new
-   * session's cookie and blacklist it.
+   * session's cookie and blacklist it. If that refresh still succeeds after the
+   * timed-out logout/ (the server rotated the cookie), logout/ is posted once
+   * more to blacklist the rotated cookie, unless the user signed in again meanwhile.
    */
   logout(): Observable<void> {
-    const pendingRefresh: Observable<unknown> = this.refreshInFlight ?? of(null);
+    const inFlight = this.refreshInFlight;
+    const post = (): Observable<unknown> =>
+      this.http.post(`${this.base}/logout/`, {}, cookieAuthOptions()).pipe(catchError(() => of(null)));
+    let timedOut = false;
+    const pendingRefresh: Observable<unknown> = inFlight ?? of(null);
     const done$ = pendingRefresh.pipe(
-      timeout({ first: LOGOUT_WAIT_MS, with: () => of(null) }),
+      timeout({
+        first: LOGOUT_WAIT_MS,
+        with: () => {
+          timedOut = true;
+          return of(null);
+        },
+      }),
       catchError(() => of(null)),
-      switchMap(() => this.http.post(`${this.base}/logout/`, {}, cookieAuthOptions())),
-      catchError(() => of(null)),
+      switchMap(post),
       map(() => undefined),
       shareReplay({ bufferSize: 1, refCount: false }),
     );
     done$.subscribe();
     this.clearSession();
+    const signedOut = this.generation;
+    // shareReplay(refCount: false): this second subscription sends no new refresh/.
+    inFlight?.subscribe({
+      error: (err: unknown) => {
+        if (timedOut && err instanceof SessionEndedError && signedOut === this.generation) post().subscribe();
+      },
+    });
     void this.router.navigate(['/login']);
     return done$;
   }
@@ -206,6 +232,7 @@ export class AuthService {
   }
 
   private startSession(res: { access: string; user: User }): void {
+    this.generation++;
     this.access.set(res.access);
     this.currentUser.set(res.user);
     this.pending.set(null);
