@@ -1,0 +1,42 @@
+{
+  "app": {
+    "title": "Fleet",
+    "tagline": "Tableau de bord de la flotte Foxugly"
+  },
+  "common": {
+    "skip_to_content": "Aller au contenu",
+    "language_switcher": { "aria": "Changer de langue" },
+    "cancel": "Annuler"
+  },
+  "chrome": {
+    "nav": {
+      "overview": "Vue d'ensemble",
+      "box": "Box",
+      "aria_main": "Navigation principale",
+      "aria_mobile": "Navigation mobile"
+    },
+    "theme": { "toggle": "Basculer le thème" },
+    "menu": { "open": "Ouvrir le menu", "close": "Fermer le menu" },
+    "user": {
+      "logout": "Déconnexion",
+      "menu_aria": "Menu utilisateur",
+      "sign_in": "Se connecter"
+    }
+  },
+  "footer": {
+    "version_label": "Version {{version}}",
+    "author": "Foxugly",
+    "rights": "Tous droits réservés"
+  },
+  "login": {
+    "title": "Connexion",
+    "username": "Nom d'utilisateur",
+    "password": "Mot de passe",
+    "remember": "Se souvenir de moi",
+    "submit": "Se connecter"
+  },
+  "mfa": { "title": "Vérification en deux étapes" },
+  "overview": { "title": "Vue d'ensemble" },
+  "site": { "title": "Site" },
+  "box": { "title": "Box" }
+}

@@ -1,0 +1,32 @@
+<app-auth-card icon="pi pi-sign-in" [title]="'login.title' | transloco">
+  <form [formGroup]="form" (ngSubmit)="submit()" class="login-form">
+    <div class="login-field">
+      <label for="login-username">{{ 'login.username' | transloco }}</label>
+      <input pInputText id="login-username" type="text" formControlName="username" autocomplete="username" />
+    </div>
+
+    <div class="login-field">
+      <label for="login-password">{{ 'login.password' | transloco }}</label>
+      <p-password
+        inputId="login-password"
+        formControlName="password"
+        [toggleMask]="true"
+        [feedback]="false"
+        styleClass="login-password"
+        autocomplete="current-password"
+      />
+    </div>
+
+    <div class="login-meta">
+      <p-checkbox inputId="login-remember" formControlName="rememberMe" [binary]="true" />
+      <label for="login-remember" class="login-remember">{{ 'login.remember' | transloco }}</label>
+    </div>
+
+    <p-button
+      type="submit"
+      [label]="'login.submit' | transloco"
+      icon="pi pi-sign-in"
+      styleClass="login-submit"
+    />
+  </form>
+</app-auth-card>

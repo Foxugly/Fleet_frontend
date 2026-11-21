@@ -1,0 +1,42 @@
+{
+  "app": {
+    "title": "Fleet",
+    "tagline": "Foxugly fleet dashboard"
+  },
+  "common": {
+    "skip_to_content": "Skip to content",
+    "language_switcher": { "aria": "Change language" },
+    "cancel": "Cancel"
+  },
+  "chrome": {
+    "nav": {
+      "overview": "Overview",
+      "box": "Box",
+      "aria_main": "Main navigation",
+      "aria_mobile": "Mobile navigation"
+    },
+    "theme": { "toggle": "Toggle theme" },
+    "menu": { "open": "Open menu", "close": "Close menu" },
+    "user": {
+      "logout": "Log out",
+      "menu_aria": "User menu",
+      "sign_in": "Sign in"
+    }
+  },
+  "footer": {
+    "version_label": "Version {{version}}",
+    "author": "Foxugly",
+    "rights": "All rights reserved"
+  },
+  "login": {
+    "title": "Sign in",
+    "username": "Username",
+    "password": "Password",
+    "remember": "Remember me",
+    "submit": "Sign in"
+  },
+  "mfa": { "title": "Two-step verification" },
+  "overview": { "title": "Overview" },
+  "site": { "title": "Site" },
+  "box": { "title": "Box" }
+}
