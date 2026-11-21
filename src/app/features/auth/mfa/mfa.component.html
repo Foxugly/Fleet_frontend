@@ -1,0 +1,97 @@
+@if (recoveryCodes(); as codes) {
+  <app-auth-card icon="pi pi-key" [title]="'auth.mfa.recovery_title' | transloco">
+    <div class="mfa-form">
+      <p class="mfa-intro">{{ 'auth.mfa.recovery_intro' | transloco }}</p>
+
+      <ul class="mfa-codes">
+        @for (code of codes; track code) {
+          <li>{{ code }}</li>
+        }
+      </ul>
+
+      <p-button
+        type="button"
+        severity="secondary"
+        [outlined]="true"
+        [icon]="copied() === 'codes' ? 'pi pi-check' : 'pi pi-copy'"
+        [label]="(copied() === 'codes' ? 'auth.mfa.copied' : 'auth.mfa.copy') | transloco"
+        (onClick)="copyCodes()"
+      />
+
+      <div class="mfa-ack">
+        <p-checkbox inputId="mfa-ack" [formControl]="ack" [binary]="true" />
+        <label for="mfa-ack">{{ 'auth.mfa.recovery_ack' | transloco }}</label>
+      </div>
+
+      <p-button
+        type="button"
+        styleClass="mfa-continue"
+        [label]="'auth.mfa.continue' | transloco"
+        icon="pi pi-arrow-right"
+        [disabled]="!ack.value"
+        (onClick)="finish()"
+      />
+    </div>
+  </app-auth-card>
+} @else {
+  <app-auth-card
+    [icon]="mode === 'setup' ? 'pi pi-shield' : 'pi pi-lock'"
+    [title]="(mode === 'setup' ? 'auth.mfa.setup_title' : 'auth.mfa.verify_title') | transloco"
+  >
+    <form [formGroup]="form" (ngSubmit)="submit()" class="mfa-form">
+      @if (errorKey(); as key) {
+        <p-message severity="error" [text]="key | transloco" role="alert" />
+      }
+
+      <p class="mfa-intro">
+        {{ (mode === 'setup' ? 'auth.mfa.setup_intro' : 'auth.mfa.verify_intro') | transloco }}
+      </p>
+
+      @if (mode === 'setup' && setup(); as s) {
+        @if (qrSrc(); as src) {
+          <img class="mfa-qr" [src]="src" [alt]="'auth.mfa.qr_alt' | transloco" width="200" height="200" />
+        } @else {
+          <p-message severity="warn" [text]="'auth.error.qr_unavailable' | transloco" />
+        }
+        <div class="mfa-field">
+          <label for="mfa-secret">{{ 'auth.mfa.secret' | transloco }}</label>
+          <div class="mfa-secret-row">
+            <input pInputText id="mfa-secret" class="mfa-mono" type="text" [value]="s.secret" readonly />
+            <p-button
+              type="button"
+              severity="secondary"
+              [outlined]="true"
+              [icon]="copied() === 'secret' ? 'pi pi-check' : 'pi pi-copy'"
+              [label]="(copied() === 'secret' ? 'auth.mfa.copied' : 'auth.mfa.copy') | transloco"
+              (onClick)="copySecret()"
+            />
+          </div>
+        </div>
+      }
+
+      <div class="mfa-field">
+        <label for="mfa-code">{{ 'auth.mfa.code' | transloco }}</label>
+        <input
+          pInputText
+          id="mfa-code"
+          class="mfa-mono"
+          type="text"
+          formControlName="code"
+          autocomplete="one-time-code"
+          inputmode="numeric"
+          maxlength="11"
+          autocapitalize="characters"
+          spellcheck="false"
+        />
+      </div>
+
+      <p-button
+        type="submit"
+        styleClass="mfa-submit"
+        [label]="(mode === 'setup' ? 'auth.mfa.activate' : 'auth.mfa.validate') | transloco"
+        icon="pi pi-check"
+        [loading]="loading()"
+      />
+    </form>
+  </app-auth-card>
+}

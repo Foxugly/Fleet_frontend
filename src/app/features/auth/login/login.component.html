@@ -1,5 +1,9 @@
-<app-auth-card icon="pi pi-sign-in" [title]="'login.title' | transloco">
+<app-auth-card icon="pi pi-lock" [title]="'login.title' | transloco">
   <form [formGroup]="form" (ngSubmit)="submit()" class="login-form">
+    @if (errorKey(); as key) {
+      <p-message severity="error" [text]="key | transloco" role="alert" />
+    }
+
     <div class="login-field">
       <label for="login-username">{{ 'login.username' | transloco }}</label>
       <input pInputText id="login-username" type="text" formControlName="username" autocomplete="username" />
@@ -26,6 +30,7 @@
       type="submit"
       [label]="'login.submit' | transloco"
       icon="pi pi-sign-in"
+      [loading]="loading()"
       styleClass="login-submit"
     />
   </form>

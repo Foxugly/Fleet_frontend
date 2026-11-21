@@ -3,7 +3,7 @@ import { authGuard, mfaPendingGuard } from './core/auth/auth.guard';
 import { MainLayoutComponent } from './core/layout/main-layout/main-layout.component';
 import { PublicLayoutComponent } from './core/layout/public-layout/public-layout.component';
 
-// Pages are placeholders until Tasks 5-9 replace them.
+// Placeholders until Tasks 6-9 replace them.
 const placeholder = () =>
   import('./features/placeholder/placeholder.component').then((m) => m.PlaceholderComponent);
 
@@ -31,7 +31,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/auth/login/login.component').then((m) => m.LoginComponent),
       },
-      { path: 'mfa', canActivate: [mfaPendingGuard], loadComponent: placeholder, data: { titleKey: 'mfa.title' } },
+      {
+        path: 'mfa',
+        canActivate: [mfaPendingGuard],
+        data: { titleKey: 'mfa.title' },
+        loadComponent: () => import('./features/auth/mfa/mfa.component').then((m) => m.MfaComponent),
+      },
     ],
   },
 

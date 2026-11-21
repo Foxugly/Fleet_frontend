@@ -35,6 +35,35 @@
     "remember": "Remember me",
     "submit": "Sign in"
   },
+  "auth": {
+    "error": {
+      "invalid_credentials": "Invalid credentials.",
+      "invalid_code": "Invalid code.",
+      "token_expired": "Your sign-in expired, enter your password again.",
+      "already_enabled": "Two-step verification is already enabled, sign in.",
+      "locked": "Too many invalid codes: two-step verification is locked, try again later.",
+      "too_many": "Too many attempts, try again later.",
+      "unavailable": "Service unavailable.",
+      "qr_unavailable": "QR code unavailable, use the secret key."
+    },
+    "mfa": {
+      "verify_title": "Verification code",
+      "verify_intro": "Enter the 6-digit code from your authenticator app, or a recovery code.",
+      "code": "Code",
+      "validate": "Verify",
+      "setup_title": "Enable two-step verification",
+      "setup_intro": "Scan this QR code with your authenticator app, then enter the 6-digit code.",
+      "qr_alt": "Two-step verification QR code",
+      "secret": "Secret key",
+      "copy": "Copy",
+      "copied": "Copied",
+      "activate": "Enable",
+      "recovery_title": "Recovery codes",
+      "recovery_intro": "These codes will not be shown again. Each works once, if you lose your app.",
+      "recovery_ack": "I have saved these codes somewhere safe",
+      "continue": "Continue"
+    }
+  },
   "mfa": { "title": "Two-step verification" },
   "overview": { "title": "Overview" },
   "site": { "title": "Site" },

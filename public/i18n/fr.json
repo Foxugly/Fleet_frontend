@@ -35,6 +35,35 @@
     "remember": "Se souvenir de moi",
     "submit": "Se connecter"
   },
+  "auth": {
+    "error": {
+      "invalid_credentials": "Identifiants invalides.",
+      "invalid_code": "Code invalide.",
+      "token_expired": "Votre connexion a expiré, saisissez de nouveau votre mot de passe.",
+      "already_enabled": "La double authentification est déjà activée, connectez-vous.",
+      "locked": "Trop de codes invalides : la double authentification est verrouillée, réessayez plus tard.",
+      "too_many": "Trop de tentatives, réessayez plus tard.",
+      "unavailable": "Service indisponible.",
+      "qr_unavailable": "QR code indisponible, utilisez la clé secrète."
+    },
+    "mfa": {
+      "verify_title": "Code de vérification",
+      "verify_intro": "Saisissez le code à 6 chiffres de votre application d'authentification, ou un code de secours.",
+      "code": "Code",
+      "validate": "Valider",
+      "setup_title": "Activer la double authentification",
+      "setup_intro": "Scannez ce QR code avec votre application d'authentification, puis saisissez le code à 6 chiffres.",
+      "qr_alt": "QR code de la double authentification",
+      "secret": "Clé secrète",
+      "copy": "Copier",
+      "copied": "Copié",
+      "activate": "Activer",
+      "recovery_title": "Codes de secours",
+      "recovery_intro": "Ces codes ne seront plus affichés. Chacun ne sert qu'une fois, si vous perdez votre application.",
+      "recovery_ack": "J'ai noté ces codes en lieu sûr",
+      "continue": "Continuer"
+    }
+  },
   "mfa": { "title": "Vérification en deux étapes" },
   "overview": { "title": "Vue d'ensemble" },
   "site": { "title": "Site" },
