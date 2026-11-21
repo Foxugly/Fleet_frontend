@@ -1,0 +1,16 @@
+export * from './auth.service';
+import { AuthService } from './auth.service';
+export * from './auth.serviceInterface';
+export * from './box.service';
+import { BoxService } from './box.service';
+export * from './box.serviceInterface';
+export * from './overview.service';
+import { OverviewService } from './overview.service';
+export * from './overview.serviceInterface';
+export * from './refresh.service';
+import { RefreshService } from './refresh.service';
+export * from './refresh.serviceInterface';
+export * from './sites.service';
+import { SitesService } from './sites.service';
+export * from './sites.serviceInterface';
+export const APIS = [AuthService, BoxService, OverviewService, RefreshService, SitesService];

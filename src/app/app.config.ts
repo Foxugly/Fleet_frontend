@@ -7,6 +7,8 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
 import { definePreset } from '@primeuix/themes';
 import Aura from '@primeuix/themes/aura';
+import { provideApi } from './api';
+import { runtimeConfig } from './core/runtime-config';
 import { routes } from './app.routes';
 import { FleetTitleStrategy } from './core/title/fleet-title.strategy';
 import { TranslocoHttpLoader } from './core/i18n/transloco-loader';
@@ -39,6 +41,8 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes, withComponentInputBinding()),
     provideHttpClient(),
+    // Read calls use the Bearer token; only auth calls need cookies (set per call).
+    provideApi({ basePath: runtimeConfig().apiBaseUrl, withCredentials: false }),
     { provide: TitleStrategy, useClass: FleetTitleStrategy },
     provideAnimations(),
     provideTransloco({
