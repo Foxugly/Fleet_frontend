@@ -7,6 +7,8 @@ import { Clock } from './clock';
  * ISO timestamp -> "just now" / "N min|h|d ago" (translated); null or unparsable ->
  * "never collected". Impure on purpose: it must follow the active language
  * and the passing time (a pure pipe would freeze both until the input changes).
+ * Reading the `Clock.now` signal makes the (zoneless) template re-render on each
+ * clock tick, so ages advance even when the data does not change.
  */
 @Pipe({ name: 'age', standalone: true, pure: false })
 export class AgePipe implements PipeTransform {

@@ -1,9 +1,10 @@
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { TranslocoService } from '@jsverse/transloco';
 
 import { authTestProviders } from '../../features/auth/auth-test-setup.testing';
 import { AgePipe } from './age.pipe';
-import { Clock } from './clock';
+import { CLOCK_TICK_MS, Clock } from './clock';
 
 const NOW = new Date('2026-11-21T12:00:00Z');
 const ago = (s: number) => new Date(NOW.getTime() - s * 1000).toISOString();
@@ -38,5 +39,32 @@ describe('AgePipe', () => {
 
   it('a date slightly in the future (clock skew) -> à l\'instant', async () => {
     expect((await pipe()).transform(ago(-30))).toBe("à l'instant");
+  });
+});
+
+@Component({ imports: [AgePipe], template: '<span>{{ at | age }}</span>' })
+class AgeHost {
+  at = '';
+}
+
+describe('AgePipe with the real Clock (zoneless)', () => {
+  afterEach(() => vi.useRealTimers());
+
+  it('advances from « à l\'instant » to « il y a 1 min » with no other change', async () => {
+    // Only the clock's interval and Date are faked: change detection keeps its real scheduler.
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
+    vi.setSystemTime(NOW);
+    TestBed.configureTestingModule({ providers: [...authTestProviders()] });
+    await new Promise<void>((resolve) => TestBed.inject(TranslocoService).load('fr').subscribe(() => resolve()));
+    const fixture = TestBed.createComponent(AgeHost);
+    fixture.componentInstance.at = NOW.toISOString();
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent?.trim()).toBe("à l'instant");
+
+    await vi.advanceTimersByTimeAsync(CLOCK_TICK_MS * 2);
+    await fixture.whenStable();
+    expect(el.textContent?.trim()).toBe('il y a 1 min');
   });
 });
