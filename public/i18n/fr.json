@@ -5,7 +5,9 @@
   },
   "common": {
     "skip_to_content": "Aller au contenu",
-    "language_switcher": { "aria": "Changer de langue" },
+    "language_switcher": {
+      "aria": "Changer de langue"
+    },
     "cancel": "Annuler"
   },
   "chrome": {
@@ -15,8 +17,13 @@
       "aria_main": "Navigation principale",
       "aria_mobile": "Navigation mobile"
     },
-    "theme": { "toggle": "Basculer le thème" },
-    "menu": { "open": "Ouvrir le menu", "close": "Fermer le menu" },
+    "theme": {
+      "toggle": "Basculer le thème"
+    },
+    "menu": {
+      "open": "Ouvrir le menu",
+      "close": "Fermer le menu"
+    },
     "user": {
       "logout": "Déconnexion",
       "menu_aria": "Menu utilisateur",
@@ -65,8 +72,43 @@
       "continue": "Continuer"
     }
   },
-  "mfa": { "title": "Vérification en deux étapes" },
-  "overview": { "title": "Vue d'ensemble" },
-  "site": { "title": "Site" },
-  "box": { "title": "Box" }
+  "mfa": {
+    "title": "Vérification en deux étapes"
+  },
+  "overview": {
+    "title": "Vue d'ensemble"
+  },
+  "site": {
+    "title": "Site"
+  },
+  "box": {
+    "title": "Box"
+  },
+  "fleet": {
+    "age": {
+      "now": "à l'instant",
+      "minutes": "il y a {{n}} min",
+      "hours": "il y a {{n}} h",
+      "days": "il y a {{n}} j",
+      "never": "jamais collecté"
+    },
+    "state": {
+      "green": "Vert",
+      "orange": "Orange",
+      "red": "Rouge",
+      "stale": "Périmé",
+      "error": "Erreur",
+      "none": "Aucune donnée"
+    },
+    "dot": {
+      "aria": "{{label}} : {{state}}, {{count}}, {{age}}",
+      "aria_error": "{{label}} : {{state}}, {{count}}, {{age}}, {{error}}"
+    },
+    "refresh": {
+      "aria": "Relancer la collecte",
+      "started": "Collecte lancée",
+      "already": "Déjà en cours",
+      "error": "Impossible de lancer la collecte."
+    }
+  }
 }

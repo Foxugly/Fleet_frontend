@@ -1,0 +1,43 @@
+:host {
+  display: inline-block;
+}
+
+.state-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+}
+
+.state-dot__dot {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: var(--state-color);
+}
+
+.state-dot--green { --state-color: var(--p-green-500); }
+.state-dot--orange { --state-color: var(--p-orange-500); }
+.state-dot--red { --state-color: var(--p-red-500); }
+.state-dot--stale { --state-color: var(--p-surface-500); }
+.state-dot--error { --state-color: var(--p-red-500); }
+.state-dot--none { --state-color: var(--p-surface-400); }
+
+.state-dot__icon {
+  color: var(--state-color);
+}
+
+.state-dot--error {
+  border: 1px solid var(--p-red-500);
+  border-radius: 999px;
+  padding: 0 0.5rem;
+}
+
+.state-dot__count {
+  font-weight: 600;
+}
+
+.state-dot__age {
+  color: var(--p-text-muted-color);
+  font-size: 0.8rem;
+}

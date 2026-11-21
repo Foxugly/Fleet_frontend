@@ -1,0 +1,30 @@
+@let c = cell();
+@let stateLabel = ('fleet.state.' + c.state) | transloco;
+<span
+  class="state-dot state-dot--{{ c.state }}"
+  role="img"
+  [attr.aria-label]="
+    (c.error ? 'fleet.dot.aria_error' : 'fleet.dot.aria')
+      | transloco: { label: label(), state: stateLabel, count: c.count, age: (c.collected_at | age), error: c.error }
+  "
+  [pTooltip]="c.error || stateLabel"
+>
+  @switch (c.state) {
+    @case ('stale') {
+      <i class="pi pi-clock state-dot__icon" aria-hidden="true"></i>
+    }
+    @case ('error') {
+      <i class="pi pi-exclamation-triangle state-dot__icon" aria-hidden="true"></i>
+    }
+    @case ('none') {
+      <span aria-hidden="true">—</span>
+    }
+    @default {
+      <span class="state-dot__dot" aria-hidden="true"></span>
+    }
+  }
+  @if (c.state !== 'none') {
+    <span class="state-dot__count" aria-hidden="true">{{ c.count }}</span>
+  }
+  <span class="state-dot__age" aria-hidden="true">{{ c.collected_at | age }}</span>
+</span>
