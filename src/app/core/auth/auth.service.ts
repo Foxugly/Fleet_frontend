@@ -56,6 +56,10 @@ export class AuthService {
    * the presented token, so a second concurrent refresh would log the user out). */
   private refreshInFlight: Observable<string> | null = null;
 
+  /** Bumped by clearSession(): a response that started before it (a refresh, the
+   * boot-time me/) belongs to an ended session and is discarded. */
+  private generation = 0;
+
   accessToken(): string | null {
     return this.access();
   }
@@ -108,15 +112,22 @@ export class AuthService {
   /**
    * New access token from the refresh cookie (the server rotates the cookie).
    * A rejected refresh (401/403) clears the session; a transient failure keeps it
-   * (the cookie is still valid, the next call retries). Errors are re-thrown.
+   * (the cookie is still valid, the next call retries). Errors are re-thrown. A
+   * response landing after clearSession() is discarded and errors.
    */
   refresh(): Observable<string> {
     if (!this.refreshInFlight) {
+      const generation = this.generation;
       this.refreshInFlight = this.http
         .post<TokenRefreshResponse>(`${this.base}/refresh/`, {}, cookieAuthOptions())
         .pipe(
-          map((res) => res.access),
-          tap((access) => this.access.set(access)),
+          map((res) => {
+            // Logged out (or restore timed out) meanwhile: never resurrect the session,
+            // and fail so no caller replays a request with this token.
+            if (generation !== this.generation) throw new Error('session ended during refresh');
+            this.access.set(res.access);
+            return res.access;
+          }),
           catchError((err: unknown) => {
             if (isRejectedRefresh(err)) this.clearSession();
             return throwError(() => err);
@@ -133,6 +144,7 @@ export class AuthService {
    * rejects (a guest is a normal outcome) and never navigates: the guard decides.
    */
   async restoreSession(): Promise<void> {
+    const generation = this.generation;
     try {
       const res = await firstValueFrom(
         this.refresh().pipe(
@@ -144,7 +156,7 @@ export class AuthService {
           timeout(RESTORE_TIMEOUT_MS),
         ),
       );
-      this.currentUser.set(res.user);
+      if (generation === this.generation) this.currentUser.set(res.user);
     } catch {
       this.clearSession();
     }
@@ -155,9 +167,16 @@ export class AuthService {
    * and clears the cookie), best effort. Runs eagerly, subscribed or not: local
    * state is cleared and the router goes to /login right away; the returned
    * observable completes once the server call settled, and never errors.
+   *
+   * logout/ waits for an in-flight refresh: both would present the same cookie,
+   * and if the refresh's Set-Cookie (the rotated, non-blacklisted token) landed
+   * after the logout's, a reload would restore the session.
    */
   logout(): Observable<void> {
-    const done$ = this.http.post(`${this.base}/logout/`, {}, cookieAuthOptions()).pipe(
+    const pendingRefresh: Observable<unknown> = this.refreshInFlight ?? of(null);
+    const done$ = pendingRefresh.pipe(
+      catchError(() => of(null)),
+      switchMap(() => this.http.post(`${this.base}/logout/`, {}, cookieAuthOptions())),
       catchError(() => of(null)),
       map(() => undefined),
       shareReplay({ bufferSize: 1, refCount: false }),
@@ -170,6 +189,7 @@ export class AuthService {
 
   /** Drop the local session (memory only; the cookie is the server's business). */
   clearSession(): void {
+    this.generation++;
     this.access.set(null);
     this.currentUser.set(null);
     this.pending.set(null);

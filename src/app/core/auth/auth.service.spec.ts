@@ -7,7 +7,7 @@ import { firstValueFrom } from 'rxjs';
 import { User } from '../../api';
 import { runtimeConfig } from '../runtime-config';
 import { authInterceptor } from './auth.interceptor';
-import { AuthService } from './auth.service';
+import { AuthService, RESTORE_TIMEOUT_MS } from './auth.service';
 
 const auth = `${runtimeConfig().apiBaseUrl}/api/v1/auth`;
 const user: User = { id: 1, username: 'renaud', mfa_enabled: true };
@@ -188,6 +188,27 @@ describe('AuthService', () => {
     });
   });
 
+  describe('restoreSession timeout', () => {
+    afterEach(() => vi.useRealTimers());
+
+    it('a refresh answering after the timeout leaves no access token', async () => {
+      vi.useFakeTimers();
+      const { service, ctrl, navigate } = setup();
+      const restored = service.restoreSession();
+      const refresh = ctrl.expectOne(`${auth}/refresh/`);
+
+      await vi.advanceTimersByTimeAsync(RESTORE_TIMEOUT_MS);
+      await expect(restored).resolves.toBeUndefined();
+      expect(service.isAuthenticated()).toBe(false);
+
+      refresh.flush({ access: 'late' });
+      expect(service.accessToken()).toBeNull();
+      expect(service.isAuthenticated()).toBe(false);
+      ctrl.expectNone(`${auth}/me/`);
+      expect(navigate).not.toHaveBeenCalled();
+    });
+  });
+
   describe('refresh', () => {
     it('is single-flight: concurrent callers share one request', async () => {
       const { service, ctrl } = setup();
@@ -238,6 +259,36 @@ describe('AuthService', () => {
       expect(service.isAuthenticated()).toBe(false);
       expect(service.accessToken()).toBeNull();
       expect(navigate).toHaveBeenCalledWith(['/login']);
+    });
+
+    it('waits for an in-flight refresh, whose late token is discarded', () => {
+      const { service, ctrl } = setup();
+      service['startSession']({ access: 'A', user });
+      service.refresh().subscribe({ error: () => undefined }); // e.g. a poll hit an expired token
+      const refresh = ctrl.expectOne(`${auth}/refresh/`);
+
+      service.logout();
+      expect(service.accessToken()).toBeNull();
+      // Sending logout/ now would race the rotation: the refresh's Set-Cookie could land last.
+      ctrl.expectNone(`${auth}/logout/`);
+
+      refresh.flush({ access: 'B' });
+      expect(service.accessToken()).toBeNull();
+      expect(service.isAuthenticated()).toBe(false);
+
+      // Sent after refresh/ settled: it blacklists the rotated cookie.
+      ctrl.expectOne(`${auth}/logout/`).flush(null, { status: 204, statusText: 'No Content' });
+    });
+
+    it('still posts logout/ when the in-flight refresh fails', () => {
+      const { service, ctrl } = setup();
+      service['startSession']({ access: 'A', user });
+      service.refresh().subscribe({ error: () => undefined });
+      const refresh = ctrl.expectOne(`${auth}/refresh/`);
+      service.logout();
+      refresh.flush('bad gateway', { status: 502, statusText: 'Bad Gateway' });
+      ctrl.expectOne(`${auth}/logout/`).flush(null, { status: 204, statusText: 'No Content' });
+      expect(service.accessToken()).toBeNull();
     });
 
     it('runs even when the caller does not subscribe', () => {
