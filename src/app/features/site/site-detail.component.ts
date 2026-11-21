@@ -60,6 +60,8 @@ export class SiteDetailComponent implements OnDestroy {
   protected readonly site = signal<SiteDetail | null>(null);
   protected readonly notFound = signal(false);
   protected readonly failed = signal(false);
+  /** Slug whose data was actually loaded: only that visit is marked (a failed load or a 404 is not a visit). */
+  private loadedSlug: string | null = null;
 
   protected readonly sources = computed(() => {
     const s = this.site();
@@ -86,6 +88,7 @@ export class SiteDetailComponent implements OnDestroy {
       .subscribe(({ site, status }) => {
         if (site) {
           this.site.set(site);
+          this.loadedSlug = this.slug();
           this.failed.set(false);
         } else if (status === 404) {
           this.site.set(null);
@@ -105,7 +108,7 @@ export class SiteDetailComponent implements OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.slug()) this.visits.markVisited('site:' + this.slug());
+    this.markLoadedVisit();
   }
 
   protected reload(): void {
@@ -113,14 +116,18 @@ export class SiteDetailComponent implements OnDestroy {
   }
 
   private open(slug: string): void {
-    const previous = this.slug();
-    if (previous) this.visits.markVisited('site:' + previous);
+    this.markLoadedVisit();
+    this.loadedSlug = null;
     this.slug.set(slug);
     this.since.set(this.visits.lastVisit('site:' + slug));
     this.site.set(null);
     this.notFound.set(false);
     this.failed.set(false);
     this.request$.next(slug);
+  }
+
+  private markLoadedVisit(): void {
+    if (this.loadedSlug) this.visits.markVisited('site:' + this.loadedSlug);
   }
 
   protected health(s: Subject): HealthData | null {

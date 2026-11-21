@@ -154,6 +154,34 @@ describe('SiteDetailComponent', () => {
     expect(mark).toHaveBeenCalledWith('site:poker');
   });
 
+  it('does not mark the visit when the load failed', async () => {
+    const { http, harness } = await setup();
+    const mark = vi.spyOn(TestBed.inject(LastVisitService), 'markVisited');
+    http.expectOne(isSite('poker')).flush('boom', { status: 500, statusText: 'Server Error' });
+    await settle(harness.fixture);
+    harness.fixture.destroy();
+    expect(mark).not.toHaveBeenCalled();
+  });
+
+  it('does not mark the visit of an unknown slug (404)', async () => {
+    const { http, harness } = await setup('nope');
+    const mark = vi.spyOn(TestBed.inject(LastVisitService), 'markVisited');
+    http.expectOne(isSite('nope')).flush({ detail: 'x' }, { status: 404, statusText: 'Not Found' });
+    await settle(harness.fixture);
+    harness.fixture.destroy();
+    expect(mark).not.toHaveBeenCalled();
+  });
+
+  it('does not mark the visit when leaving before the data arrived', async () => {
+    const { http, router } = await setup('poker');
+    const mark = vi.spyOn(TestBed.inject(LastVisitService), 'markVisited');
+    const pending = http.expectOne(isSite('poker'));
+    await router.navigateByUrl('/sites/other');
+    expect(mark).not.toHaveBeenCalled();
+    expect(pending.cancelled).toBe(true);
+    http.expectOne(isSite('other'));
+  });
+
   it('unknown slug (404) shows « Site inconnu » with a back link', async () => {
     const { http, harness, el } = await setup('nope');
     http.expectOne(isSite('nope')).flush({ detail: 'x' }, { status: 404, statusText: 'Not Found' });
