@@ -78,11 +78,14 @@ jobs:
           cp backend/openapi-schema.yaml openapi/fleet-api.yaml
           npm run api:gen
           # --ignore-cr-at-eol: only real content changes should fail the guard.
-          if git diff --ignore-cr-at-eol --quiet -- openapi/ src/app/api/; then
+          # `git add -N` makes files the generator newly created visible to git diff
+          # (a plain diff ignores untracked files); diff against HEAD so staged deletions count.
+          git add -N -- openapi/ src/app/api/
+          if git diff HEAD --ignore-cr-at-eol --quiet -- openapi/ src/app/api/; then
             echo "OpenAPI client in sync with the backend"
           else
             echo "::error::OpenAPI client out of sync with the backend. Re-vendor openapi-schema.yaml to openapi/fleet-api.yaml, run 'npm run api:gen' and commit."
-            git diff --ignore-cr-at-eol --stat -- openapi/ src/app/api/
-            git diff --ignore-cr-at-eol -- openapi/ src/app/api/ | head -120
+            git diff HEAD --ignore-cr-at-eol --stat -- openapi/ src/app/api/
+            git diff HEAD --ignore-cr-at-eol -- openapi/ src/app/api/ | head -120
             exit 1
           fi
