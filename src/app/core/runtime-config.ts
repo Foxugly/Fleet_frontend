@@ -2,6 +2,8 @@ import { isDevMode } from '@angular/core';
 
 export interface FleetRuntimeConfig {
   apiBaseUrl: string;
+  /** Injected by nginx; absent or empty DSN = Sentry disabled. */
+  sentry?: { dsn: string; environment: string; release: string };
 }
 
 declare global {
@@ -30,5 +32,6 @@ export function runtimeConfig(devMode: boolean = isDevMode()): FleetRuntimeConfi
   if (!/^https?:\/\/[^/]+/.test(apiBaseUrl)) {
     throw new Error(`Fleet: window.__FLEET__.apiBaseUrl must be an absolute http(s) URL, got ${JSON.stringify(injected)}.`);
   }
-  return { apiBaseUrl };
+  const sentry = typeof window !== 'undefined' ? window.__FLEET__?.sentry : undefined;
+  return sentry ? { apiBaseUrl, sentry } : { apiBaseUrl };
 }

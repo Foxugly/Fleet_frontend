@@ -1,5 +1,6 @@
 import {
   ApplicationConfig,
+  ErrorHandler,
   inject,
   isDevMode,
   provideAppInitializer,
@@ -13,6 +14,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
 import { definePreset } from '@primeuix/themes';
 import Aura from '@primeuix/themes/aura';
+import * as Sentry from '@sentry/angular';
 import { provideApi } from './api';
 import { runtimeConfig } from './core/runtime-config';
 import { routes } from './app.routes';
@@ -47,6 +49,8 @@ const FleetAura = definePreset(Aura, {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
+    // Reports unhandled Angular errors; no-op when Sentry.init wasn't called (see main.ts).
+    { provide: ErrorHandler, useValue: Sentry.createErrorHandler() },
     provideRouter(routes, withComponentInputBinding()),
     provideHttpClient(withInterceptors([authInterceptor])),
     // One cookie refresh before the first navigation: a remembered session
