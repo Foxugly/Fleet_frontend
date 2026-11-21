@@ -7,7 +7,7 @@ import { firstValueFrom } from 'rxjs';
 import { User } from '../../api';
 import { runtimeConfig } from '../runtime-config';
 import { authInterceptor } from './auth.interceptor';
-import { AuthService, RESTORE_TIMEOUT_MS } from './auth.service';
+import { AuthService, LOGOUT_WAIT_MS, RESTORE_TIMEOUT_MS } from './auth.service';
 
 const auth = `${runtimeConfig().apiBaseUrl}/api/v1/auth`;
 const user: User = { id: 1, username: 'renaud', mfa_enabled: true };
@@ -289,6 +289,39 @@ describe('AuthService', () => {
       refresh.flush('bad gateway', { status: 502, statusText: 'Bad Gateway' });
       ctrl.expectOne(`${auth}/logout/`).flush(null, { status: 204, statusText: 'No Content' });
       expect(service.accessToken()).toBeNull();
+    });
+
+    it('a hung refresh does not block logout/ beyond LOGOUT_WAIT_MS', async () => {
+      vi.useFakeTimers();
+      try {
+        const { service, ctrl } = setup();
+        service['startSession']({ access: 'A', user });
+        service.refresh().subscribe({ error: () => undefined });
+        const refresh = ctrl.expectOne(`${auth}/refresh/`);
+        const done = firstValueFrom(service.logout(), { defaultValue: undefined });
+        await vi.advanceTimersByTimeAsync(LOGOUT_WAIT_MS - 1);
+        ctrl.expectNone(`${auth}/logout/`);
+        await vi.advanceTimersByTimeAsync(1);
+        ctrl.expectOne(`${auth}/logout/`).flush(null, { status: 204, statusText: 'No Content' });
+        await expect(done).resolves.toBeUndefined();
+        refresh.flush('gone', { status: 504, statusText: 'Gateway Timeout' });
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('a stale 401 from a refresh started before logout does not clear a newer session', () => {
+      const { service, ctrl } = setup();
+      service['startSession']({ access: 'A', user });
+      service.refresh().subscribe({ error: () => undefined });
+      const refresh = ctrl.expectOne(`${auth}/refresh/`);
+      service.logout();
+      // Re-login while the old refresh is still pending.
+      service['startSession']({ access: 'NEW', user });
+      refresh.flush({ detail: 'blacklisted' }, { status: 401, statusText: 'Unauthorized' });
+      expect(service.accessToken()).toBe('NEW');
+      expect(service.isAuthenticated()).toBe(true);
+      ctrl.expectOne(`${auth}/logout/`).flush(null, { status: 204, statusText: 'No Content' });
     });
 
     it('runs even when the caller does not subscribe', () => {

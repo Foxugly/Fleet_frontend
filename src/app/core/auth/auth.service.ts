@@ -22,6 +22,10 @@ import { LoginStep, MfaSetup, User } from './auth.models';
 /** Upper bound on the boot-time restore, so a hung API never blocks the SPA. */
 export const RESTORE_TIMEOUT_MS = 10_000;
 
+/** Upper bound on logout/ waiting for an in-flight refresh (a hung one must not
+ * delay it until after a re-login, whose cookie it would then blacklist). */
+export const LOGOUT_WAIT_MS = 8_000;
+
 /** 401/403 from refresh/ = the refresh token was rejected (absent, expired,
  * blacklisted). Anything else (network, 5xx, 429) is transient. */
 export function isRejectedRefresh(err: unknown): boolean {
@@ -111,7 +115,8 @@ export class AuthService {
 
   /**
    * New access token from the refresh cookie (the server rotates the cookie).
-   * A rejected refresh (401/403) clears the session; a transient failure keeps it
+   * A rejected refresh (401/403) clears the session, unless that session already
+   * ended (generation changed) while the refresh was in flight; a transient failure keeps it
    * (the cookie is still valid, the next call retries). Errors are re-thrown. A
    * response landing after clearSession() is discarded and errors.
    */
@@ -129,7 +134,9 @@ export class AuthService {
             return res.access;
           }),
           catchError((err: unknown) => {
-            if (isRejectedRefresh(err)) this.clearSession();
+            // A rejection for an ended session (logout, maybe a re-login since) must
+            // not clear the session that replaced it.
+            if (isRejectedRefresh(err) && generation === this.generation) this.clearSession();
             return throwError(() => err);
           }),
           finalize(() => (this.refreshInFlight = null)),
@@ -170,11 +177,14 @@ export class AuthService {
    *
    * logout/ waits for an in-flight refresh: both would present the same cookie,
    * and if the refresh's Set-Cookie (the rotated, non-blacklisted token) landed
-   * after the logout's, a reload would restore the session.
+   * after the logout's, a reload would restore the session. The wait is bounded
+   * (LOGOUT_WAIT_MS): a logout/ sent after a re-login would carry the new
+   * session's cookie and blacklist it.
    */
   logout(): Observable<void> {
     const pendingRefresh: Observable<unknown> = this.refreshInFlight ?? of(null);
     const done$ = pendingRefresh.pipe(
+      timeout({ first: LOGOUT_WAIT_MS, with: () => of(null) }),
       catchError(() => of(null)),
       switchMap(() => this.http.post(`${this.base}/logout/`, {}, cookieAuthOptions())),
       catchError(() => of(null)),
