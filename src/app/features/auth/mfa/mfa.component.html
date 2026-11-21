@@ -1,6 +1,9 @@
 @if (recoveryCodes(); as codes) {
   <app-auth-card icon="pi pi-key" [title]="'auth.mfa.recovery_title' | transloco">
     <div class="mfa-form">
+      @if (leaveBlocked() && !ack.value) {
+        <p-message severity="warn" [text]="'auth.error.ack_required' | transloco" role="alert" />
+      }
       <p class="mfa-intro">{{ 'auth.mfa.recovery_intro' | transloco }}</p>
 
       <ul class="mfa-codes">
@@ -78,7 +81,7 @@
           type="text"
           formControlName="code"
           autocomplete="one-time-code"
-          inputmode="numeric"
+          inputmode="text"
           maxlength="11"
           autocapitalize="characters"
           spellcheck="false"

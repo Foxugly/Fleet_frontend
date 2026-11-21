@@ -49,6 +49,8 @@ export class MfaComponent implements OnInit {
   protected readonly setup = signal<MfaSetup | null>(null);
   protected readonly recoveryCodes = signal<string[] | null>(null);
   protected readonly copied = signal<'secret' | 'codes' | null>(null);
+  /** Set when a navigation was refused: shows the (un-dismissable) reminder. */
+  protected readonly leaveBlocked = signal(false);
 
   /** `qrSvg` is a server-built `data:` URI; anything else is never bound to the <img>. */
   protected readonly qrSrc = computed(() => {
@@ -86,6 +88,15 @@ export class MfaComponent implements OnInit {
         error: (err: unknown) => this.fail(mfaFailure(err)),
       });
     }
+  }
+
+  /** Router `canDeactivate`: free unless unacknowledged recovery codes are on screen. */
+  canLeave(): boolean {
+    if (this.recoveryCodes() && !this.ack.value) {
+      this.leaveBlocked.set(true);
+      return false;
+    }
+    return true;
   }
 
   protected finish(): void {

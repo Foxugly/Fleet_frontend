@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard, mfaPendingGuard } from './core/auth/auth.guard';
+import { mfaLeaveGuard } from './features/auth/mfa/mfa-leave.guard';
 import { MainLayoutComponent } from './core/layout/main-layout/main-layout.component';
 import { PublicLayoutComponent } from './core/layout/public-layout/public-layout.component';
 
@@ -34,6 +35,7 @@ export const routes: Routes = [
       {
         path: 'mfa',
         canActivate: [mfaPendingGuard],
+        canDeactivate: [mfaLeaveGuard],
         data: { titleKey: 'mfa.title' },
         loadComponent: () => import('./features/auth/mfa/mfa.component').then((m) => m.MfaComponent),
       },

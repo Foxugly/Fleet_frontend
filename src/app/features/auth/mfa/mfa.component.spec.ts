@@ -5,6 +5,8 @@ import { Router } from '@angular/router';
 
 import { AuthService } from '../../../core/auth/auth.service';
 import { mfaPendingGuard } from '../../../core/auth/auth.guard';
+import { mfaLeaveGuard } from './mfa-leave.guard';
+import { RouterTestingHarness } from '@angular/router/testing';
 import { authTestProviders } from '../auth-test-setup.testing';
 import { MfaComponent } from './mfa.component';
 
@@ -18,7 +20,7 @@ const signedIn = { access: 'A', user: USER };
 async function setup(kind: 'verify' | 'setup' | null, url = '/mfa') {
   TestBed.configureTestingModule({
     providers: authTestProviders([
-      { path: 'mfa', canActivate: [mfaPendingGuard], component: MfaComponent },
+      { path: 'mfa', canActivate: [mfaPendingGuard], canDeactivate: [mfaLeaveGuard], component: MfaComponent },
       { path: 'login', component: Stub },
       { path: 'box', component: Stub },
       { path: '', component: Stub },
@@ -76,7 +78,7 @@ describe('MfaComponent verify mode', () => {
     const el: HTMLElement = fixture.nativeElement;
     const input = el.querySelector('#mfa-code')!;
     expect(input.getAttribute('autocomplete')).toBe('one-time-code');
-    expect(input.getAttribute('inputmode')).toBe('numeric');
+    expect(input.getAttribute('inputmode')).toBe('text');
     expect(el.textContent).toContain('Code de vérification');
   });
 
@@ -244,5 +246,44 @@ describe('MfaComponent setup mode', () => {
       .flush({ code: 'mfa_already_enabled', detail: 'x' }, { status: 400, statusText: 'Bad Request' });
     await fixture.whenStable();
     expect(ctx.router.url).toBe('/login?reason=mfa_enrolled');
+  });
+});
+
+describe('MfaComponent leave guard (recovery codes)', () => {
+  async function enrolViaRouter() {
+    const ctx = await setup('setup', '/box');
+    const harness = await RouterTestingHarness.create();
+    const component = await harness.navigateByUrl('/mfa', MfaComponent);
+    ctx.http
+      .expectOne((r) => r.url.endsWith('/mfa/setup/'))
+      .flush({ otpauth_uri: 'o', secret: 'JBSWY3DP', qr_svg: QR });
+    harness.detectChanges();
+    const el: HTMLElement = harness.routeNativeElement as HTMLElement;
+    const input = el.querySelector<HTMLInputElement>('#mfa-code')!;
+    input.value = '123456';
+    input.dispatchEvent(new Event('input'));
+    harness.detectChanges();
+    el.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+    ctx.http
+      .expectOne((r) => r.url.endsWith('/mfa/setup/confirm/'))
+      .flush({ ...signedIn, recovery_codes: ['AAAAA-11111'] });
+    harness.detectChanges();
+    return { ...ctx, harness, component, el };
+  }
+
+  it('refuses router navigation while the codes are unacknowledged, shows the reminder, then allows it once ticked', async () => {
+    const { router, harness, el } = await enrolViaRouter();
+    expect(el.textContent).toContain('AAAAA-11111');
+
+    expect(await router.navigateByUrl('/')).toBe(false);
+    harness.detectChanges();
+    expect(router.url).toBe('/mfa');
+    expect(el.textContent).toContain('AAAAA-11111');
+    expect(el.querySelector('p-message')!.textContent).toContain('Cochez');
+
+    el.querySelector<HTMLInputElement>('input[type=checkbox]')!.click();
+    harness.detectChanges();
+    expect(await router.navigateByUrl('/')).toBe(true);
+    expect(router.url).toBe('/');
   });
 });

@@ -44,6 +44,7 @@
       "locked": "Too many invalid codes: two-step verification is locked, try again later.",
       "too_many": "Too many attempts, try again later.",
       "unavailable": "Service unavailable.",
+      "ack_required": "Tick « I have saved these codes somewhere safe » before leaving this page: they will not be shown again.",
       "qr_unavailable": "QR code unavailable, use the secret key."
     },
     "mfa": {
