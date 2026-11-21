@@ -76,7 +76,19 @@
     "title": "Vérification en deux étapes"
   },
   "overview": {
-    "title": "Vue d'ensemble"
+    "title": "Vue d'ensemble",
+    "generated": "Généré {{age}}",
+    "reload": "Actualiser",
+    "error": "Impossible de mettre à jour la vue d'ensemble. Les dernières données connues restent affichées.",
+    "box": "Box",
+    "undeployed": "non déployé",
+    "col": {
+      "site": "Site",
+      "health": "Santé",
+      "github": "GitHub",
+      "sentry": "Sentry",
+      "deps": "Dépendances"
+    }
   },
   "site": {
     "title": "Site"

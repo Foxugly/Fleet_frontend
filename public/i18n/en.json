@@ -76,7 +76,19 @@
     "title": "Two-step verification"
   },
   "overview": {
-    "title": "Overview"
+    "title": "Overview",
+    "generated": "Generated {{age}}",
+    "reload": "Refresh",
+    "error": "Could not update the overview. The last known data is still shown.",
+    "box": "Box",
+    "undeployed": "not deployed",
+    "col": {
+      "site": "Site",
+      "health": "Health",
+      "github": "GitHub",
+      "sentry": "Sentry",
+      "deps": "Dependencies"
+    }
   },
   "site": {
     "title": "Site"

@@ -15,7 +15,13 @@ export const routes: Routes = [
     canActivate: [authGuard],
     component: MainLayoutComponent,
     children: [
-      { path: '', pathMatch: 'full', loadComponent: placeholder, data: { titleKey: 'overview.title' } },
+      {
+        path: '',
+        pathMatch: 'full',
+        loadComponent: () =>
+          import('./features/overview/overview.component').then((m) => m.OverviewComponent),
+        data: { titleKey: 'overview.title' },
+      },
       { path: 'sites/:slug', loadComponent: placeholder, data: { titleKey: 'site.title' } },
       { path: 'box', loadComponent: placeholder, data: { titleKey: 'box.title' } },
     ],

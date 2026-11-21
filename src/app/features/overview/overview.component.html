@@ -1,0 +1,82 @@
+<app-page-header [title]="'overview.title' | transloco" icon="pi-th-large">
+  <div slot="right" class="overview__actions">
+    @if (data(); as d) {
+      <span class="overview__generated">{{ 'overview.generated' | transloco: { age: d.generated_at | age } }}</span>
+    }
+    <p-button
+      class="overview__reload"
+      icon="pi pi-refresh"
+      size="small"
+      severity="secondary"
+      [label]="'overview.reload' | transloco"
+      (onClick)="reload()"
+    />
+  </div>
+</app-page-header>
+
+@if (failed()) {
+  <p-message severity="error" styleClass="overview__error">{{ 'overview.error' | transloco }}</p-message>
+}
+
+@if (data(); as d) {
+  <div class="table-scroll">
+    <table class="overview__table">
+      <thead>
+        <tr>
+          <th scope="col">{{ 'overview.col.site' | transloco }}</th>
+          @for (col of columns; track col.key) {
+            <th scope="col">
+              <span class="overview__head">
+                {{ col.label | transloco }}
+                <app-refresh-button [source]="col.key" />
+              </span>
+            </th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="overview__box">
+          <th scope="row">
+            <span class="overview__head">
+              <a routerLink="/box">{{ 'overview.box' | transloco }}</a>
+              <app-refresh-button source="box" />
+            </span>
+          </th>
+          <td [attr.colspan]="columns.length">
+            <app-state-dot [cell]="d.box.box" [label]="'overview.box' | transloco" />
+          </td>
+        </tr>
+        @for (site of d.sites; track site.slug) {
+          <tr>
+            <th scope="row">
+              <a [routerLink]="['/sites', site.slug]">{{ site.slug }}</a>
+              @if (!site.deployed) {
+                <p-tag class="overview__undeployed" severity="secondary" [value]="'overview.undeployed' | transloco" />
+              }
+            </th>
+            @for (col of columns; track col.key) {
+              <td>
+                <app-state-dot [cell]="site.cells[col.key]" [label]="(col.label | transloco) + ' · ' + site.slug" />
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+} @else if (!failed()) {
+  <div class="table-scroll" aria-busy="true">
+    <table class="overview__table">
+      <tbody>
+        @for (row of skeletonRows; track row) {
+          <tr>
+            <th scope="row"><p-skeleton width="6rem" height="1.25rem" /></th>
+            @for (col of columns; track col.key) {
+              <td><p-skeleton width="5rem" height="1.25rem" /></td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
