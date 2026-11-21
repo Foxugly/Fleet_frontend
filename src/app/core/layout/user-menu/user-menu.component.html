@@ -1,4 +1,4 @@
-@if (auth.isLoggedIn()) {
+@if (auth.isAuthenticated()) {
   <div class="user-menu">
     <button
       type="button"
@@ -9,7 +9,7 @@
       (click)="toggle()"
     >
       <i class="pi pi-user" aria-hidden="true"></i>
-      <span class="user-trigger__email">{{ auth.currentUser()?.username }}</span>
+      <span class="user-trigger__email">{{ auth.user()?.username }}</span>
     </button>
 
     @if (open()) {

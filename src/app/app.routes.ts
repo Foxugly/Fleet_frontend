@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './core/auth/auth.guard';
+import { authGuard, mfaPendingGuard } from './core/auth/auth.guard';
 import { MainLayoutComponent } from './core/layout/main-layout/main-layout.component';
 import { PublicLayoutComponent } from './core/layout/public-layout/public-layout.component';
 
@@ -31,7 +31,7 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/auth/login/login.component').then((m) => m.LoginComponent),
       },
-      { path: 'mfa', loadComponent: placeholder, data: { titleKey: 'mfa.title' } },
+      { path: 'mfa', canActivate: [mfaPendingGuard], loadComponent: placeholder, data: { titleKey: 'mfa.title' } },
     ],
   },
 

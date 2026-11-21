@@ -1,6 +1,12 @@
-import { ApplicationConfig, isDevMode, provideBrowserGlobalErrorListeners } from '@angular/core';
+import {
+  ApplicationConfig,
+  inject,
+  isDevMode,
+  provideAppInitializer,
+  provideBrowserGlobalErrorListeners,
+} from '@angular/core';
 import { TitleStrategy, provideRouter, withComponentInputBinding } from '@angular/router';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideTransloco } from '@jsverse/transloco';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -10,6 +16,8 @@ import Aura from '@primeuix/themes/aura';
 import { provideApi } from './api';
 import { runtimeConfig } from './core/runtime-config';
 import { routes } from './app.routes';
+import { authInterceptor } from './core/auth/auth.interceptor';
+import { AuthService } from './core/auth/auth.service';
 import { FleetTitleStrategy } from './core/title/fleet-title.strategy';
 import { TranslocoHttpLoader } from './core/i18n/transloco-loader';
 
@@ -40,7 +48,10 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes, withComponentInputBinding()),
-    provideHttpClient(),
+    provideHttpClient(withInterceptors([authInterceptor])),
+    // One cookie refresh before the first navigation: a remembered session
+    // survives a reload and the guard then decides. Never rejects.
+    provideAppInitializer(() => inject(AuthService).restoreSession()),
     // Read calls use the Bearer token; only auth calls need cookies (set per call).
     provideApi({ basePath: runtimeConfig().apiBaseUrl, withCredentials: false }),
     { provide: TitleStrategy, useClass: FleetTitleStrategy },

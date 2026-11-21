@@ -5,7 +5,7 @@ Single-operator dashboard over `Fleet_server`. Fleet-wide rules: `~/.claude/CLAU
 
 ## Layout
 
-- `src/app/core/`: `auth` (guard, service), `i18n` (HTTP loader, switcher), `layout` (topmenu, footer,
+- `src/app/core/`: `auth` (cookie-mode service with mandatory TOTP, interceptor, guards), `i18n` (HTTP loader, switcher), `layout` (topmenu, footer,
   user-menu, main/public layouts), `theme`, `title` (« {page} — Fleet »), `runtime-config.ts`.
 - `src/app/shared/components/`: `auth-card`, `page-header`, `empty-state`.
 - `src/app/features/`: `auth/login`, `placeholder` (temporary page for `/`, `/sites/:slug`, `/box`, `/mfa`).

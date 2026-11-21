@@ -46,6 +46,6 @@ export class UserMenuComponent {
 
   protected logout(): void {
     this.close();
-    this.auth.logout();
+    this.auth.logout(); // eager: clears the session and goes to /login
   }
 }

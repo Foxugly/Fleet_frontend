@@ -12,7 +12,8 @@ import { AuthService } from '../../../core/auth/auth.service';
 /**
  * Login card (auth-card, username, p-password, remember-me, emerald submit).
  * Fleet is single-operator: no register, forgot-password or magic link (the
- * documented exception to the auth-page standard). Auth is MOCKED until Task 4.
+ * documented exception to the auth-page standard). The password step hands
+ * off to /mfa (AuthService.pendingMfa); Task 5 completes this page.
  */
 @Component({
   selector: 'app-login',
@@ -46,7 +47,7 @@ export class LoginComponent {
       return;
     }
     const { username, password, rememberMe } = this.form.getRawValue();
-    this.auth.login(username, password, rememberMe); // MOCK: always succeeds
-    void this.router.navigate(['/']);
+    // Minimal until Task 5 rewrites this page (errors, returnUrl, /mfa form).
+    this.auth.login(username, password, rememberMe).subscribe(() => void this.router.navigate(['/mfa']));
   }
 }
