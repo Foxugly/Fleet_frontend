@@ -1,0 +1,69 @@
+:host {
+  display: block;
+}
+
+.box__actions,
+.box__dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.box__dot {
+  margin-left: 0.6rem;
+}
+
+:host ::ng-deep .box__error,
+:host ::ng-deep .box__warn,
+:host ::ng-deep .box__block {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.box__block,
+.box__skeleton {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.box__age,
+.muted {
+  color: var(--text-muted, var(--p-text-muted-color));
+  font-size: 0.85rem;
+  margin: 0 0 0.5rem;
+}
+
+.units {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.unit-failed {
+  color: var(--p-red-500, #ef4444);
+  font-weight: 600;
+  padding: 0.2rem 0;
+}
+
+.apt-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    text-align: left;
+    padding: 0.3rem 0.6rem 0.3rem 0;
+    border-bottom: 1px solid var(--p-content-border-color, rgba(128, 128, 128, 0.2));
+    overflow-wrap: anywhere;
+  }
+}
+
+.disk--critical {
+  --p-progressbar-value-background: var(--p-red-500, #ef4444);
+}
+
+.disk-warning {
+  color: var(--p-red-500, #ef4444);
+  font-weight: 600;
+  margin: 0.5rem 0 0;
+}

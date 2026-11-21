@@ -161,7 +161,32 @@
     }
   },
   "box": {
-    "title": "Box"
+    "title": "Box",
+    "reload": "Refresh",
+    "error": "Unable to load the box. Please try again shortly.",
+    "reboot": {
+      "title": "Reboot required"
+    },
+    "failed": {
+      "title": "Failed units",
+      "none": "No failed units"
+    },
+    "apt": {
+      "title": "Packages to upgrade",
+      "package": "Package",
+      "version": "Version",
+      "origin": "Origin",
+      "security": "Security",
+      "none": "All packages are up to date"
+    },
+    "disk": {
+      "title": "Disk",
+      "critical": "Disk almost full"
+    },
+    "memory": {
+      "title": "Memory",
+      "value": "{{available}} MB available of {{total}} MB"
+    }
   },
   "fleet": {
     "age": {

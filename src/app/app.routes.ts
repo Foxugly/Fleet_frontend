@@ -4,9 +4,6 @@ import { mfaLeaveGuard } from './features/auth/mfa/mfa-leave.guard';
 import { MainLayoutComponent } from './core/layout/main-layout/main-layout.component';
 import { PublicLayoutComponent } from './core/layout/public-layout/public-layout.component';
 
-// Placeholder until Task 9 replaces the box page.
-const placeholder = () =>
-  import('./features/placeholder/placeholder.component').then((m) => m.PlaceholderComponent);
 
 export const routes: Routes = [
   // Authenticated area (main-layout, topmenu mode="authenticated")
@@ -27,7 +24,7 @@ export const routes: Routes = [
         loadComponent: () => import('./features/site/site-detail.component').then((m) => m.SiteDetailComponent),
         data: { titleKey: 'site.title' },
       },
-      { path: 'box', loadComponent: placeholder, data: { titleKey: 'box.title' } },
+      { path: 'box', loadComponent: () => import('./features/box/box.component').then((m) => m.BoxComponent), data: { titleKey: 'box.title' } },
     ],
   },
 

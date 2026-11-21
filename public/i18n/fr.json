@@ -161,7 +161,32 @@
     }
   },
   "box": {
-    "title": "Box"
+    "title": "Box",
+    "reload": "Actualiser",
+    "error": "Impossible de charger la box. Réessayez dans un instant.",
+    "reboot": {
+      "title": "Redémarrage nécessaire"
+    },
+    "failed": {
+      "title": "Unités en échec",
+      "none": "Aucune unité en échec"
+    },
+    "apt": {
+      "title": "Paquets à mettre à jour",
+      "package": "Paquet",
+      "version": "Version",
+      "origin": "Origine",
+      "security": "Sécurité",
+      "none": "Tous les paquets sont à jour"
+    },
+    "disk": {
+      "title": "Disque",
+      "critical": "Disque presque plein"
+    },
+    "memory": {
+      "title": "Mémoire",
+      "value": "{{available}} Mo disponibles sur {{total}} Mo"
+    }
   },
   "fleet": {
     "age": {
