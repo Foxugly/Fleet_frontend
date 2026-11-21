@@ -56,6 +56,16 @@
     border-bottom: 1px solid var(--p-content-border-color, rgba(128, 128, 128, 0.2));
     overflow-wrap: anywhere;
   }
+
+  // Package name and « Sécurité » tag never break mid-word; the version column wraps instead.
+  .apt-nowrap {
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+}
+
+:host ::ng-deep .sev-security .p-tag {
+  white-space: nowrap;
 }
 
 .disk--critical {

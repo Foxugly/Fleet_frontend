@@ -22,7 +22,7 @@ export const routes: Routes = [
       {
         path: 'sites/:slug',
         loadComponent: () => import('./features/site/site-detail.component').then((m) => m.SiteDetailComponent),
-        data: { titleKey: 'site.title' },
+        data: { titleKey: 'site.title', titleParam: 'slug' },
       },
       { path: 'box', loadComponent: () => import('./features/box/box.component').then((m) => m.BoxComponent), data: { titleKey: 'box.title' } },
     ],

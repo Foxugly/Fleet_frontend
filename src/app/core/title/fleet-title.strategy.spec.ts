@@ -4,6 +4,7 @@ import { Title } from '@angular/platform-browser';
 import { Router, TitleStrategy, provideRouter } from '@angular/router';
 import { Translation, TranslocoLoader, TranslocoService, provideTransloco } from '@jsverse/transloco';
 import { Observable, delay, of } from 'rxjs';
+import { routes } from '../../app.routes';
 import { FleetTitleStrategy } from './fleet-title.strategy';
 
 const CATALOGS: Record<string, Translation> = {
@@ -33,6 +34,7 @@ describe('FleetTitleStrategy', () => {
         provideRouter([
           { path: '', component: Page, data: { titleKey: 'overview.title' } },
           { path: 'bare', component: Page },
+          { path: 'sites/:slug', component: Page, data: { titleKey: 'overview.title', titleParam: 'slug' } },
         ]),
         { provide: TitleStrategy, useClass: FleetTitleStrategy },
         provideTransloco({
@@ -68,5 +70,16 @@ describe('FleetTitleStrategy', () => {
     await router.navigateByUrl('/bare');
     await settle();
     expect(title.getTitle()).toBe('Fleet');
+  });
+
+  it('uses the route param named by titleParam as the page: « {slug} — Fleet »', async () => {
+    await router.navigateByUrl('/sites/poker');
+    await settle();
+    expect(title.getTitle()).toBe('poker — Fleet');
+  });
+
+  it('the site detail route titles the tab with its slug', () => {
+    const site = routes.flatMap((r) => [r, ...(r.children ?? [])]).find((r) => r.path === 'sites/:slug');
+    expect(site?.data?.['titleParam']).toBe('slug');
   });
 });

@@ -42,3 +42,9 @@ a:hover {
   background: rgba(255, 255, 255, 0.1);
   color: var(--chrome-ink-strong);
 }
+
+/* Global toast (app.ts): below the sticky topbar (min-height 60px, taller when it
+   wraps on mobile) instead of PrimeNG's inline top: 20px, which overlaps it. */
+.p-toast.fleet-toast {
+  top: 5rem !important;
+}

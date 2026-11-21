@@ -32,7 +32,7 @@
   }
 
   @if (data(); as d) {
-    <p class="box__age">{{ b.collected_at | age }}</p>
+    <p class="box__age">{{ 'site.last_good' | transloco: { age: b.collected_at | age } }}</p>
 
     @if (d.reboot_required) {
       <p-message severity="warn" styleClass="box__block box__reboot">
@@ -73,10 +73,10 @@
           <tbody>
             @for (p of apt(); track p.package) {
               <tr>
-                <td>{{ p.package }}</td>
+                <td class="apt-nowrap">{{ p.package }}</td>
                 <td>{{ p.from_version ? p.from_version + ' → ' : '' }}{{ p.version }}</td>
                 <td>{{ p.origin }}</td>
-                <td>
+                <td class="apt-nowrap">
                   @if (p.security) {
                     <p-tag class="sev-security" severity="danger" [value]="'box.apt.security' | transloco" />
                   }

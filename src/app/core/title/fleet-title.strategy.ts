@@ -8,7 +8,8 @@ const APP_NAME = 'Fleet';
 
 /**
  * Page title « {page} — Fleet ». The page name comes from the route's
- * `data.titleKey` (a Transloco key); routes without one get just « Fleet ».
+ * `data.titleKey` (a Transloco key), or verbatim from the route param named by
+ * `data.titleParam` (e.g. the site slug); routes without either get just « Fleet ».
  * The title is reactive: it waits for the catalog (HTTP loader) and follows
  * language switches, so the raw key is never shown.
  */
@@ -22,9 +23,16 @@ export class FleetTitleStrategy extends TitleStrategy implements OnDestroy {
     this.sub?.unsubscribe();
     let route = snapshot.root;
     let key: string | undefined;
+    let param: string | undefined;
     while (route) {
       key = (route.data?.['titleKey'] as string | undefined) ?? key;
+      const paramName = route.data?.['titleParam'] as string | undefined;
+      if (paramName) param = route.paramMap.get(paramName) ?? param;
       route = route.firstChild as typeof route;
+    }
+    if (param) {
+      this.title.setTitle(`${param} — ${APP_NAME}`);
+      return;
     }
     if (!key) {
       this.title.setTitle(APP_NAME);

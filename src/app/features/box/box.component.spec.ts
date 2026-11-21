@@ -92,6 +92,19 @@ describe('BoxComponent', () => {
     expect(el.querySelector('h1')!.textContent).toContain('Box');
   });
 
+  it('labels the age line as the last successful collection', async () => {
+    const { el } = await loaded(box(data()));
+    expect(el.querySelector('.box__age')!.textContent!.trim()).toBe('dernière collecte réussie il y a 10 min');
+  });
+
+  it('keeps the package name and the security tag on one line (only the version wraps)', async () => {
+    const { el } = await loaded(box(data()));
+    const cells = el.querySelectorAll('.apt-table tbody tr:first-child td');
+    expect(cells[0].classList).toContain('apt-nowrap');
+    expect(cells[3].classList).toContain('apt-nowrap');
+    expect(cells[1].classList).not.toContain('apt-nowrap');
+  });
+
   it('hides the reboot block when no reboot is required', async () => {
     const { el } = await loaded(box(data()));
     expect(el.querySelector('.box__reboot')).toBeNull();
