@@ -1,0 +1,96 @@
+<app-page-header [title]="slug()" icon="pi-globe">
+  <div slot="left">
+    <p-button routerLink="/" icon="pi pi-arrow-left" [text]="true" size="small" [label]="'site.back' | transloco" />
+  </div>
+  @if (site(); as s) {
+    <span slot="title-after" class="site__tags">
+      <p-tag
+        [severity]="s.deployed ? 'success' : 'secondary'"
+        [value]="(s.deployed ? 'site.deployed' : 'site.undeployed') | transloco"
+      />
+      <p-tag
+        severity="secondary"
+        [value]="(s.actions_allowed ? 'site.actions_allowed' : 'site.read_only') | transloco"
+      />
+    </span>
+  }
+  <div slot="right">
+    @if (!notFound()) {
+      <p-button
+        class="site__reload"
+        icon="pi pi-refresh"
+        size="small"
+        severity="secondary"
+        [label]="'site.reload' | transloco"
+        (onClick)="reload()"
+      />
+    }
+  </div>
+</app-page-header>
+
+@if (notFound()) {
+  <app-empty-state [title]="'site.unknown.title' | transloco" [subtitle]="'site.unknown.subtitle' | transloco" icon="pi-question-circle">
+    <p-button routerLink="/" icon="pi pi-arrow-left" [label]="'site.back' | transloco" />
+  </app-empty-state>
+} @else {
+  @if (failed()) {
+    <p-message severity="error" styleClass="site__error">{{ 'site.error' | transloco }}</p-message>
+  }
+
+  @if (site()) {
+    @for (src of sources(); track src.key) {
+      <p-panel class="site__panel" [toggleable]="false">
+        <ng-template #header>
+          <span class="site__panel-head">
+            <strong>{{ 'site.source.' + src.key | transloco }}</strong>
+            <app-state-dot [cell]="src.cell" [label]="'site.source.' + src.key | transloco" />
+            <app-refresh-button [source]="src.key" />
+          </span>
+        </ng-template>
+
+        @for (item of src.items; track item.name) {
+          <section class="site__subject">
+            <h3 class="site__subject-name">
+              {{ item.name }}
+              <span class="site__age">{{ item.subject.collected_at | age }}</span>
+            </h3>
+            @if (item.subject.ok === false) {
+              <p-message severity="warn" styleClass="site__warn">
+                {{ item.subject.error }}
+                @if (item.subject.data) {
+                  — {{ 'site.last_good' | transloco: { age: item.subject.collected_at | age } }}
+                }
+              </p-message>
+            }
+            @if (item.subject.data === null) {
+              <p class="site__never">{{ 'fleet.age.never' | transloco }}</p>
+            } @else {
+              @switch (src.key) {
+                @case ('health') {
+                  <app-health-section [data]="health(item.subject)!" />
+                }
+                @case ('github') {
+                  <app-github-section [data]="github(item.subject)!" [since]="since()" />
+                }
+                @case ('sentry') {
+                  <app-sentry-section [data]="sentry(item.subject)!" [since]="since()" />
+                }
+                @case ('deps') {
+                  <app-deps-section [data]="deps(item.subject)!" />
+                }
+              }
+            }
+          </section>
+        } @empty {
+          <p class="site__never">{{ 'site.no_items' | transloco }}</p>
+        }
+      </p-panel>
+    }
+  } @else if (!failed()) {
+    <div aria-busy="true">
+      @for (n of skeletons; track n) {
+        <p-skeleton class="site__skeleton" height="6rem" />
+      }
+    </div>
+  }
+}

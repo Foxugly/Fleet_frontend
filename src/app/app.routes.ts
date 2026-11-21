@@ -4,7 +4,7 @@ import { mfaLeaveGuard } from './features/auth/mfa/mfa-leave.guard';
 import { MainLayoutComponent } from './core/layout/main-layout/main-layout.component';
 import { PublicLayoutComponent } from './core/layout/public-layout/public-layout.component';
 
-// Placeholders until Tasks 6-9 replace them.
+// Placeholder until Task 9 replaces the box page.
 const placeholder = () =>
   import('./features/placeholder/placeholder.component').then((m) => m.PlaceholderComponent);
 
@@ -22,7 +22,11 @@ export const routes: Routes = [
           import('./features/overview/overview.component').then((m) => m.OverviewComponent),
         data: { titleKey: 'overview.title' },
       },
-      { path: 'sites/:slug', loadComponent: placeholder, data: { titleKey: 'site.title' } },
+      {
+        path: 'sites/:slug',
+        loadComponent: () => import('./features/site/site-detail.component').then((m) => m.SiteDetailComponent),
+        data: { titleKey: 'site.title' },
+      },
       { path: 'box', loadComponent: placeholder, data: { titleKey: 'box.title' } },
     ],
   },

@@ -91,7 +91,74 @@
     }
   },
   "site": {
-    "title": "Site"
+    "title": "Site",
+    "back": "Retour",
+    "reload": "Actualiser",
+    "deployed": "Déployé",
+    "undeployed": "Non déployé",
+    "actions_allowed": "Actions autorisées",
+    "read_only": "Lecture seule",
+    "error": "Impossible de charger ce site. Réessayez dans un instant.",
+    "new": "nouveau",
+    "last_good": "dernière collecte réussie {{age}}",
+    "no_items": "Aucun élément suivi",
+    "unknown": {
+      "title": "Site inconnu",
+      "subtitle": "Ce site n'existe pas dans la flotte."
+    },
+    "source": {
+      "health": "Santé",
+      "github": "GitHub",
+      "sentry": "Sentry",
+      "deps": "Dépendances"
+    },
+    "health": {
+      "status": "Statut HTTP",
+      "latency": "Latence",
+      "tls": "Certificat TLS",
+      "tls_days": "{{n}} j restants",
+      "tls_soon": "expire bientôt"
+    },
+    "github": {
+      "prs": "Pull requests",
+      "issues": "Tickets",
+      "dependabot_alerts": "Alertes Dependabot",
+      "code_scanning": "Analyse de code",
+      "secret_scanning": "Secrets exposés",
+      "main_run": "Dernière exécution sur main",
+      "no_prs": "Aucune PR ouverte",
+      "no_issues": "Aucun ticket ouvert",
+      "no_alerts": "Aucune alerte Dependabot",
+      "no_code_scanning": "Aucune alerte d'analyse de code",
+      "no_secrets": "Aucun secret exposé",
+      "no_run": "Aucune exécution connue",
+      "dependabot": "Dependabot",
+      "draft": "brouillon",
+      "checks": {
+        "success": "CI verte",
+        "failure": "CI en échec",
+        "pending": "CI en cours",
+        "none": "Pas de CI"
+      },
+      "run": {
+        "success": "Réussie",
+        "failure": "En échec"
+      }
+    },
+    "sentry": {
+      "unresolved": "Non résolues",
+      "new_24h": "Nouvelles (24 h)",
+      "none": "Aucune issue non résolue",
+      "events": "{{n}} évén."
+    },
+    "deps": {
+      "ecosystem": "Écosystème",
+      "checked": "Paquets vérifiés",
+      "up_to_date": "Tout est à jour",
+      "name": "Paquet",
+      "version": "Version",
+      "kind": "Type"
+    }
   },
   "box": {
     "title": "Box"

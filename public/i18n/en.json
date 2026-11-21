@@ -91,7 +91,74 @@
     }
   },
   "site": {
-    "title": "Site"
+    "title": "Site",
+    "back": "Back",
+    "reload": "Refresh",
+    "deployed": "Deployed",
+    "undeployed": "Not deployed",
+    "actions_allowed": "Actions allowed",
+    "read_only": "Read-only",
+    "error": "Could not load this site. Please try again shortly.",
+    "new": "new",
+    "last_good": "last successful collection {{age}}",
+    "no_items": "Nothing tracked",
+    "unknown": {
+      "title": "Unknown site",
+      "subtitle": "This site does not exist in the fleet."
+    },
+    "source": {
+      "health": "Health",
+      "github": "GitHub",
+      "sentry": "Sentry",
+      "deps": "Dependencies"
+    },
+    "health": {
+      "status": "HTTP status",
+      "latency": "Latency",
+      "tls": "TLS certificate",
+      "tls_days": "{{n}} d left",
+      "tls_soon": "expires soon"
+    },
+    "github": {
+      "prs": "Pull requests",
+      "issues": "Issues",
+      "dependabot_alerts": "Dependabot alerts",
+      "code_scanning": "Code scanning",
+      "secret_scanning": "Exposed secrets",
+      "main_run": "Latest run on main",
+      "no_prs": "No open PR",
+      "no_issues": "No open issue",
+      "no_alerts": "No Dependabot alert",
+      "no_code_scanning": "No code scanning alert",
+      "no_secrets": "No exposed secret",
+      "no_run": "No known run",
+      "dependabot": "Dependabot",
+      "draft": "draft",
+      "checks": {
+        "success": "CI green",
+        "failure": "CI failing",
+        "pending": "CI running",
+        "none": "No CI"
+      },
+      "run": {
+        "success": "Passed",
+        "failure": "Failed"
+      }
+    },
+    "sentry": {
+      "unresolved": "Unresolved",
+      "new_24h": "New (24 h)",
+      "none": "No unresolved issue",
+      "events": "{{n}} events"
+    },
+    "deps": {
+      "ecosystem": "Ecosystem",
+      "checked": "Packages checked",
+      "up_to_date": "Everything is up to date",
+      "name": "Package",
+      "version": "Version",
+      "kind": "Kind"
+    }
   },
   "box": {
     "title": "Box"

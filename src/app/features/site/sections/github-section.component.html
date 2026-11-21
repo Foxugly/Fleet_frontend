@@ -1,0 +1,132 @@
+<ng-template #linked let-url="url" let-text="text">
+  @if (link(url); as href) {
+    <a class="row-title" [href]="href" target="_blank" rel="noopener noreferrer">{{ text }}</a>
+  } @else {
+    <span class="row-title">{{ text }}</span>
+  }
+</ng-template>
+
+@let d = data();
+
+<section class="block">
+  <h4>{{ 'site.github.prs' | transloco }}</h4>
+  @if (prs().length === 0) {
+    <p class="muted">{{ 'site.github.no_prs' | transloco }}</p>
+  } @else {
+    <ul class="rows">
+      @for (p of prs(); track p.number) {
+        <li class="pr-row">
+          <ng-container *ngTemplateOutlet="linked; context: { url: p.url, text: p.title }" />
+          @if (isNew(p.created_at)) {
+            <app-new-tag />
+          }
+          @if (p.is_dependabot) {
+            <p-tag severity="secondary" [value]="'site.github.dependabot' | transloco" />
+          }
+          @if (p.draft) {
+            <p-tag severity="secondary" [value]="'site.github.draft' | transloco" />
+          }
+          <p-tag
+            [severity]="p.checks === 'success' ? 'success' : p.checks === 'failure' ? 'danger' : p.checks === 'pending' ? 'warn' : 'secondary'"
+            [value]="'site.github.checks.' + p.checks | transloco"
+          />
+          <span class="muted">{{ p.merge_state }}</span>
+          @if (p.author) {
+            <span class="muted">{{ p.author }}</span>
+          }
+          <span class="muted">{{ p.created_at | age }}</span>
+        </li>
+      }
+    </ul>
+  }
+</section>
+
+<section class="block">
+  <h4>{{ 'site.github.issues' | transloco }}</h4>
+  @if (issues().length === 0) {
+    <p class="muted">{{ 'site.github.no_issues' | transloco }}</p>
+  } @else {
+    <ul class="rows">
+      @for (i of issues(); track i.number) {
+        <li class="issue-row">
+          <ng-container *ngTemplateOutlet="linked; context: { url: i.url, text: i.title }" />
+          @if (isNew(i.created_at)) {
+            <app-new-tag />
+          }
+          <span class="muted">{{ i.created_at | age }}</span>
+        </li>
+      }
+    </ul>
+  }
+</section>
+
+<section class="block">
+  <h4>{{ 'site.github.dependabot_alerts' | transloco }}</h4>
+  @if (alerts().length === 0) {
+    <p class="muted">{{ 'site.github.no_alerts' | transloco }}</p>
+  } @else {
+    <ul class="rows">
+      @for (a of alerts(); track $index) {
+        <li>
+          <ng-container *ngTemplateOutlet="linked; context: { url: a.url, text: a.package }" />
+          @if (isNew(a.created_at)) {
+            <app-new-tag />
+          }
+          <p-tag [severity]="sev(a.severity)" [value]="a.severity" />
+          <span class="muted">{{ a.created_at | age }}</span>
+        </li>
+      }
+    </ul>
+  }
+</section>
+
+<section class="block">
+  <h4>{{ 'site.github.code_scanning' | transloco }}</h4>
+  @if (d.code_scanning.length === 0) {
+    <p class="muted">{{ 'site.github.no_code_scanning' | transloco }}</p>
+  } @else {
+    <ul class="rows">
+      @for (c of d.code_scanning; track $index) {
+        <li>
+          <ng-container *ngTemplateOutlet="linked; context: { url: c.url, text: c.rule }" />
+          @if (c.severity) {
+            <p-tag [severity]="sev(c.severity)" [value]="c.severity" />
+          }
+          @if (c.path) {
+            <span class="muted">{{ c.path }}</span>
+          }
+        </li>
+      }
+    </ul>
+  }
+</section>
+
+<section class="block">
+  <h4>{{ 'site.github.secret_scanning' | transloco }}</h4>
+  @if (d.secret_scanning.length === 0) {
+    <p class="muted">{{ 'site.github.no_secrets' | transloco }}</p>
+  } @else {
+    <ul class="rows">
+      @for (s of d.secret_scanning; track $index) {
+        <li>
+          <ng-container *ngTemplateOutlet="linked; context: { url: s.url, text: s.type }" />
+        </li>
+      }
+    </ul>
+  }
+</section>
+
+<section class="block">
+  <h4>{{ 'site.github.main_run' | transloco }}</h4>
+  @if (d.main_run; as r) {
+    <ul class="rows">
+      <li>
+        <p-tag [severity]="r.conclusion === 'success' ? 'success' : 'danger'" [value]="'site.github.run.' + r.conclusion | transloco" />
+        <ng-container *ngTemplateOutlet="linked; context: { url: r.url, text: r.workflow }" />
+        <span class="muted">{{ r.created_at | age }}</span>
+      </li>
+    </ul>
+  } @else {
+    <p class="muted">{{ 'site.github.no_run' | transloco }}</p>
+  }
+</section>

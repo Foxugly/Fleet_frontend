@@ -8,7 +8,7 @@ Single-operator dashboard over `Fleet_server`. Fleet-wide rules: `~/.claude/CLAU
 - `src/app/core/`: `auth` (cookie-mode service with mandatory TOTP, interceptor, guards), `i18n` (HTTP loader, switcher), `layout` (topmenu, footer,
   user-menu, main/public layouts), `theme`, `title` (« {page} — Fleet »), `runtime-config.ts`.
 - `src/app/shared/components/`: `auth-card`, `page-header`, `empty-state`.
-- `src/app/features/`: `auth` (login, mfa, shared `auth-flow.ts`: error mapping + `safeReturnUrl`), `placeholder` (temporary page for `/`, `/sites/:slug`, `/box`).
+- `src/app/features/`: `auth` (login, mfa, shared `auth-flow.ts`: error mapping + `safeReturnUrl`), `overview`, `site` (detail + per-source `sections/`), `placeholder` (temporary page for `/box`).
 - `public/i18n/{fr,en}.json`: catalogs; `i18n-parity.spec.ts` keeps their keys identical.
 
 ## Commands (Windows)
