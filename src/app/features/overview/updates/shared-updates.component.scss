@@ -165,3 +165,8 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
+.shared-updates__none {
+  padding: 1rem 0;
+  color: var(--text-muted, var(--p-text-muted-color));
+}

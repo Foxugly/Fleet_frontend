@@ -10,6 +10,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { SelectModule } from 'primeng/select';
 import { SkeletonModule } from 'primeng/skeleton';
+import { TabsModule } from 'primeng/tabs';
 import { Subject, catchError, map, merge, of, switchMap } from 'rxjs';
 
 import { Overview, OverviewService } from '../../api';
@@ -36,6 +37,8 @@ import { OverviewMosaicComponent } from './overview-mosaic.component';
 import { SharedUpdatesComponent } from './updates/shared-updates.component';
 import { OverviewView, readView, writeView } from './view-pref';
 
+export type OverviewTab = 'apps' | 'deps';
+
 @Component({
   selector: 'app-overview',
   imports: [
@@ -53,6 +56,7 @@ import { OverviewView, readView, writeView } from './view-pref';
     OverviewMosaicComponent,
     RefreshButtonComponent,
     SharedUpdatesComponent,
+    TabsModule,
     AgePipe,
   ],
   templateUrl: './overview.component.html',
@@ -62,7 +66,7 @@ export class OverviewComponent {
   private readonly api = inject(OverviewService);
   private readonly reload$ = new Subject<void>();
   /** Rendered once the overview has loaded; it polls on its own and follows the reload button. */
-  private readonly updates = viewChild(SharedUpdatesComponent);
+  protected readonly updates = viewChild(SharedUpdatesComponent);
 
   protected readonly data = signal<Overview | null>(null);
   protected readonly failed = signal(false);
@@ -80,6 +84,8 @@ export class OverviewComponent {
     const params = this.query();
     return params ? parseFilter(params) : NO_FILTER;
   });
+  /** « Apps » (default) or « Dépendances », kept in the URL like the filters. */
+  protected readonly tab = computed<OverviewTab>(() => (this.query()?.get('tab') === 'deps' ? 'deps' : 'apps'));
   protected readonly filtering = computed(() => isFiltering(this.filter()));
   protected readonly shown = computed(() => filterEntries(this.entries(), this.filter()));
   protected readonly buckets: readonly Bucket[] = ['handle', 'watch', 'ok'];
@@ -125,6 +131,16 @@ export class OverviewComponent {
   protected setView(view: OverviewView): void {
     this.view.set(view);
     writeView(view);
+  }
+
+  protected setTab(tab: OverviewTab): void {
+    if (tab === this.tab()) return;
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab: tab === 'apps' ? null : tab },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   protected setSearch(q: string): void {

@@ -14,7 +14,6 @@ import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
-import { PanelModule } from 'primeng/panel';
 import { TagModule } from 'primeng/tag';
 import { Subject, catchError, map, merge, of, switchMap } from 'rxjs';
 
@@ -49,7 +48,7 @@ interface Row {
 /** Dependency updates shared by ≥ 2 apps, each with a ready-made Claude Code prompt. */
 @Component({
   selector: 'app-shared-updates',
-  imports: [TranslocoPipe, RouterLink, ButtonModule, PanelModule, TagModule],
+  imports: [TranslocoPipe, RouterLink, ButtonModule, TagModule],
   templateUrl: './shared-updates.component.html',
   styleUrl: './shared-updates.component.scss',
 })
@@ -61,6 +60,10 @@ export class SharedUpdatesComponent {
   private readonly reload$ = new Subject<void>();
 
   protected readonly groups = signal<UpdateGroup[]>([]);
+  /** True once a first answer arrived (empty or not): the empty message waits for it. */
+  protected readonly loaded = signal(false);
+  /** Shown in the overview's « Dépendances » tab label. */
+  readonly count = computed(() => this.groups().length);
   protected readonly sections = computed(() => {
     const rows = this.groups().map((g) => this.toRow(g));
     return UPDATE_SECTIONS.map((key) => ({ key, rows: rows.filter((r) => sectionOf(r.group) === key) })).filter(
@@ -89,7 +92,10 @@ export class SharedUpdatesComponent {
         takeUntilDestroyed(inject(DestroyRef)),
       )
       .subscribe((groups) => {
-        if (groups) this.groups.set(groups);
+        if (groups) {
+          this.groups.set(groups);
+          this.loaded.set(true);
+        }
       });
   }
 

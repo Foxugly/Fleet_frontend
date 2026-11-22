@@ -8,7 +8,10 @@ import { Cell, Overview } from '../../api';
 import { Clock } from '../../shared/fleet/clock';
 import { authTestProviders } from '../auth/auth-test-setup.testing';
 import { OverviewComponent } from './overview.component';
+import { group as updateGroup } from './updates/update-test-data.testing';
 import { VIEW_STORAGE_KEY } from './view-pref';
+
+const UPDATE_GROUP = updateGroup();
 
 @Component({ template: '' })
 class Stub {}
@@ -100,8 +103,11 @@ describe('OverviewComponent', () => {
   beforeEach(() => {
     localStorage.clear();
     vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+    // jsdom has no ResizeObserver; PrimeNG's tab list observes its scroll container.
+    vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
   });
   afterEach(() => {
+    vi.unstubAllGlobals();
     vi.restoreAllMocks();
     vi.useRealTimers();
     localStorage.clear();
@@ -231,23 +237,54 @@ describe('OverviewComponent', () => {
     http.expectOne(isOverview).flush(overview());
   });
 
-  it('renders the shared-updates panel between the filters and the list, and reloads it too', async () => {
-    const { fixture, http, el } = await loaded();
-    const panel = el.querySelector('app-shared-updates')!;
-    expect(panel).not.toBeNull();
-    const filters = el.querySelector('.overview__filters')!;
-    const list = el.querySelector('app-overview-list')!;
-    expect(filters.compareDocumentPosition(panel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(panel.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    http.expectOne(isUpdates).flush({ generated_at: '2026-11-21T11:58:00Z', groups: [] });
+  describe('tabs', () => {
+    const panel = (el: HTMLElement, key: string) => el.querySelector<HTMLElement>(`.overview__panel[data-panel="${key}"]`)!;
+    const tabButton = (el: HTMLElement, key: string) => el.querySelector<HTMLElement>(`p-tab[data-tab="${key}"]`)!;
 
-    el.querySelector<HTMLButtonElement>('.overview__reload button')!.click();
-    http.expectOne(isOverview).flush(overview());
-    http.expectOne(isUpdates).flush('boom', { status: 500, statusText: 'Server Error' });
-    await settle(fixture);
-    // A failing /updates/ leaves the overview untouched (Review Focus 5).
-    expect(el.querySelector('p-message')).toBeNull();
-    expect(rows(el).length).toBe(4);
+    it('opens on « Apps »; the dependencies panel is rendered but hidden', async () => {
+      const { http, el } = await loaded();
+      expect(panel(el, 'apps').hidden).toBe(false);
+      expect(panel(el, 'deps').hidden).toBe(true);
+      expect(panel(el, 'deps').querySelector('app-shared-updates')).not.toBeNull();
+      expect(panel(el, 'apps').querySelector('app-overview-list')).not.toBeNull();
+      http.expectOne(isUpdates).flush({ generated_at: '2026-11-21T11:58:00Z', groups: [] });
+    });
+
+    it('?tab=deps opens « Dépendances »; the tab label carries the count', async () => {
+      const m = await loaded();
+      await TestBed.inject(Router).navigateByUrl('/?tab=deps');
+      m.http.expectOne(isUpdates).flush({ generated_at: '2026-11-21T11:58:00Z', groups: [UPDATE_GROUP] });
+      await settle(m.fixture);
+      expect(panel(m.el, 'deps').hidden).toBe(false);
+      expect(panel(m.el, 'apps').hidden).toBe(true);
+      expect(tabButton(m.el, 'deps').querySelector('.overview__tab-count')!.textContent!.trim()).toBe('1');
+    });
+
+    it('clicking a tab keeps it in the URL (replacing history) and keeps the filters', async () => {
+      const m = await loaded();
+      m.http.expectOne(isUpdates).flush({ generated_at: '2026-11-21T11:58:00Z', groups: [] });
+      await TestBed.inject(Router).navigateByUrl('/?q=po');
+      await settle(m.fixture);
+      const nav = vi.spyOn(TestBed.inject(Router), 'navigate');
+      tabButton(m.el, 'deps').click();
+      await settle(m.fixture);
+      expect(nav).toHaveBeenCalledWith([], expect.objectContaining({ queryParams: { tab: 'deps' }, queryParamsHandling: 'merge', replaceUrl: true }));
+      expect(TestBed.inject(Router).url).toBe('/?q=po&tab=deps');
+      tabButton(m.el, 'apps').click();
+      await settle(m.fixture);
+      expect(TestBed.inject(Router).url).toBe('/?q=po');
+    });
+
+    it('the reload button refreshes both tabs; a failing /updates/ leaves the apps untouched', async () => {
+      const { fixture, http, el } = await loaded();
+      http.expectOne(isUpdates).flush({ generated_at: '2026-11-21T11:58:00Z', groups: [] });
+      el.querySelector<HTMLButtonElement>('.overview__reload button')!.click();
+      http.expectOne(isOverview).flush(overview());
+      http.expectOne(isUpdates).flush('boom', { status: 500, statusText: 'Server Error' });
+      await settle(fixture);
+      expect(el.querySelector('p-message')).toBeNull();
+      expect(rows(el).length).toBe(4);
+    });
   });
 
   it('keeps the last data, the error banner and the view when a later poll fails, then clears it (Review Focus 5)', async () => {

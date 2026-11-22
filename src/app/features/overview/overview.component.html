@@ -20,6 +20,19 @@
 
 @if (data()) {
   @let s = summary();
+  <p-tabs class="overview__tabs" [value]="tab()" (valueChange)="setTab($any($event))">
+    <p-tablist>
+      <p-tab value="apps" data-tab="apps">{{ 'overview.tab.apps' | transloco }}</p-tab>
+      <p-tab value="deps" data-tab="deps">
+        {{ 'overview.tab.deps' | transloco }}
+        @if (updates()?.count(); as n) {
+          <span class="overview__tab-count">{{ n }}</span>
+        }
+      </p-tab>
+    </p-tablist>
+  </p-tabs>
+
+  <div class="overview__panel" data-panel="apps" [hidden]="tab() !== 'apps'">
   <div class="overview__toolbar">
     <div class="overview__summary" role="group" [attr.aria-label]="'overview.summary.aria' | transloco">
       @for (b of buckets; track b) {
@@ -96,8 +109,6 @@
     }
   </div>
 
-  <app-shared-updates />
-
   <ul class="overview__sources" [attr.aria-label]="'overview.sources' | transloco">
     @for (src of sources; track src.key) {
       <li class="overview__source">
@@ -131,6 +142,12 @@
   } @else {
     <app-overview-list [entries]="shown()" [collapseOk]="!filtering()" />
   }
+  </div>
+
+  <!-- Always rendered (hidden when inactive): it polls on its own and feeds the tab's count. -->
+  <div class="overview__panel" data-panel="deps" [hidden]="tab() !== 'deps'">
+    <app-shared-updates />
+  </div>
 } @else if (!failed()) {
   <ul class="overview__skeleton" aria-busy="true">
     @for (row of skeletonRows; track row) {

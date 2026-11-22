@@ -82,19 +82,24 @@ describe('SharedUpdatesComponent', () => {
 
   it('is hidden when there are no groups', async () => {
     const { el } = await mount([]);
-    expect(el.querySelector('p-panel')).toBeNull();
+    expect(el.querySelector('.shared-updates')).toBeNull();
+  });
+
+  it('says there is nothing to do once an empty answer arrived', async () => {
+    const { el } = await mount([]);
+    expect(el.querySelector('.shared-updates__none')!.textContent).toContain('Aucune mise à jour ne concerne plusieurs apps');
   });
 
   it('is hidden, without a console error, when the request fails (Review Focus 5)', async () => {
     const error = vi.spyOn(console, 'error');
     const { el } = await mount('error');
-    expect(el.querySelector('p-panel')).toBeNull();
+    expect(el.querySelector('.shared-updates')).toBeNull();
     expect(error).not.toHaveBeenCalled();
   });
 
-  it('titles the panel with the group count and renders the non-empty sections in order', async () => {
-    const { el } = await mount([patch, minor, security, major]);
-    expect(el.querySelector('p-panel')!.textContent).toContain('Mises à jour communes (4)');
+  it('counts the groups and renders the non-empty sections in order', async () => {
+    const { fixture, el } = await mount([patch, minor, security, major]);
+    expect(fixture.componentInstance.count()).toBe(4);
     expect(sectionKeys(el)).toEqual(['security', 'major', 'updates', 'patch']);
     // Under the panel title (h1 is the page header): no level skipped.
     expect(el.querySelectorAll('.shared-updates__section > h2').length).toBe(4);
@@ -268,7 +273,7 @@ describe('SharedUpdatesComponent', () => {
     fixture.componentInstance.reload();
     http.expectOne(isUpdates).flush({ generated_at: '2026-11-22T10:01:00Z', groups: [minor] });
     await settle(fixture);
-    expect(el.querySelector('p-panel')).not.toBeNull();
+    expect(el.querySelector('.shared-updates')).not.toBeNull();
   });
 });
 
