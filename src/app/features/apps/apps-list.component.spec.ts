@@ -116,10 +116,60 @@ describe('AppsListComponent', () => {
     expect(rows(el)[0].textContent).not.toContain('Archivée');
   });
 
-  it('shows an empty state without apps and an error message when the load fails', async () => {
+  it('shows an empty state without apps', async () => {
     const { http, settle, el } = await setup();
     http.expectOne(isApps).flush([]);
     await settle();
     expect(el.querySelector('app-empty-state')).not.toBeNull();
+  });
+
+  it('shows an error message when the load fails', async () => {
+    const { http, settle, el } = await setup();
+    http.expectOne(isApps).flush({}, { status: 500, statusText: 'Server Error' });
+    await settle();
+    expect(el.querySelector('p-message')!.textContent).toContain("Impossible de charger l'inventaire");
+    expect(el.querySelector('app-empty-state')).toBeNull();
+  });
+
+  it('the code dialog names the action and the app', async () => {
+    const { http, settle, el } = await setup();
+    http.expectOne(isApps).flush([appOut('poker')]);
+    await settle();
+    rows(el)[0].querySelector<HTMLButtonElement>('.apps-list__archive button, button.apps-list__archive')!.click();
+    await settle();
+    expect(document.body.querySelector('.totp-dialog__subject')!.textContent).toContain('Archiver poker');
+  });
+
+  it('a network failure keeps the dialog with a neutral retry message', async () => {
+    const { http, settle, el } = await setup();
+    http.expectOne(isApps).flush([appOut('poker')]);
+    await settle();
+    rows(el)[0].querySelector<HTMLButtonElement>('.apps-list__archive button, button.apps-list__archive')!.click();
+    await settle();
+    await enterCode(settle);
+    http.expectOne((r) => r.url.endsWith('/archive/')).error(new ProgressEvent('error'), { status: 0, statusText: '' });
+    await settle();
+    const error = document.body.querySelector('.totp-dialog__error')!.textContent!;
+    expect(error).toContain('Service indisponible, réessayez');
+    expect(error).not.toContain('saisies');
+  });
+
+  it('an archive refused with a 400 closes the dialog, toasts the message and reloads the list', async () => {
+    const { http, settle, el, messages } = await setup();
+    const toast = vi.spyOn(messages, 'add');
+    http.expectOne(isApps).flush([appOut('poker')]);
+    await settle();
+    rows(el)[0].querySelector<HTMLButtonElement>('.apps-list__archive button, button.apps-list__archive')!.click();
+    await settle();
+    await enterCode(settle);
+    http
+      .expectOne((r) => r.url.endsWith('/archive/'))
+      .flush({ detail: ['This app is already archived.'] }, { status: 400, statusText: 'Bad Request' });
+    await settle();
+    expect(codeInput()).toBeNull();
+    expect(toast).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error', detail: 'This app is already archived.' }));
+    http.expectOne(isApps).flush([appOut('poker', { archived: true })]);
+    await settle();
+    expect(rows(el)).toHaveLength(0);
   });
 });

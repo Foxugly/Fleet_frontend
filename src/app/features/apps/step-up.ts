@@ -4,6 +4,8 @@ import { Observable } from 'rxjs';
 import { writeFailure } from './inventory-model';
 
 export interface StepUpRequest<T> {
+  /** What the code confirms, translated (shown in the dialog). */
+  subject: string;
   /** The write, given the code just typed (the code is never kept). */
   send: (code: string) => Observable<T>;
   done: (result: T) => void;
@@ -21,10 +23,15 @@ export class StepUp {
   readonly open = signal(false);
   readonly busy = signal(false);
   readonly errorKey = signal<string | null>(null);
+  readonly subject = signal<string | null>(null);
   private pending: StepUpRequest<unknown> | null = null;
+
+  /** @param unavailableKey message for a network/5xx failure (pages without form data say so differently). */
+  constructor(private readonly unavailableKey = 'apps.error.unavailable') {}
 
   start<T>(request: StepUpRequest<T>): void {
     this.pending = request as StepUpRequest<unknown>;
+    this.subject.set(request.subject);
     this.errorKey.set(null);
     this.open.set(true);
   }
@@ -49,7 +56,7 @@ export class StepUp {
           request.fields(failure.errors);
         } else {
           this.open.set(true);
-          this.errorKey.set(failure.key);
+          this.errorKey.set(failure.key === 'apps.error.unavailable' ? this.unavailableKey : failure.key);
         }
       },
     });

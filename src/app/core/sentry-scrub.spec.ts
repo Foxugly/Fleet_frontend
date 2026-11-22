@@ -20,7 +20,7 @@ describe('scrubUrl', () => {
 });
 
 describe('scrubEvent', () => {
-  it.each(['mfa_token', 'code', 'password', 'refresh', 'access', 'recovery_codes', 'secret'])(
+  it.each(['mfa_token', 'code', 'totp_code', 'totpCode', 'password', 'refresh', 'access', 'recovery_codes', 'secret'])(
     'masks %s in the request body, extra and breadcrumb data',
     (key) => {
       const event = {

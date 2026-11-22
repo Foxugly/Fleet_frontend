@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, model, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, effect, input, model, output, signal, untracked, viewChild } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -29,22 +29,27 @@ const CODE_RE = /^\d{6}$/;
       [style]="{ width: '24rem', maxWidth: 'calc(100vw - 2rem)' }"
     >
       <form class="totp-dialog" (submit)="$event.preventDefault(); confirm()">
+        @if (subject(); as what) {
+          <p class="totp-dialog__subject">{{ what }}</p>
+        }
         <p class="totp-dialog__intro">{{ 'apps.totp.intro' | transloco }}</p>
         @if (errorKey(); as key) {
           <p-message class="totp-dialog__error" severity="error" [text]="key | transloco" role="alert" />
         }
         <label class="meta-label" for="totp-dialog-code">{{ 'apps.totp.code' | transloco }}</label>
         <input
+          #codeInput
           pInputText
           id="totp-dialog-code"
           class="totp-dialog__code"
           type="text"
           inputmode="numeric"
           autocomplete="one-time-code"
-          maxlength="6"
+          maxlength="12"
           spellcheck="false"
           [value]="code()"
-          (input)="code.set($any($event.target).value.trim())"
+          (input)="code.set(digits($any($event.target).value))"
+          (keydown.enter)="$event.preventDefault(); confirm()"
           [attr.aria-invalid]="errorKey() ? true : null"
         />
         <div class="totp-dialog__actions">
@@ -74,6 +79,11 @@ const CODE_RE = /^\d{6}$/;
       display: grid;
       gap: 0.6rem;
     }
+    .totp-dialog__subject {
+      margin: 0;
+      font-weight: 600;
+      overflow-wrap: anywhere;
+    }
     .totp-dialog__intro {
       margin: 0;
       font-size: 0.9rem;
@@ -97,9 +107,28 @@ export class TotpDialogComponent {
   readonly visible = model(false);
   readonly busy = input(false);
   readonly errorKey = input<string | null>(null);
+  /** What the code confirms, already translated (e.g. « Archiver poker »). */
+  readonly subject = input<string | null>(null);
   readonly confirmed = output<string>();
 
   protected readonly code = signal('');
+  private readonly codeInput = viewChild<ElementRef<HTMLInputElement>>('codeInput');
+
+  constructor() {
+    // After a failed attempt (error set, request over), put the cursor back in the emptied field.
+    effect((onCleanup) => {
+      if (!this.errorKey() || this.busy() || !this.visible()) return;
+      const el = this.codeInput()?.nativeElement;
+      if (!el) return;
+      const timer = setTimeout(() => untracked(() => el.focus()));
+      onCleanup(() => clearTimeout(timer));
+    });
+  }
+
+  /** Keep the digits only, so a pasted « 123 456 » works. */
+  protected digits(value: string): string {
+    return value.replace(/\D/g, '');
+  }
 
   protected valid(): boolean {
     return CODE_RE.test(this.code());

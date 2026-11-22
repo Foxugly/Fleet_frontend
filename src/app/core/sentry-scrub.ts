@@ -1,7 +1,7 @@
 /**
  * Strips credentials from Sentry events. Fleet is a single-operator dashboard behind
  * password + TOTP, so nothing below may ever reach Sentry: the access token (memory
- * only), the refresh token (cookie), `mfa_token`, the TOTP `code`, the `password`,
+ * only), the refresh token (cookie), `mfa_token`, the TOTP `code` (and the inventory step-up `totp_code`), the `password`,
  * the `recovery_codes` and the TOTP `secret` / `otpauth_uri`. Applied to request
  * bodies (object or JSON string), headers, cookies, breadcrumbs, extra, contexts,
  * and to URLs in messages (query parameters).
@@ -19,6 +19,8 @@ const SENSITIVE_KEYS = new Set([
   'mfa_token',
   'mfatoken',
   'code',
+  'totp_code',
+  'totpcode',
   'password',
   'recovery_codes',
   'recoverycodes',
@@ -33,7 +35,7 @@ const SENSITIVE_KEYS = new Set([
 ]);
 
 const SENSITIVE_QUERY =
-  /([?&](?:access|refresh|access_token|refresh_token|token|mfa_token|code|password|returnUrl)=)[^&#\s"']*/gi;
+  /([?&](?:access|refresh|access_token|refresh_token|token|mfa_token|code|totp_code|password|returnUrl)=)[^&#\s"']*/gi;
 
 /** Masks sensitive query parameters in a string containing a URL. */
 export function scrubUrl(value: string): string;

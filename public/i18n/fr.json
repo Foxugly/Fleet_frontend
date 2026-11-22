@@ -8,7 +8,8 @@
     "language_switcher": {
       "aria": "Changer de langue"
     },
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "remove": "Retirer"
   },
   "chrome": {
     "nav": {
@@ -393,12 +394,15 @@
       "intro": "Saisissez le code à 6 chiffres de votre application d'authentification.",
       "code": "Code de vérification",
       "confirm": "Confirmer",
-      "invalid": "Code invalide ou déjà utilisé. Saisissez le code suivant."
+      "invalid": "Code invalide ou déjà utilisé. Saisissez le code suivant.",
+      "subject_save": "Enregistrer {{slug}}",
+      "subject_create": "Créer {{slug}}"
     },
     "error": {
       "too_many": "Trop de tentatives, réessayez dans une minute.",
       "unavailable": "Service indisponible. Vos saisies sont conservées, réessayez.",
-      "not_found": "Cette app n'existe plus."
+      "not_found": "Cette app n'existe plus.",
+      "unavailable_retry": "Service indisponible, réessayez."
     },
     "history": {
       "title": "Historique de {{slug}}",

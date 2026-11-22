@@ -8,11 +8,12 @@
 </app-page-header>
 
 <ng-template #fieldErrors let-key>
+  @let shown = errorsOf(key).length;
   @for (e of errorsOf(key); track $index) {
     <span class="meta-hint meta-hint--error" [id]="'app-form-' + key + '-error-' + $index">{{ e.key | transloco: e.params }}</span>
   }
   @for (m of serverErrorsOf(key); track $index) {
-    <span class="meta-hint meta-hint--error">{{ m }}</span>
+    <span class="meta-hint meta-hint--error" [id]="'app-form-' + key + '-error-' + (shown + $index)">{{ m }}</span>
   }
 </ng-template>
 
@@ -51,7 +52,7 @@
           [readOnly]="editSlug !== null"
           [class.ng-dirty]="invalid('slug')"
           [attr.aria-invalid]="invalid('slug') || null"
-          aria-describedby="app-form-slug-hint"
+          [attr.aria-describedby]="describedBy('slug')"
         />
         <span class="meta-hint" id="app-form-slug-hint">
           {{ (editSlug === null ? 'apps.form.slug_hint' : 'apps.form.slug_readonly') | transloco }}
@@ -71,7 +72,7 @@
           maxlength="200"
           [class.ng-dirty]="invalid('health_path')"
           [attr.aria-invalid]="invalid('health_path') || null"
-          aria-describedby="app-form-health_path-hint"
+          [attr.aria-describedby]="describedBy('health_path')"
         />
         <span class="meta-hint" id="app-form-health_path-hint">{{ 'apps.form.health_path_hint' | transloco }}</span>
         <ng-container *ngTemplateOutlet="fieldErrors; context: { $implicit: 'health_path' }" />
@@ -90,12 +91,12 @@
             separator=","
             [suggestions]="[]"
             [fluid]="true"
-            [ariaLabel]="'apps.field.' + f.key | transloco"
+            [pt]="listInputPt(f.key)"
             [class.ng-dirty]="invalid(f.key)"
             [class.ng-invalid]="invalid(f.key)"
             (keydown.enter)="$event.preventDefault()"
           />
-          <span class="meta-hint">{{ f.hint | transloco }} {{ 'apps.form.list_hint' | transloco }}</span>
+          <span class="meta-hint" [id]="'app-form-' + f.key + '-hint'">{{ f.hint | transloco }} {{ 'apps.form.list_hint' | transloco }}</span>
           <ng-container *ngTemplateOutlet="fieldErrors; context: { $implicit: f.key }" />
         </div>
       }
@@ -124,4 +125,4 @@
   </form>
 }
 
-<app-totp-dialog [(visible)]="stepUp.open" [busy]="stepUp.busy()" [errorKey]="stepUp.errorKey()" (confirmed)="stepUp.submit($event)" />
+<app-totp-dialog [(visible)]="stepUp.open" [busy]="stepUp.busy()" [errorKey]="stepUp.errorKey()" [subject]="stepUp.subject()" (confirmed)="stepUp.submit($event)" />

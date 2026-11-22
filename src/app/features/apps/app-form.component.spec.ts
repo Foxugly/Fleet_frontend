@@ -179,6 +179,39 @@ describe('AppFormComponent', () => {
       expect(el.querySelector('.app-form__summary')!.textContent).toContain('erreurs');
     });
 
+    it('the code dialog names the write being confirmed', async () => {
+      const { el, settle } = await edit();
+      await save(el, settle);
+      expect(document.body.querySelector('.totp-dialog__subject')!.textContent).toContain('Enregistrer poker');
+    });
+
+    it('ties each list input to its hint and errors, without a redundant aria-label', async () => {
+      const { el, settle } = await edit();
+      await typeChip(el, 'python_locks', 'Foxugly/Other:requirements.txt', settle);
+      const input = field(el, 'python_locks').querySelector<HTMLInputElement>('input')!;
+      expect(input.id).toBe('app-form-python_locks');
+      expect(input.getAttribute('aria-label')).toBeNull();
+      expect(input.getAttribute('aria-invalid')).toBe('true');
+      const ids = input.getAttribute('aria-describedby')!.split(' ');
+      const described = ids.map((id) => el.querySelector('#' + id)?.textContent ?? '').join(' ');
+      expect(described).toContain('depot:chemin');
+      expect(described).toContain("n'est pas dans les dépôts");
+      const repos = field(el, 'repos').querySelector<HTMLInputElement>('input')!;
+      expect(repos.getAttribute('aria-invalid')).toBeNull();
+    });
+
+    it('a new save clears the previous server errors', async () => {
+      const { el, settle, http } = await edit();
+      await save(el, settle);
+      await enterCode(settle);
+      http.expectOne(isApp('poker', 'PUT')).flush({ detail: ['Conflict.'] }, { status: 400, statusText: 'Bad Request' });
+      await settle();
+      expect(el.querySelector('.app-form__summary')!.textContent).toContain('Conflict.');
+      await save(el, settle);
+      expect(el.querySelector('.app-form__summary')).toBeNull();
+      expect(dialogOpen()).toBe(true);
+    });
+
     it('shows an empty state for an unknown slug', async () => {
       const s = await setup('/apps/ghost/edit');
       s.http.expectOne(isApp('ghost')).flush({ detail: 'Not found.' }, { status: 404, statusText: 'Not Found' });

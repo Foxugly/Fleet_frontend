@@ -43,7 +43,7 @@ export class AppsListComponent {
   protected readonly apps = signal<AppOut[] | null>(null);
   protected readonly failed = signal(false);
   protected readonly showArchived = signal(false);
-  protected readonly stepUp = new StepUp();
+  protected readonly stepUp = new StepUp('apps.error.unavailable_retry');
   protected readonly skeletons = [1, 2, 3];
 
   protected readonly archivedCount = computed(() => (this.apps() ?? []).filter((a) => a.archived).length);
@@ -76,6 +76,7 @@ export class AppsListComponent {
   private toggle(app: AppOut, archive: boolean): void {
     const slug = app.slug;
     this.stepUp.start({
+      subject: this.i18n.translate(archive ? 'apps.archive_aria' : 'apps.restore_aria', { slug }),
       send: (code) =>
         archive ? this.api.appsArchive({ slug, totpOnly: { totp_code: code } }) : this.api.appsRestore({ slug, totpOnly: { totp_code: code } }),
       done: (updated: AppOut) => {

@@ -8,7 +8,8 @@
     "language_switcher": {
       "aria": "Change language"
     },
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "remove": "Remove"
   },
   "chrome": {
     "nav": {
@@ -371,7 +372,7 @@
       "slug_hint": "Lowercase letters, digits and hyphens; it cannot be changed later.",
       "slug_readonly": "The identifier cannot be changed.",
       "list_hint": "Type a value, then Enter or a comma to add it.",
-      "repos_hint": "Format Foxugly/Repo. The « fleet-read » GitHub token must cover this repository.",
+      "repos_hint": "Format Foxugly/Repo. The \"fleet-read\" GitHub token must cover this repository.",
       "vhosts_hint": "Host name, for example app.foxugly.com.",
       "health_path_hint": "Starts with /, for example /health/.",
       "sentry_hint": "Sentry project slug, for example app-backend.",
@@ -393,12 +394,15 @@
       "intro": "Enter the 6-digit code from your authenticator app.",
       "code": "Verification code",
       "confirm": "Confirm",
-      "invalid": "Invalid or already used code. Please enter the next code."
+      "invalid": "Invalid or already used code. Please enter the next code.",
+      "subject_save": "Save {{slug}}",
+      "subject_create": "Create {{slug}}"
     },
     "error": {
       "too_many": "Too many attempts, please try again in a minute.",
       "unavailable": "Service unavailable. Your input is kept, please try again.",
-      "not_found": "This app no longer exists."
+      "not_found": "This app no longer exists.",
+      "unavailable_retry": "Service unavailable, please try again."
     },
     "history": {
       "title": "History of {{slug}}",

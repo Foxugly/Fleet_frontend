@@ -6,12 +6,13 @@ import { TotpDialogComponent } from './totp-dialog.component';
 
 @Component({
   imports: [TotpDialogComponent],
-  template: `<app-totp-dialog [(visible)]="open" [busy]="busy()" [errorKey]="error()" (confirmed)="codes.push($event)" />`,
+  template: `<app-totp-dialog [(visible)]="open" [busy]="busy()" [errorKey]="error()" [subject]="subject()" (confirmed)="codes.push($event)" />`,
 })
 class Host {
   readonly open = signal(true);
   readonly busy = signal(false);
   readonly error = signal<string | null>(null);
+  readonly subject = signal<string | null>('Archiver poker');
   readonly codes: string[] = [];
 }
 
@@ -71,5 +72,48 @@ describe('TotpDialogComponent', () => {
     fixture.detectChanges();
     expect(host.open()).toBe(false);
     expect(host.codes).toEqual([]);
+  });
+
+  it('says what is being confirmed', async () => {
+    await setup();
+    expect(document.body.querySelector('.totp-dialog__subject')!.textContent).toContain('Archiver poker');
+  });
+
+  it('Enter in the code field submits, once, and not while busy', async () => {
+    const { fixture, host } = await setup();
+    type('123456');
+    fixture.detectChanges();
+    input().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    fixture.detectChanges();
+    expect(host.codes).toEqual(['123456']);
+    host.busy.set(true);
+    fixture.detectChanges();
+    type('654321');
+    input().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    expect(host.codes).toEqual(['123456']);
+  });
+
+  it('accepts a pasted code with spaces', async () => {
+    const { fixture, host } = await setup();
+    type('123 456');
+    fixture.detectChanges();
+    expect(confirmBtn().disabled).toBe(false);
+    confirmBtn().click();
+    expect(host.codes).toEqual(['123456']);
+  });
+
+  it('refocuses the code input after a failed attempt', async () => {
+    const { fixture, host } = await setup();
+    type('123456');
+    confirmBtn().click();
+    input().blur();
+    host.busy.set(true);
+    fixture.detectChanges();
+    host.busy.set(false);
+    host.error.set('apps.totp.invalid');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r));
+    expect(document.activeElement).toBe(input());
   });
 });

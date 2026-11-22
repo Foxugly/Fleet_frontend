@@ -98,4 +98,4 @@
   </div>
 }
 
-<app-totp-dialog [(visible)]="stepUp.open" [busy]="stepUp.busy()" [errorKey]="stepUp.errorKey()" (confirmed)="stepUp.submit($event)" />
+<app-totp-dialog [(visible)]="stepUp.open" [busy]="stepUp.busy()" [errorKey]="stepUp.errorKey()" [subject]="stepUp.subject()" (confirmed)="stepUp.submit($event)" />

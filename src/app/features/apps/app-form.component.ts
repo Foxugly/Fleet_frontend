@@ -141,13 +141,26 @@ export class AppFormComponent {
     return this.errorsOf(key).length > 0 || this.serverErrorsOf(key).length > 0;
   }
 
+  /** Ids of the hint and of every error shown under a field (for `aria-describedby`). */
+  protected describedBy(key: FieldKey): string {
+    const n = this.errorsOf(key).length + this.serverErrorsOf(key).length;
+    return [`app-form-${key}-hint`, ...Array.from({ length: n }, (_, i) => `app-form-${key}-error-${i}`)].join(' ');
+  }
+
+  /** PrimeNG pass-through to the autocomplete's inner input (it has no describedby input of its own). */
+  protected listInputPt(key: FieldKey): Record<string, unknown> {
+    return { input: { 'aria-describedby': this.describedBy(key), 'aria-invalid': this.invalid(key) ? 'true' : undefined } };
+  }
+
   protected save(): void {
     this.submitted.set(true);
+    this.serverErrors.set({});
     const fields = this.current();
     if (Object.keys(validateApp(fields)).length) return;
     const slug = this.editSlug;
     const { slug: _slug, ...rest } = fields;
     this.stepUp.start({
+      subject: this.i18n.translate(slug === null ? 'apps.totp.subject_create' : 'apps.totp.subject_save', { slug: fields.slug }),
       send: (code) =>
         slug === null
           ? this.api.appsCreate({ appCreate: { ...fields, totp_code: code } })
@@ -166,7 +179,17 @@ export class AppFormComponent {
 
   private current(): AppFields {
     const v = this.form.getRawValue();
-    return { ...v, slug: v.slug.trim(), health_path: v.health_path.trim() };
+    const list = (values: string[]) => values.map((s) => s.trim()).filter((s) => s !== '');
+    return {
+      ...v,
+      slug: v.slug.trim(),
+      health_path: v.health_path.trim(),
+      repos: list(v.repos),
+      vhosts: list(v.vhosts),
+      sentry_projects: list(v.sentry_projects),
+      python_locks: list(v.python_locks),
+      npm_locks: list(v.npm_locks),
+    };
   }
 
   private load(slug: string): void {
