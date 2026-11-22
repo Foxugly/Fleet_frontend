@@ -28,7 +28,7 @@ const data = (over: Partial<BoxData> = {}): BoxData => ({
 });
 
 const box = (d: BoxData | null, extra: Partial<Box> = {}): Box => ({
-  cell: { state: 'green' as Cell['state'], count: 0, collected_at: '2026-11-21T11:55:00Z', error: '' },
+  cell: { state: 'green' as Cell['state'], count: 0, collected_at: '2026-11-21T11:55:00Z', error: '', reason: null },
   data: d,
   collected_at: d ? '2026-11-21T11:50:00Z' : null,
   ok: d ? true : null,

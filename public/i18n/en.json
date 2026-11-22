@@ -205,14 +205,41 @@
       "none": "No data"
     },
     "dot": {
-      "aria": "{{label}}: {{state}}, {{count}}, {{age}}",
-      "aria_error": "{{label}}: {{state}}, {{count}}, {{age}}, {{error}}"
+      "aria": "{{label}}: {{state}}, {{count}}, {{age}} · {{reason}}",
+      "aria_error": "{{label}}: {{state}}, {{count}}, {{age}}, {{error}} · {{reason}}"
     },
     "refresh": {
       "aria": "Refresh collection",
       "started": "Collection started",
       "already": "Already running",
       "error": "Could not start the collection."
+    }
+  },
+  "reason": {
+    "http_status": "Responds {{status}}",
+    "unreachable": "Unreachable",
+    "tls_error": "Certificate error",
+    "tls_expiring": "Certificate: {{days}} d",
+    "main_ci_failed": "CI failing on main",
+    "secret_alert": "{{n}} secret alert(s)",
+    "high_alert": "{{n}} critical alert(s)",
+    "open_items": "{{n}} to handle",
+    "unresolved": "{{n}} unresolved",
+    "outdated": "{{n}} outdated",
+    "failed_units": "{{n}} failed unit(s)",
+    "security_updates": "{{n}} security update(s)",
+    "disk_full": "Disk {{pct}}% full",
+    "updates": "{{n}} update(s)",
+    "reboot_required": "Reboot required",
+    "stale": "Stale data",
+    "collect_error": "Collection error",
+    "fallback": {
+      "error": "Collection error",
+      "red": "{{n}} issue(s)",
+      "stale": "Stale data",
+      "orange": "{{n}} warning(s)",
+      "green": "OK",
+      "none": "No data"
     }
   }
 }

@@ -205,14 +205,41 @@
       "none": "Aucune donnée"
     },
     "dot": {
-      "aria": "{{label}} : {{state}}, {{count}}, {{age}}",
-      "aria_error": "{{label}} : {{state}}, {{count}}, {{age}}, {{error}}"
+      "aria": "{{label}} : {{state}}, {{count}}, {{age}} · {{reason}}",
+      "aria_error": "{{label}} : {{state}}, {{count}}, {{age}}, {{error}} · {{reason}}"
     },
     "refresh": {
       "aria": "Relancer la collecte",
       "started": "Collecte lancée",
       "already": "Déjà en cours",
       "error": "Impossible de lancer la collecte."
+    }
+  },
+  "reason": {
+    "http_status": "Répond {{status}}",
+    "unreachable": "Injoignable",
+    "tls_error": "Erreur de certificat",
+    "tls_expiring": "Certificat : {{days}} j",
+    "main_ci_failed": "CI rouge sur main",
+    "secret_alert": "{{n}} alerte(s) de secret",
+    "high_alert": "{{n}} alerte(s) critique(s)",
+    "open_items": "{{n}} à traiter",
+    "unresolved": "{{n}} non résolu(s)",
+    "outdated": "{{n}} obsolète(s)",
+    "failed_units": "{{n}} unité(s) en échec",
+    "security_updates": "{{n}} mise(s) à jour de sécurité",
+    "disk_full": "Disque plein à {{pct}} %",
+    "updates": "{{n}} mise(s) à jour",
+    "reboot_required": "Redémarrage nécessaire",
+    "stale": "Données anciennes",
+    "collect_error": "Erreur de collecte",
+    "fallback": {
+      "error": "Erreur de collecte",
+      "red": "{{n}} problème(s)",
+      "stale": "Données anciennes",
+      "orange": "{{n}} point(s) d'attention",
+      "green": "OK",
+      "none": "Aucune donnée"
     }
   }
 }

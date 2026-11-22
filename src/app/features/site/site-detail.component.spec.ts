@@ -15,7 +15,7 @@ import { SiteDetailComponent } from './site-detail.component';
 class Stub {}
 
 const NOW = new Date('2026-11-21T12:00:00Z');
-const cell = (state: string, count = 0): Cell => ({ state: state as Cell['state'], count, collected_at: '2026-11-21T11:55:00Z', error: '' });
+const cell = (state: string, count = 0): Cell => ({ state: state as Cell['state'], count, collected_at: '2026-11-21T11:55:00Z', error: '', reason: null });
 const subj = (data: unknown, extra: Partial<{ ok: boolean | null; error: string; collected_at: string | null }> = {}) => ({
   data,
   collected_at: '2026-11-21T11:50:00Z',

@@ -1,13 +1,14 @@
 @let c = cell();
 @let stateLabel = ('fleet.state.' + c.state) | transloco;
+@let reasonText = c | reasonLabel;
 <span
   class="state-dot state-dot--{{ c.state }}"
   role="img"
   [attr.aria-label]="
     (c.error ? 'fleet.dot.aria_error' : 'fleet.dot.aria')
-      | transloco: { label: label(), state: stateLabel, count: c.count, age: (c.collected_at | age), error: c.error }
+      | transloco: { label: label(), state: stateLabel, count: c.count, age: (c.collected_at | age), error: c.error, reason: reasonText }
   "
-  [pTooltip]="c.error || stateLabel"
+  [pTooltip]="c.error || reasonText"
 >
   @switch (c.state) {
     @case ('stale') {

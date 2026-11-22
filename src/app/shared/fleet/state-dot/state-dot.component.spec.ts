@@ -27,9 +27,13 @@ const cell = (state: StateEnum, extra: Partial<Cell> = {}): Cell => ({
   count: 0,
   collected_at: FIVE_MIN_AGO,
   error: '',
+  reason: null,
   ...extra,
 });
 const root = (el: HTMLElement) => el.querySelector<HTMLElement>('.state-dot')!;
+
+const reasonText = (state: StateEnum, count: number) =>
+  ({ green: 'OK', orange: `${count} point(s) d'attention`, red: `${count} problème(s)` })[state as 'green'];
 
 describe('StateDotComponent', () => {
   it.each([
@@ -42,7 +46,7 @@ describe('StateDotComponent', () => {
     expect(el.querySelector('.state-dot__dot')).not.toBeNull();
     expect(el.textContent).toContain(String(count));
     expect(el.textContent).toContain('il y a 5 min');
-    expect(root(el).getAttribute('aria-label')).toBe(`GitHub : ${stateLabel}, ${count}, il y a 5 min`);
+    expect(root(el).getAttribute('aria-label')).toBe(`GitHub : ${stateLabel}, ${count}, il y a 5 min · ${reasonText(state, count)}`);
   });
 
   it('stale is never green: clock icon, grey class, no dot', async () => {
@@ -68,7 +72,7 @@ describe('StateDotComponent', () => {
     expect(root(el).classList).toContain('state-dot--none');
     expect(el.querySelector('.state-dot__dot')).toBeNull();
     expect(el.textContent).toContain('—');
-    expect(root(el).getAttribute('aria-label')).toBe('GitHub : Aucune donnée, 0, jamais collecté');
+    expect(root(el).getAttribute('aria-label')).toBe('GitHub : Aucune donnée, 0, jamais collecté · Aucune donnée');
   });
 
   it('never collected (collected_at null, stale): jamais collecté, not NaN', async () => {
@@ -76,5 +80,10 @@ describe('StateDotComponent', () => {
     expect(el.textContent).toContain('jamais collecté');
     expect(el.textContent).not.toContain('NaN');
     expect(root(el).getAttribute('aria-label')).toContain('jamais collecté');
+  });
+
+  it('the accessible name carries the API reason', async () => {
+    const el = await mount(cell(StateEnum.Red, { count: 1, reason: { code: 'http_status', params: { status: 502 } } }));
+    expect(root(el).getAttribute('aria-label')).toBe('GitHub : Rouge, 1, il y a 5 min · Répond 502');
   });
 });
