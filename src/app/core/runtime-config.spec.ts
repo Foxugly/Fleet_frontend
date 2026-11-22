@@ -26,3 +26,20 @@ describe('runtimeConfig', () => {
     },
   );
 });
+
+describe('runtimeConfig sentry', () => {
+  afterEach(() => {
+    delete window.__FLEET__;
+  });
+
+  it('is undefined when not injected or empty', () => {
+    window.__FLEET__ = { apiBaseUrl: 'https://a.test' };
+    expect(runtimeConfig(false).sentry).toBeUndefined();
+  });
+
+  it('passes the injected sentry object through', () => {
+    const sentry = { dsn: 'https://k@o.ingest.de.sentry.io/1', environment: 'production', release: 'abc' };
+    window.__FLEET__ = { apiBaseUrl: 'https://a.test', sentry };
+    expect(runtimeConfig(false).sentry).toEqual(sentry);
+  });
+});
