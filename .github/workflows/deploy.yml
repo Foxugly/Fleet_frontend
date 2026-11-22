@@ -1,0 +1,300 @@
+name: Deploy
+
+# Fleet model (OPERATIONS.md §3.11), S3 bundle like Facilitation_frontend. On a
+# push to main: CI (ci.yml, called here) THEN, if it passes, the deploy: build ->
+# tar of dist/fleet-frontend/browser -> S3 -> SSM (root) on the instance ->
+# public check of the served index.html.
+#
+# No `pull_request` here: a PR or a fork never reaches the `deploy` job, the
+# `production` environment or its secrets. `workflow_dispatch` re-runs a deploy
+# of main by hand (the job guard refuses any other ref).
+#
+# Secrets of the `production` environment:
+#   AWS_DEPLOY_ROLE_ARN  role fleet-frontend-deploy (OIDC): s3:PutObject on
+#                        foxugly-deploy/builds/fleet-frontend/*, ssm:SendCommand,
+#                        ssm:GetCommandInvocation (Fleet_server deploy/iam-cloudshell.sh)
+#   EC2_INSTANCE_ID      i-0fe664678563bae5f
+#
+# Shell steps read GitHub values from env (GITHUB_SHA, secrets via `env:`), never
+# `${{ }}` inside a `run:`; src/deploy-files.spec.ts runs them as they are.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Nothing by default: each job asks for what it needs.
+permissions: {}
+
+# `bash --noprofile --norc -eo pipefail {0}` for every run step. Without it
+# GitHub uses `bash -e {0}` (no pipefail): a failing `git ls-remote | cut` would
+# pass as success.
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+
+  deploy:
+    needs: ci
+    # Explicit guard: workflow_dispatch can target any branch.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # Build + SSM executionTimeout 600 s + checks.
+    timeout-minutes: 25
+    # OIDC sub = repo:Foxugly@3275928/Fleet_frontend@1467008189:environment:production
+    # (or the legacy repo:Foxugly/Fleet_frontend:environment:production); the role
+    # trust pins both.
+    environment: production
+    permissions:
+      id-token: write
+      contents: read
+    # Two deploys never overlap; a push arriving mid-deploy waits.
+    concurrency:
+      group: deploy-fleet-frontend
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Two close pushes: their CIs run in parallel and the slower one could
+      # deploy AFTER the newer one, putting the old bundle back. A run whose SHA
+      # is no longer the head of main stops here, green; the newest run deploys.
+      - name: Still the head of main?
+        id: head
+        run: |
+          head=$(git ls-remote "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/main | cut -f1)
+          # Unreadable answer = red run, never a silent green skip.
+          if [ -z "$head" ]; then
+            echo "::error::could not read the head of main from GitHub"; exit 1
+          fi
+          if [ "$head" = "$GITHUB_SHA" ]; then
+            echo "current=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::main has moved to $head: this run ($GITHUB_SHA) does not deploy."
+            echo "current=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: steps.head.outputs.current == 'true'
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install
+        if: steps.head.outputs.current == 'true'
+        run: npm ci
+
+      - name: Build (production)
+        if: steps.head.outputs.current == 'true'
+        run: npm run build
+
+      # The bundle is dist/fleet-frontend/browser at the tar root. The built
+      # index.html must carry the exact strings the vhost's sub_filter matches:
+      # otherwise the theme script is blocked by the CSP and nothing is injected.
+      - name: Build the bundle
+        id: bundle
+        if: steps.head.outputs.current == 'true'
+        run: |
+          set -euo pipefail
+          if [ "$(git rev-parse HEAD)" != "$GITHUB_SHA" ]; then
+            echo "::error::checkout is $(git rev-parse HEAD), expected $GITHUB_SHA"; exit 1
+          fi
+          index=dist/fleet-frontend/browser/index.html
+          if [ ! -s "$index" ]; then
+            echo "::error::$index missing or empty"; exit 1
+          fi
+          for pattern in '<script data-theme-init="">' '</head>'; do
+            if ! grep -qF "$pattern" "$index"; then
+              echo "::error::$index lacks '$pattern' (the nginx sub_filter would not match)"; exit 1
+            fi
+          done
+          tarball="$RUNNER_TEMP/fleet-frontend-$GITHUB_SHA.tar.gz"
+          tar -czf "$tarball" -C dist/fleet-frontend/browser .
+          echo "BUNDLE=$tarball" >> "$GITHUB_ENV"
+          ls -l "$tarball"
+
+      - name: AWS credentials (OIDC)
+        if: steps.head.outputs.current == 'true'
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-session-name: gh-actions-fleet-frontend-${{ github.run_id }}
+
+      - name: Upload the bundle to S3
+        id: upload
+        if: steps.head.outputs.current == 'true'
+        run: >-
+          aws s3 cp --only-show-errors "$BUNDLE"
+          "s3://foxugly-deploy/builds/fleet-frontend/$GITHUB_SHA.tar.gz"
+
+      - name: Deploy on the instance over SSM
+        id: ssm
+        if: steps.head.outputs.current == 'true'
+        env:
+          INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
+        run: |
+          set -euo pipefail
+          # The SHA is the only value from GitHub spliced into the box script.
+          if ! [[ "$GITHUB_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::unexpected GITHUB_SHA '$GITHUB_SHA'"; exit 1
+          fi
+          # Footer version: short SHA + UTC build date (window.__FLEET_VERSION).
+          VERSION="${GITHUB_SHA::7} ($(date -u +%Y-%m-%d))"
+          if ! [[ "$VERSION" =~ ^[0-9a-f]{7}\ \([0-9]{4}-[0-9]{2}-[0-9]{2}\)$ ]]; then
+            echo "::error::unexpected version '$VERSION'"; exit 1
+          fi
+          # Commands run by ROOT under /bin/sh (dash), in order. SSM joins them
+          # into ONE script and keeps only the last exit code: `set -eu` first.
+          # No bare `a && b` (set -e ignores a failure of `a`) and no pipes (no
+          # pipefail in dash).
+          #   1. root's BARE MIRROR (/var/lib/fleet-deploy, root:root 700) fetched
+          #      from GitHub (public repo, anonymous HTTPS) at the pushed SHA;
+          #   2. the runtime-fetch script and unit, read from the mirror only;
+          #   3. root downloads the bundle into a private mktemp -d; FLEET extracts
+          #      it (from stdin) into dist/.bundle-new, rotates .bundle-current ->
+          #      .bundle-prev and publishes current UNION previous into the docroot
+          #      (a tab opened before the deploy still finds its lazy chunks).
+          #      Root never writes into a fleet-owned directory;
+          #   4. permissions, as root, with fleet locked out first (owner root,
+          #      no "other" bits) so it cannot swap a path under the find/chmod;
+          #      then dirs 2750 (setgid: new files inherit www-data), files 640,
+          #      owner back to fleet. -R -h never follows a link;
+          #   5. the vhost from the mirror, with .deploybak and a rollback if
+          #      `nginx -t` fails; the version snippet;
+          #   6. the runtime fetch (SSM -> snippet), then an explicit
+          #      `nginx -t && systemctl reload nginx`: the fetch skips its reload
+          #      when the snippet is unchanged, and the vhost must still apply.
+          # Single-quoted entries reach the box verbatim ($M, $T... expand there).
+          cmds=(
+            'set -eu'
+            'export HOME=/root AWS_SHARED_CREDENTIALS_FILE=/dev/null AWS_CONFIG_FILE=/dev/null'
+            'cd /'
+            "SHA=$GITHUB_SHA"
+            'M=/var/lib/fleet-deploy/Fleet_frontend.git'
+            'A=/srv/fleet/Fleet_frontend'
+            'VHOST=/etc/nginx/sites-available/fleet.foxugly.com'
+            'T=$(mktemp -d)'
+            "trap 'rm -rf \"\$T\"' EXIT"
+            'install -d -m 700 -o root -g root /var/lib/fleet-deploy'
+            '[ -d "$M" ] || git init --quiet --bare "$M"'
+            'git --git-dir="$M" fetch --quiet --depth=1 https://github.com/Foxugly/Fleet_frontend.git "$SHA"'
+            'git --git-dir="$M" cat-file -e "$SHA^{commit}"'
+            'git --git-dir="$M" show "$SHA:deploy/fetch-frontend-runtime-from-ssm.sh" > "$T/runtime-fetch.sh"'
+            'install -m 0755 -o root -g root "$T/runtime-fetch.sh" /usr/local/sbin/fleet-app-frontend-runtime-fetch.sh'
+            'git --git-dir="$M" show "$SHA:deploy/systemd/fleet-app-frontend-runtime-fetch.service" > "$T/runtime-fetch.service"'
+            'install -m 0644 -o root -g root "$T/runtime-fetch.service" /etc/systemd/system/fleet-app-frontend-runtime-fetch.service'
+            'systemctl daemon-reload'
+            'systemctl enable --quiet fleet-app-frontend-runtime-fetch'
+            'install -d -m 755 -o root -g root /srv/fleet'
+            'install -d -m 2750 -o fleet -g www-data "$A"'
+            'aws s3 cp --only-show-errors "s3://foxugly-deploy/builds/fleet-frontend/$SHA.tar.gz" "$T/bundle.tar.gz" --region eu-west-1'
+            "sudo -u fleet sh -c 'umask 027; mkdir -p /srv/fleet/Fleet_frontend/dist && rm -rf /srv/fleet/Fleet_frontend/dist/.bundle-new && mkdir /srv/fleet/Fleet_frontend/dist/.bundle-new && tar --no-same-owner --no-overwrite-dir -xzf - -C /srv/fleet/Fleet_frontend/dist/.bundle-new' < \"\$T/bundle.tar.gz\""
+            'sudo -u fleet test -s /srv/fleet/Fleet_frontend/dist/.bundle-new/index.html'
+            "sudo -u fleet sh -c 'cd /srv/fleet/Fleet_frontend/dist && rm -rf .bundle-prev && if [ -d .bundle-current ]; then mv .bundle-current .bundle-prev; fi && mv .bundle-new .bundle-current'"
+            "sudo -u fleet sh -c 'umask 027; cd /srv/fleet/Fleet_frontend/dist && mkdir -p fleet-frontend/browser && rsync -rlt --delete .bundle-current/ fleet-frontend/browser/ && if [ -d .bundle-prev ]; then rsync -rlt --ignore-existing .bundle-prev/ fleet-frontend/browser/; fi'"
+            'chown -R -h root "$A"'
+            'chgrp -R -h www-data "$A"'
+            'chmod -R g-w,o-rwx "$A"'
+            'find "$A" -type d -exec chmod 2750 {} +'
+            'find "$A" -type f -exec chmod 640 {} +'
+            'chown -R -h fleet "$A"'
+            'rm -f "$VHOST.deploybak"'
+            'if [ -e "$VHOST" ]; then cp -a "$VHOST" "$VHOST.deploybak"; fi'
+            'git --git-dir="$M" show "$SHA:deploy/nginx/fleet.foxugly.com" > "$T/vhost"'
+            'install -m 0644 -o root -g root "$T/vhost" "$VHOST"'
+            'ln -sfn ../sites-available/fleet.foxugly.com /etc/nginx/sites-enabled/fleet.foxugly.com'
+            "printf '%s\\n' 'set \$fleet_version \"$VERSION\";' > \"\$T/version.conf\""
+            'install -m 0644 -o root -g root "$T/version.conf" /etc/nginx/snippets/fleet-frontend-runtime-version.conf'
+            "if ! nginx -t; then echo 'ERROR: nginx -t rejects the config; back to the previous vhost.' >&2; if [ -e \"\$VHOST.deploybak\" ]; then mv -f \"\$VHOST.deploybak\" \"\$VHOST\"; else rm -f /etc/nginx/sites-enabled/fleet.foxugly.com \"\$VHOST\"; fi; exit 1; fi"
+            'systemctl restart fleet-app-frontend-runtime-fetch'
+            'nginx -t && systemctl reload nginx || exit 1'
+            'rm -rf "$T"'
+            'echo "Fleet_frontend $SHA deployed."'
+          )
+          params="$RUNNER_TEMP/ssm-params.json"
+          python3 -c 'import json, sys; json.dump({"commands": sys.argv[1:], "executionTimeout": ["600"]}, sys.stdout)' \
+            "${cmds[@]}" > "$params"
+          CMD_ID=$(aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name AWS-RunShellScript \
+            --timeout-seconds 120 \
+            --comment "Deploy fleet-frontend ${GITHUB_SHA::7}" \
+            --parameters "file://$params" \
+            --query Command.CommandId --output text)
+          echo "SSM CommandId: $CMD_ID"
+          echo "cmd_id=$CMD_ID" >> "$GITHUB_OUTPUT"
+
+      # 140 x 5 s (+ API time) > the 600 s executionTimeout of the command.
+      - name: Wait for the deploy to finish
+        id: wait
+        if: steps.head.outputs.current == 'true'
+        env:
+          INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
+          CMD_ID: ${{ steps.ssm.outputs.cmd_id }}
+        run: |
+          # An API error counts as Pending (the invocation can take a few seconds
+          # to exist), but 5 in a row fail the step with the last error shown.
+          errors=0
+          for _ in $(seq 1 140); do
+            if STATUS=$(aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" \
+                --query Status --output text 2>"$RUNNER_TEMP/ssm-wait.err"); then
+              errors=0
+            else
+              errors=$((errors + 1))
+              if [ "$errors" -ge 5 ]; then
+                echo "::error::get-command-invocation failed 5 times in a row:"
+                cat "$RUNNER_TEMP/ssm-wait.err"
+                exit 1
+              fi
+              STATUS=Pending
+            fi
+            case "$STATUS" in
+              Success)
+                aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" --query StandardOutputContent --output text
+                exit 0 ;;
+              Failed|Cancelled|TimedOut)
+                echo "Deploy: $STATUS"
+                echo "=== STDOUT ==="
+                aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" --query StandardOutputContent --output text
+                echo "=== STDERR ==="
+                aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" --query StandardErrorContent --output text
+                exit 1 ;;
+              *) sleep 5 ;;
+            esac
+          done
+          echo "::error::SSM command still running after ~12 min"; exit 1
+
+      # One GET checks the status (200) and the page nginx actually serves: the
+      # runtime config injected with an https API, the theme script nonced (the
+      # sub_filter matched), and this run's version (the reload took effect).
+      - name: Public check of the served index.html
+        id: smoke
+        if: steps.head.outputs.current == 'true'
+        run: |
+          page="$RUNNER_TEMP/index.html"
+          for try in 1 2 3; do
+            # -w prints 000 on a connection error; `|| true` keeps the loop going.
+            code=$(curl -sS -o "$page" -w '%{http_code}' --max-time 10 https://fleet.foxugly.com/) || true
+            code=${code:-000}
+            echo "Try $try: HTTP $code"
+            if [ "$code" = "200" ]; then
+              if ! grep -qF 'window.__FLEET__={apiBaseUrl:"https://' "$page"; then
+                echo "window.__FLEET__ missing or without an https API base URL"
+              elif grep -qF 'data-theme-init' "$page"; then
+                echo "the theme script was not given its nonce"
+              elif ! grep -qF "window.__FLEET_VERSION=\"${GITHUB_SHA::7} (" "$page"; then
+                echo "served version is not ${GITHUB_SHA::7}"
+              else
+                exit 0
+              fi
+            fi
+            sleep 5
+          done
+          echo "::error::https://fleet.foxugly.com/ does not serve this deploy"; exit 1
