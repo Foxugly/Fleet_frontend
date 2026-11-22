@@ -1,4 +1,4 @@
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -21,6 +21,7 @@ import { OverviewListComponent } from './overview-list.component';
 import {
   Bucket,
   NO_FILTER,
+  OVERVIEW_POLL_MS,
   OverviewFilter,
   SITE_SOURCES,
   SOURCES,
@@ -32,9 +33,8 @@ import {
   summarize,
 } from './overview-model';
 import { OverviewMosaicComponent } from './overview-mosaic.component';
+import { SharedUpdatesComponent } from './updates/shared-updates.component';
 import { OverviewView, readView, writeView } from './view-pref';
-
-export const OVERVIEW_POLL_MS = 60_000;
 
 @Component({
   selector: 'app-overview',
@@ -52,6 +52,7 @@ export const OVERVIEW_POLL_MS = 60_000;
     OverviewListComponent,
     OverviewMosaicComponent,
     RefreshButtonComponent,
+    SharedUpdatesComponent,
     AgePipe,
   ],
   templateUrl: './overview.component.html',
@@ -60,6 +61,8 @@ export const OVERVIEW_POLL_MS = 60_000;
 export class OverviewComponent {
   private readonly api = inject(OverviewService);
   private readonly reload$ = new Subject<void>();
+  /** Rendered once the overview has loaded; it polls on its own and follows the reload button. */
+  private readonly updates = viewChild(SharedUpdatesComponent);
 
   protected readonly data = signal<Overview | null>(null);
   protected readonly failed = signal(false);
@@ -154,5 +157,6 @@ export class OverviewComponent {
 
   protected reload(): void {
     this.reload$.next();
+    this.updates()?.reload();
   }
 }

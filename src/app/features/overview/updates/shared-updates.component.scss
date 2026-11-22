@@ -1,0 +1,158 @@
+@use 'sass:map';
+@use '../../../shared/fleet/state-colors';
+
+:host {
+  display: block;
+  min-width: 0;
+}
+
+:host ::ng-deep .shared-updates {
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.shared-updates__section + .shared-updates__section {
+  margin-top: 1rem;
+}
+
+.shared-updates__heading {
+  margin: 0 0 0.4rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.shared-updates__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--p-primary-color);
+    outline-offset: 2px;
+  }
+
+  .pi {
+    font-size: 0.75rem;
+  }
+}
+
+.shared-updates__rows,
+.shared-updates__sites,
+.shared-updates__links {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.shared-updates__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
+  min-width: 0;
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--p-content-border-color);
+}
+
+.shared-updates__main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.6rem;
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+
+.shared-updates__package {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.shared-updates__versions {
+  color: var(--p-text-muted-color);
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+// Progress tag: the label carries the state, the colour only reinforces it.
+.shared-updates__progress {
+  --state-color: #{map.get(state-colors.$tokens, 'none')};
+
+  padding: 0.05rem 0.5rem;
+  border: 1px solid var(--state-color);
+  border-left-width: 4px;
+  border-radius: 0.35rem;
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.shared-updates__progress--in_progress {
+  --state-color: #{map.get(state-colors.$tokens, 'orange')};
+}
+
+.shared-updates__progress--possible {
+  --state-color: #{map.get(state-colors.$tokens, 'green')};
+}
+
+.shared-updates__progress--blocked {
+  --state-color: #{map.get(state-colors.$tokens, 'red')};
+}
+
+.shared-updates__progress--retry {
+  --state-color: var(--p-blue-500);
+}
+
+.shared-updates__progress--none,
+.shared-updates__progress--waiting {
+  color: var(--p-text-muted-color);
+}
+
+.shared-updates__sites,
+.shared-updates__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.shared-updates__site {
+  display: inline-block;
+  padding: 0.05rem 0.5rem;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 0.35rem;
+  color: inherit;
+  font-size: 0.8rem;
+  text-decoration: none;
+
+  &:hover {
+    border-color: var(--p-primary-color);
+  }
+}
+
+.shared-updates__pr,
+.shared-updates__issue {
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.shared-updates__manual {
+  flex: 1 1 100%;
+  max-width: 100%;
+  max-height: 14rem;
+  margin: 0;
+  padding: 0.6rem;
+  overflow: auto;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 0.35rem;
+  background: var(--p-content-hover-background);
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: all;
+}

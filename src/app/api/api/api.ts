@@ -13,4 +13,7 @@ export * from './refresh.serviceInterface';
 export * from './sites.service';
 import { SitesService } from './sites.service';
 export * from './sites.serviceInterface';
-export const APIS = [AuthService, BoxService, OverviewService, RefreshService, SitesService];
+export * from './updates.service';
+import { UpdatesService } from './updates.service';
+export * from './updates.serviceInterface';
+export const APIS = [AuthService, BoxService, OverviewService, RefreshService, SitesService, UpdatesService];
