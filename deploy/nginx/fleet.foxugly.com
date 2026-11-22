@@ -32,6 +32,10 @@ server {
 
     root /srv/fleet/Fleet_frontend/dist/fleet-frontend/browser;
     index index.html;
+    # fleet owns the docroot and nginx reads as www-data, which can read every
+    # other site's /run/<app>/.env: never follow a link fleet could plant there.
+    # publish-bundle.sh also refuses a bundle holding a symlink.
+    disable_symlinks on;
 
     client_max_body_size 1m;
 
@@ -39,7 +43,7 @@ server {
     # header loses these, so every such location below repeats all five
     # (OPERATIONS.md §3.19). The SPA is never framed: X-Frame-Options DENY says
     # what CSP frame-ancestors 'none' says, for browsers that ignore CSP.
-    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
     add_header X-Content-Type-Options    "nosniff" always;
     add_header X-Frame-Options           "DENY" always;
     add_header Referrer-Policy           "strict-origin-when-cross-origin" always;
@@ -63,7 +67,7 @@ server {
     }
 
     location = /index.html {
-        add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
+        add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
         add_header X-Content-Type-Options    "nosniff" always;
         add_header X-Frame-Options           "DENY" always;
         add_header Referrer-Policy           "strict-origin-when-cross-origin" always;
@@ -90,7 +94,7 @@ server {
 
     # i18n catalogs are not content-hashed: revalidate on every load.
     location ~* ^/i18n/.+\.json$ {
-        add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
+        add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
         add_header X-Content-Type-Options    "nosniff" always;
         add_header X-Frame-Options           "DENY" always;
         add_header Referrer-Policy           "strict-origin-when-cross-origin" always;
@@ -100,11 +104,23 @@ server {
         try_files $uri =404;
     }
 
+    # favicon.ico is not content-hashed: one day, never immutable.
+    location = /favicon.ico {
+        add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+        add_header X-Content-Type-Options    "nosniff" always;
+        add_header X-Frame-Options           "DENY" always;
+        add_header Referrer-Policy           "strict-origin-when-cross-origin" always;
+        add_header Permissions-Policy        "geolocation=(), microphone=(), camera=()" always;
+        add_header Cache-Control "public, max-age=86400";
+        access_log off;
+        try_files $uri =404;
+    }
+
     # Hashed bundles: immutable long cache. No `always` on Cache-Control (and no
     # `expires`): a 404 for a missing chunk must not be cached for a year.
     # brotli_static/gzip_static fall back to the plain file when no .br/.gz exists.
-    location ~* \.(?:js|css|woff2?|ttf|eot|svg|png|jpg|jpeg|gif|ico|webp)$ {
-        add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
+    location ~* \.(?:js|css|woff2?|ttf|eot|svg|png|jpg|jpeg|gif|webp)$ {
+        add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
         add_header X-Content-Type-Options    "nosniff" always;
         add_header X-Frame-Options           "DENY" always;
         add_header Referrer-Policy           "strict-origin-when-cross-origin" always;

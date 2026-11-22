@@ -18,6 +18,7 @@
 #   4. index.html last, atomically (copy to index.html.new, then rename);
 #   5. delete what is in neither generation (two deploys old, leftovers).
 # Each generation dir carries .release (its SHA), never published.
+# A generation holding a symlink is refused before any change.
 # =============================================================================
 set -eu
 umask 027
@@ -34,6 +35,20 @@ fi
 cd "$DIST"
 DIST=$(pwd -P)
 DOC=fleet-frontend/browser
+
+# A built bundle holds no symlink. nginx (www-data, which reads every other
+# site's /run/<app>/.env) must never be handed one: refuse, before any change.
+# The vhost also sets disable_symlinks on.
+no_symlinks() {
+    for g do
+        [ -d "$g" ] || continue
+        links=$(find "$g" -type l | head -n 5)
+        if [ -n "$links" ]; then
+            echo "ERROR: symlink in $g, refusing to publish: $links" >&2; exit 1
+        fi
+    done
+}
+no_symlinks .bundle-new .bundle-current .bundle-prev
 
 # --- 1. rotation (idempotent) ------------------------------------------------
 if [ -d .bundle-current ]; then

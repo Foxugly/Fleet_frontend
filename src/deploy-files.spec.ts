@@ -67,7 +67,7 @@ function serverLevel(conf: string): string {
 }
 
 const SECURITY_HEADERS = [
-  'add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;',
+  'add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;',
   'add_header X-Content-Type-Options    "nosniff" always;',
   'add_header X-Frame-Options           "DENY" always;',
   'add_header Referrer-Policy           "strict-origin-when-cross-origin" always;',
@@ -131,6 +131,10 @@ describe('nginx vhost fleet.foxugly.com', () => {
     expect(server.indexOf('include /etc/nginx/snippets')).toBeGreaterThan(server.indexOf('set $fleet_version'));
   });
 
+  it('never follows a symlink in the docroot (fleet owns it, www-data reads every .env)', () => {
+    expect(serverLevel(conf)).toMatch(/^\s*disable_symlinks on;/m);
+  });
+
   it('repeats the 5 security headers in every block that sets a header', () => {
     const blocks = [['server', serverLevel(conf)] as const, ...locs.entries()];
     let withHeaders = 0;
@@ -151,6 +155,14 @@ describe('nginx vhost fleet.foxugly.com', () => {
     expect(assets).toContain('add_header Cache-Control "public, max-age=31536000, immutable";');
     expect(assets).not.toMatch(/immutable" always|expires/);
     expect(locs.get('/')).toContain('try_files $uri /index.html;');
+  });
+
+  it('keeps the unhashed favicon.ico out of the immutable cache', () => {
+    const immutable = [...locs.entries()].find(([k]) => k.includes('js|css'))?.[0] ?? '';
+    expect(immutable).not.toMatch(/\bico\b/);
+    const favicon = locs.get('= /favicon.ico') ?? '';
+    expect(favicon).toContain('add_header Cache-Control "public, max-age=86400";');
+    expect(favicon).not.toContain('immutable');
   });
 });
 
@@ -1201,6 +1213,28 @@ describe('publish-bundle.sh behaviour', () => {
       const res = publish(env, null, sha('b'));
       expect(res.status).not.toBe(0);
       expect(release(env, '.bundle-current')).toBe(sha('a'));
+      expect(readFileSync(docPath(env, 'index.html'), 'utf-8')).toContain('main-a.js');
+    },
+    SLOW,
+  );
+
+  withRsync(
+    'refuses a bundle holding a symlink (nginx, as www-data, would follow it) and changes nothing',
+    () => {
+      const env = setup();
+      expect(publish(env, 'a', sha('a')).status).toBe(0);
+      for (const [name, body] of Object.entries(generation('b'))) {
+        const path = join(env.dist, '.bundle-new', name);
+        mkdirSync(join(path, '..'), { recursive: true });
+        writeFileSync(path, body);
+      }
+      const link = bashRun('ln -s /run/fleet/.env "$1/.bundle-new/i18n/env.json"', [posix(env.dist)]);
+      expect(link.status, link.stderr).toBe(0);
+      const res = publish(env, null, sha('b'));
+      expect(res.status).not.toBe(0);
+      expect(res.stderr).toContain('symlink');
+      expect(release(env, '.bundle-current')).toBe(sha('a'));
+      expect(served(env, 'i18n/env.json')).toBe(false);
       expect(readFileSync(docPath(env, 'index.html'), 'utf-8')).toContain('main-a.js');
     },
     SLOW,

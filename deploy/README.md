@@ -37,11 +37,14 @@ Push to `main` → `deploy.yml` calls `ci.yml` (tests + build) → the `deploy` 
      `index.html` (no delete), then the previous generation's missing files, then `index.html`
      last via `index.html.new` + `mv`, then a prune of what is in neither generation. No request
      sees an `index.html` referencing a missing file, and a tab opened before the deploy keeps its
-     lazy chunks for one more deploy;
+     lazy chunks for one more deploy. A generation holding a symlink is refused before any change
+     (nginx reads the docroot as `www-data`, which can read every site's `.env`; the vhost also
+     sets `disable_symlinks on`);
    - permissions as root: owner root and no "other" bits first (fleet locked out), `chgrp -R -h
      www-data`, dirs `2750`, files `640`, owner back to `fleet`;
    - vhost from the mirror with a `.deploybak` copy, rolled back if `nginx -t` fails; version
-     snippet `set $fleet_version "<short sha> (<date>)"`;
+     snippet `set $fleet_version "<short sha> (<date>)"; set $fleet_release "<full sha>";` (the
+     footer version and the SPA's Sentry `release`);
    - restart `fleet-app-frontend-runtime-fetch`, then an explicit
      `nginx -t && systemctl reload nginx` (the fetch skips its reload when the snippet is unchanged).
 4. Public check (3 tries, `--max-time 10`): `https://fleet.foxugly.com/` answers 200 with
