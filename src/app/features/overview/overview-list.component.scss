@@ -1,0 +1,76 @@
+@use '../../shared/fleet/state-colors';
+
+:host {
+  display: block;
+}
+
+.overview-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--p-content-border-color, rgba(128, 128, 128, 0.25));
+  border-radius: 0.5rem;
+}
+
+.overview-list__row,
+.overview-list__more {
+  padding: 0.55rem 0.9rem;
+  border-bottom: 1px solid var(--p-content-border-color, rgba(128, 128, 128, 0.2));
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.overview-list__row {
+  @include state-colors.modifiers;
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1rem;
+  min-width: 0;
+}
+
+.overview-list__row--none {
+  color: var(--p-text-muted-color);
+}
+
+.overview-list__head {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 0 0 11rem;
+  min-width: 0;
+}
+
+.overview-list__dot {
+  flex: none;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: var(--state-color);
+}
+
+.overview-list__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: inherit;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+  }
+}
+
+.overview-list__undeployed {
+  flex: none;
+  opacity: 0.8;
+}
+
+app-overview-chips {
+  flex: 1 1 18rem;
+}

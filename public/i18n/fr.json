@@ -88,6 +88,23 @@
       "github": "GitHub",
       "sentry": "Sentry",
       "deps": "Dépendances"
+    },
+    "chip": "{{source}} : {{reason}}",
+    "sources": "Relancer une collecte par source",
+    "summary": {
+      "aria": "Résumé",
+      "handle": "{{n}} à traiter",
+      "watch": "{{n}} à surveiller",
+      "ok": "{{n}} OK"
+    },
+    "view": {
+      "aria": "Affichage",
+      "list": "Liste",
+      "mosaic": "Mosaïque"
+    },
+    "list": {
+      "show_ok": "+{{n}} sites OK",
+      "hide_ok": "Masquer les {{n}} sites OK"
     }
   },
   "site": {

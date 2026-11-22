@@ -1,0 +1,22 @@
+<ul class="overview-mosaic">
+  @for (e of entries(); track e.key) {
+    @let worst = worstCell(e);
+    <li class="overview-mosaic__tile overview-mosaic__tile--{{ e.worst }}">
+      <div class="overview-mosaic__head">
+        <span class="overview-mosaic__dot" aria-hidden="true"></span>
+        <a class="overview-mosaic__name" [routerLink]="e.link">{{ e.key === boxKey ? (e.label | transloco) : e.label }}</a>
+        @if (!e.deployed) {
+          <p-tag class="overview-mosaic__undeployed" severity="secondary" [value]="'overview.undeployed' | transloco" />
+        }
+      </div>
+      <p class="overview-mosaic__headline">
+        @if (worst) {
+          {{ worst | reasonLabel }}
+        } @else {
+          {{ 'reason.fallback.none' | transloco }}
+        }
+      </p>
+      <app-overview-chips [entry]="e" />
+    </li>
+  }
+</ul>

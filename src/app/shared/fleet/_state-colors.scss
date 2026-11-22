@@ -1,0 +1,19 @@
+// State -> colour token, shared by every state-coloured element (dot, chip, tile).
+// Include inside a block selector: `.x { @include state-colors.modifiers; }` emits
+// `.x--green { --state-color: ... }` etc. Then use `var(--state-color)`.
+$tokens: (
+  'green': var(--p-green-500),
+  'orange': var(--p-orange-500),
+  'red': var(--p-red-500),
+  'stale': var(--p-surface-500),
+  'error': var(--p-red-500),
+  'none': var(--p-surface-400),
+);
+
+@mixin modifiers {
+  @each $state, $color in $tokens {
+    &--#{$state} {
+      --state-color: #{$color};
+    }
+  }
+}

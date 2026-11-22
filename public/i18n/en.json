@@ -88,6 +88,23 @@
       "github": "GitHub",
       "sentry": "Sentry",
       "deps": "Dependencies"
+    },
+    "chip": "{{source}}: {{reason}}",
+    "sources": "Re-run a collection per source",
+    "summary": {
+      "aria": "Summary",
+      "handle": "{{n}} to handle",
+      "watch": "{{n}} to watch",
+      "ok": "{{n}} OK"
+    },
+    "view": {
+      "aria": "View",
+      "list": "List",
+      "mosaic": "Mosaic"
+    },
+    "list": {
+      "show_ok": "+{{n}} sites OK",
+      "hide_ok": "Hide the {{n}} OK sites"
     }
   },
   "site": {

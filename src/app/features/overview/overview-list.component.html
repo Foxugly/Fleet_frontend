@@ -1,0 +1,43 @@
+@let g = groups();
+<ul class="overview-list">
+  @for (e of g.before; track e.key) {
+    <ng-container *ngTemplateOutlet="row; context: { $implicit: e }" />
+  }
+  @if (g.ok.length) {
+    @if (showOk()) {
+      @for (e of g.ok; track e.key) {
+        <ng-container *ngTemplateOutlet="row; context: { $implicit: e }" />
+      }
+    }
+    <li class="overview-list__more">
+      <button
+        type="button"
+        pButton
+        size="small"
+        [text]="true"
+        severity="secondary"
+        [attr.aria-expanded]="showOk()"
+        (click)="showOk.set(!showOk())"
+      >
+        <i pButtonIcon class="pi" [class.pi-chevron-up]="showOk()" [class.pi-chevron-down]="!showOk()"></i>
+        <span pButtonLabel>{{ (showOk() ? 'overview.list.hide_ok' : 'overview.list.show_ok') | transloco: { n: g.ok.length } }}</span>
+      </button>
+    </li>
+  }
+  @for (e of g.after; track e.key) {
+    <ng-container *ngTemplateOutlet="row; context: { $implicit: e }" />
+  }
+</ul>
+
+<ng-template #row let-e>
+  <li class="overview-list__row overview-list__row--{{ e.worst }}">
+    <span class="overview-list__head">
+      <span class="overview-list__dot" aria-hidden="true"></span>
+      <a class="overview-list__name" [routerLink]="e.link">{{ e.key === boxKey ? (e.label | transloco) : e.label }}</a>
+      @if (!e.deployed) {
+        <p-tag class="overview-list__undeployed" severity="secondary" [value]="'overview.undeployed' | transloco" />
+      }
+    </span>
+    <app-overview-chips [entry]="e" />
+  </li>
+</ng-template>

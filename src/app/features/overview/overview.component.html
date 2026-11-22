@@ -18,65 +18,54 @@
   <p-message severity="error" styleClass="overview__error">{{ 'overview.error' | transloco }}</p-message>
 }
 
-@if (data(); as d) {
-  <div class="table-scroll">
-    <table class="overview__table">
-      <thead>
-        <tr>
-          <th scope="col">{{ 'overview.col.site' | transloco }}</th>
-          @for (col of columns; track col.key) {
-            <th scope="col">
-              <span class="overview__head">
-                {{ col.label | transloco }}
-                <app-refresh-button [source]="col.key" />
-              </span>
-            </th>
-          }
-        </tr>
-      </thead>
-      <tbody>
-        <tr class="overview__box">
-          <th scope="row">
-            <span class="overview__head">
-              <a routerLink="/box">{{ 'overview.box' | transloco }}</a>
-              <app-refresh-button source="box" />
-            </span>
-          </th>
-          <td [attr.colspan]="columns.length">
-            <app-state-dot [cell]="d.box.box" [label]="'overview.box' | transloco" />
-          </td>
-        </tr>
-        @for (site of d.sites; track site.slug) {
-          <tr>
-            <th scope="row">
-              <a [routerLink]="['/sites', site.slug]">{{ site.slug }}</a>
-              @if (!site.deployed) {
-                <p-tag class="overview__undeployed" severity="secondary" [value]="'overview.undeployed' | transloco" />
-              }
-            </th>
-            @for (col of columns; track col.key) {
-              <td>
-                <app-state-dot [cell]="site.cells[col.key]" [label]="(col.label | transloco) + ' · ' + site.slug" />
-              </td>
-            }
-          </tr>
-        }
-      </tbody>
-    </table>
+@if (data()) {
+  @let s = summary();
+  <div class="overview__toolbar">
+    <ul class="overview__summary" [attr.aria-label]="'overview.summary.aria' | transloco">
+      <li class="overview__count overview__count--handle">{{ 'overview.summary.handle' | transloco: { n: s.handle } }}</li>
+      <li class="overview__count overview__count--watch">{{ 'overview.summary.watch' | transloco: { n: s.watch } }}</li>
+      <li class="overview__count overview__count--ok">{{ 'overview.summary.ok' | transloco: { n: s.ok } }}</li>
+    </ul>
+    <div class="overview__view" role="group" [attr.aria-label]="'overview.view.aria' | transloco">
+      @for (v of views; track v.key) {
+        <button
+          type="button"
+          pButton
+          size="small"
+          severity="secondary"
+          [outlined]="view() !== v.key"
+          [attr.data-view]="v.key"
+          [attr.aria-pressed]="view() === v.key"
+          (click)="setView(v.key)"
+        >
+          <i pButtonIcon class="pi {{ v.icon }}"></i>
+          <span pButtonLabel>{{ v.label | transloco }}</span>
+        </button>
+      }
+    </div>
   </div>
+
+  <ul class="overview__sources" [attr.aria-label]="'overview.sources' | transloco">
+    @for (src of sources; track src.key) {
+      <li class="overview__source">
+        {{ src.label | transloco }}
+        <app-refresh-button [source]="src.key" />
+      </li>
+    }
+  </ul>
+
+  @if (view() === 'mosaic') {
+    <app-overview-mosaic [entries]="entries()" />
+  } @else {
+    <app-overview-list [entries]="entries()" />
+  }
 } @else if (!failed()) {
-  <div class="table-scroll" aria-busy="true">
-    <table class="overview__table">
-      <tbody>
-        @for (row of skeletonRows; track row) {
-          <tr>
-            <th scope="row"><p-skeleton width="6rem" height="1.25rem" /></th>
-            @for (col of columns; track col.key) {
-              <td><p-skeleton width="5rem" height="1.25rem" /></td>
-            }
-          </tr>
-        }
-      </tbody>
-    </table>
-  </div>
+  <ul class="overview__skeleton" aria-busy="true">
+    @for (row of skeletonRows; track row) {
+      <li>
+        <p-skeleton width="8rem" height="1.25rem" />
+        <p-skeleton width="16rem" height="1.25rem" />
+      </li>
+    }
+  </ul>
 }

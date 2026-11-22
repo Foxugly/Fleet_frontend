@@ -1,0 +1,51 @@
+@use '../../shared/fleet/state-colors';
+
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.overview-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.overview-chip {
+  @include state-colors.modifiers;
+
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--state-color);
+  border-left-width: 4px;
+  border-radius: 0.35rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.overview-chip__source {
+  flex: none;
+  color: var(--p-text-muted-color);
+}
+
+.overview-chip__reason {
+  min-width: 0;
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.overview-chip--none {
+  border-style: dashed;
+  color: var(--p-text-muted-color);
+}

@@ -1,11 +1,9 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { SkeletonModule } from 'primeng/skeleton';
-import { TagModule } from 'primeng/tag';
 import { Subject, catchError, map, merge, of, switchMap } from 'rxjs';
 
 import { Overview, OverviewService } from '../../api';
@@ -13,23 +11,23 @@ import { visibleInterval } from '../../core/polling/visible-interval';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { AgePipe } from '../../shared/fleet/age.pipe';
 import { RefreshButtonComponent } from '../../shared/fleet/refresh-button/refresh-button.component';
-import { StateDotComponent } from '../../shared/fleet/state-dot/state-dot.component';
+import { OverviewListComponent } from './overview-list.component';
+import { SOURCES, buildEntries, summarize } from './overview-model';
+import { OverviewMosaicComponent } from './overview-mosaic.component';
+import { OverviewView, readView, writeView } from './view-pref';
 
 export const OVERVIEW_POLL_MS = 60_000;
-
-type SiteColumn = 'health' | 'github' | 'sentry' | 'deps';
 
 @Component({
   selector: 'app-overview',
   imports: [
     TranslocoPipe,
-    RouterLink,
     ButtonModule,
     MessageModule,
     SkeletonModule,
-    TagModule,
     PageHeaderComponent,
-    StateDotComponent,
+    OverviewListComponent,
+    OverviewMosaicComponent,
     RefreshButtonComponent,
     AgePipe,
   ],
@@ -42,12 +40,18 @@ export class OverviewComponent {
 
   protected readonly data = signal<Overview | null>(null);
   protected readonly failed = signal(false);
-  protected readonly columns: readonly { key: SiteColumn; label: string }[] = [
-    { key: 'health', label: 'overview.col.health' },
-    { key: 'github', label: 'overview.col.github' },
-    { key: 'sentry', label: 'overview.col.sentry' },
-    { key: 'deps', label: 'overview.col.deps' },
+  protected readonly entries = computed(() => {
+    const d = this.data();
+    return d ? buildEntries(d) : [];
+  });
+  protected readonly summary = computed(() => summarize(this.entries()));
+  protected readonly sources = SOURCES;
+  protected readonly views: readonly { key: OverviewView; label: string; icon: string }[] = [
+    { key: 'list', label: 'overview.view.list', icon: 'pi-list' },
+    { key: 'mosaic', label: 'overview.view.mosaic', icon: 'pi-th-large' },
   ];
+  /** Independent of the data: a failed poll never resets it. */
+  protected readonly view = signal<OverviewView>(readView());
   protected readonly skeletonRows = [1, 2, 3, 4, 5];
 
   constructor() {
@@ -70,6 +74,11 @@ export class OverviewComponent {
           this.failed.set(true);
         }
       });
+  }
+
+  protected setView(view: OverviewView): void {
+    this.view.set(view);
+    writeView(view);
   }
 
   protected reload(): void {
