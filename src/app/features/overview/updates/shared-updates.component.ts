@@ -1,4 +1,14 @@
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -10,11 +20,19 @@ import { Subject, catchError, map, merge, of, switchMap } from 'rxjs';
 
 import { ProgressEnum, UpdateGroup, UpdatesService } from '../../../api';
 import { visibleInterval } from '../../../core/polling/visible-interval';
+import { safeUrl } from '../../site/site-helpers';
 import { OVERVIEW_POLL_MS } from '../overview-model';
-import { UPDATE_SECTIONS, UpdateSection, buildPrompt, sectionOf, versionRange } from './update-prompt';
+import {
+  SEVERITIES,
+  UPDATE_SECTIONS,
+  UpdateSection,
+  buildPrompt,
+  isPromptSafe,
+  sectionOf,
+  versionRange,
+} from './update-prompt';
 
 const groupKey = (g: UpdateGroup) => `${g.ecosystem ?? ''}|${g.package}|${g.latest ?? ''}`;
-const SEVERITIES = ['critical', 'high', 'medium', 'low'];
 
 interface Row {
   key: string;
@@ -24,6 +42,8 @@ interface Row {
   /** The blocker named by the waiting/retry tag. */
   blocker: { package: string; version: string; newer: string | null } | null;
   severity: string | null;
+  /** False when an API value failed the prompt checks: a notice replaces the copy button. */
+  safe: boolean;
 }
 
 /** Dependency updates shared by ≥ 2 apps, each with a ready-made Claude Code prompt. */
@@ -37,6 +57,7 @@ export class SharedUpdatesComponent {
   private readonly api = inject(UpdatesService);
   private readonly messages = inject(MessageService);
   private readonly i18n = inject(TranslocoService);
+  private readonly injector = inject(Injector);
   private readonly reload$ = new Subject<void>();
 
   protected readonly groups = signal<UpdateGroup[]>([]);
@@ -49,21 +70,27 @@ export class SharedUpdatesComponent {
   protected readonly patchesOpen = signal(false);
   /** The prompt shown inline after a failed copy, by group key. */
   protected readonly manual = signal<{ key: string; text: string } | null>(null);
+  private readonly manualBox = viewChild<ElementRef<HTMLTextAreaElement>>('manualBox');
   protected readonly Progress = ProgressEnum;
+  /** PR and issue URLs come from GitHub data: only https links are rendered. */
+  protected readonly link = safeUrl;
 
   constructor() {
     merge(visibleInterval(OVERVIEW_POLL_MS), this.reload$)
       .pipe(
-        // A failure hides the panel and never reaches the overview (Review Focus 5).
+        // A failure never reaches the overview (Review Focus 5). The first one leaves the
+        // panel hidden; a later one keeps the last good groups.
         switchMap(() =>
           this.api.updatesRetrieve().pipe(
             map((r) => r.groups),
-            catchError(() => of([] as UpdateGroup[])),
+            catchError(() => of(null)),
           ),
         ),
         takeUntilDestroyed(inject(DestroyRef)),
       )
-      .subscribe((groups) => this.groups.set(groups));
+      .subscribe((groups) => {
+        if (groups) this.groups.set(groups);
+      });
   }
 
   /** Called by the overview's reload button. */
@@ -81,6 +108,7 @@ export class SharedUpdatesComponent {
 
   protected copy(row: Row): void {
     const text = buildPrompt(row.group, (key, params) => this.i18n.translate(key, params as Record<string, unknown>));
+    if (text === null) return; // unsafe data: the template renders no button then
     // navigator.clipboard is undefined outside a secure context.
     const write = navigator.clipboard?.writeText(text) ?? Promise.reject(new Error('no clipboard'));
     write.then(
@@ -90,6 +118,7 @@ export class SharedUpdatesComponent {
       },
       () => {
         this.manual.set({ key: row.key, text });
+        afterNextRender({ write: () => this.manualBox()?.nativeElement.focus() }, { injector: this.injector });
         this.messages.add({ severity: 'error', summary: this.i18n.translate('updates.copy_failed'), life: 6000 });
       },
     );
@@ -111,6 +140,7 @@ export class SharedUpdatesComponent {
       sites: [...new Set(g.members.map((m) => m.site))],
       blocker,
       severity: g.security ? (max && SEVERITIES.includes(max) ? max : 'unknown') : null,
+      safe: isPromptSafe(g),
     };
   }
 }

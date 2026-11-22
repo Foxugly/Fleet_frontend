@@ -4,8 +4,10 @@ import { firstValueFrom } from 'rxjs';
 
 import { ProgressEnum } from '../../../api';
 import { authTestProviders } from '../../auth/auth-test-setup.testing';
-import { Translate, buildPrompt, sectionOf, versionRange } from './update-prompt';
+import { Translate, buildPrompt, isPromptSafe, sectionOf, versionRange } from './update-prompt';
 import { group } from './update-test-data.testing';
+
+const NL = String.fromCharCode(10);
 
 describe('update-prompt', () => {
   let t: Translate;
@@ -65,7 +67,9 @@ describe('update-prompt', () => {
     });
 
     it('uses the branch from the API verbatim', () => {
-      expect(buildPrompt(group({ branch: 'deps/odd-name' }), t)).toContain('`deps/odd-name`');
+      expect(buildPrompt(group({ package: '@scope/pkg.js', branch: 'deps/@scope/pkg.js-6.1.2' }), t)).toContain(
+        '`deps/@scope/pkg.js-6.1.2`',
+      );
     });
 
     it('a major group appends the breaking-changes sentence', () => {
@@ -96,7 +100,7 @@ describe('update-prompt', () => {
         }),
         t,
       );
-      expect(p.startsWith("Corrige l'alerte Dependabot `pillow` (sévérité high) dans ces dépôts Foxugly : `Foxugly/a`, `Foxugly/b`.")).toBe(
+      expect(p!.startsWith("Corrige l'alerte Dependabot `pillow` (sévérité élevée) dans ces dépôts Foxugly : `Foxugly/a`, `Foxugly/b`.")).toBe(
         true,
       );
       expect(p).toContain('`deps/pillow-security`');
@@ -116,7 +120,7 @@ describe('update-prompt', () => {
         }),
         t,
       );
-      expect(p.match(/`Foxugly\/Fabric`/g)!.length).toBe(1);
+      expect(p!.match(/`Foxugly\/Fabric`/g)!.length).toBe(1);
       expect(p).toContain('`Foxugly/Fabric` (`package-lock.json`, `agent/package-lock.json`), `Foxugly/Poker_frontend` (`package-lock.json`)');
     });
 
@@ -134,9 +138,42 @@ describe('update-prompt', () => {
         }),
         t,
       );
-      expect(p.startsWith('Nouvelle tentative : djangorestframework 3.17.0 est disponible.')).toBe(true);
+      expect(p!.startsWith('Nouvelle tentative : djangorestframework 3.17.0 est disponible.')).toBe(true);
       expect(p).toContain('Foxugly/billing_server#12');
       expect(p).toContain('Mets à jour `django`');
+    });
+
+    describe('refuses unchecked API data (security)', () => {
+      const unsafe: [string, Parameters<typeof group>[0]][] = [
+        ['a package with a backtick', { package: 'dj`ango', branch: 'deps/dj`ango-6.1.2' }],
+        ['a package with a newline', { package: 'django' + NL + 'rm -rf /', branch: 'deps/django' + NL + 'rm -rf /-6.1.2' }],
+        ['a version with a space', { latest: '6.1.2 now', branch: 'deps/django-6.1.2 now' }],
+        ['an unknown ecosystem', { ecosystem: 'cargo' }],
+        ['a branch that is not the recomputed one', { branch: 'main' }],
+        ['a branch with a suffix', { branch: 'deps/django-6.1.2; echo' }],
+        ['a lock with ..', { members: [{ site: 'a', repo: 'Foxugly/a', lock: 'Foxugly/a:../../etc/passwd', current: '1' }] }],
+        ['an absolute lock', { members: [{ site: 'a', repo: 'Foxugly/a', lock: 'Foxugly/a:/etc/passwd', current: '1' }] }],
+        ['a bad repo', { members: [{ site: 'a', repo: 'Foxugly/a b', lock: null, current: null }] }],
+        ['an unknown severity', { security: { alerts: 1, max_severity: 'urgent`' } }],
+        [
+          'a non-integer issue number',
+          { blocked: { issues: [{ repo: 'Foxugly/a', number: 1.5, url: 'https://x' }], by: [] } },
+        ],
+        [
+          'a blocker version with a backtick',
+          { blocked: { issues: [], by: [{ package: 'drf', version: '3`', newer: null }] } },
+        ],
+      ];
+      for (const [name, over] of unsafe) {
+        it(`${name} gives no prompt`, () => {
+          expect(isPromptSafe(group(over))).toBe(false);
+          expect(buildPrompt(group(over), t)).toBeNull();
+        });
+      }
+
+      it('a valid group is safe', () => {
+        expect(isPromptSafe(group())).toBe(true);
+      });
     });
   });
 });

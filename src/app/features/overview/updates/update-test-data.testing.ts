@@ -2,7 +2,7 @@ import { ProgressEnum, UpdateGroup } from '../../../api';
 
 /** Test helper: a minor python group across two sites, overridable field by field. */
 export function group(over: Partial<UpdateGroup> = {}): UpdateGroup {
-  return {
+  const g: UpdateGroup = {
     ecosystem: 'python',
     package: 'django',
     latest: '6.1.2',
@@ -18,4 +18,6 @@ export function group(over: Partial<UpdateGroup> = {}): UpdateGroup {
     blocked: null,
     ...over,
   };
+  // Like the API: the branch follows the package and target unless a test overrides it.
+  return 'branch' in over ? g : { ...g, branch: `deps/${g.package}-${g.latest ?? 'security'}` };
 }

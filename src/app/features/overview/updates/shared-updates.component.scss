@@ -141,18 +141,27 @@
   overflow-wrap: anywhere;
 }
 
+.shared-updates__unsafe {
+  margin: 0;
+  color: var(--p-text-muted-color);
+  font-size: 0.85rem;
+}
+
 .shared-updates__manual {
   flex: 1 1 100%;
+  box-sizing: border-box;
+  width: 100%;
   max-width: 100%;
-  max-height: 14rem;
   margin: 0;
   padding: 0.6rem;
+  resize: vertical;
   overflow: auto;
+  color: inherit;
+  font-family: monospace;
   border: 1px solid var(--p-content-border-color);
   border-radius: 0.35rem;
   background: var(--p-content-hover-background);
   font-size: 0.8rem;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  user-select: all;
 }

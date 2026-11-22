@@ -96,6 +96,8 @@ describe('SharedUpdatesComponent', () => {
     const { el } = await mount([patch, minor, security, major]);
     expect(el.querySelector('p-panel')!.textContent).toContain('Mises à jour communes (4)');
     expect(sectionKeys(el)).toEqual(['security', 'major', 'updates', 'patch']);
+    // Under the panel title (h1 is the page header): no level skipped.
+    expect(el.querySelectorAll('.shared-updates__section > h2').length).toBe(4);
 
     const { el: el2 } = await remount([minor]);
     expect(sectionKeys(el2)).toEqual(['updates']);
@@ -104,13 +106,16 @@ describe('SharedUpdatesComponent', () => {
   it('starts with the patches collapsed; the toggle reveals them', async () => {
     const { fixture, el } = await mount([minor, patch]);
     const toggle = el.querySelector<HTMLButtonElement>('[data-section="patch"] .shared-updates__toggle')!;
+    const list = el.querySelector<HTMLElement>('#' + toggle.getAttribute('aria-controls'))!;
+    expect(list).not.toBeNull();
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
-    expect(rowOf(el, 'requests')).toBeUndefined();
-    expect(rowOf(el, 'django')).toBeDefined();
+    expect(list.hidden).toBe(true);
+    expect(rowOf(el, 'django').closest('ul')!.hidden).toBe(false);
     toggle.click();
     await settle(fixture);
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
-    expect(rowOf(el, 'requests')).toBeDefined();
+    expect(list.hidden).toBe(false);
+    expect(list.contains(rowOf(el, 'requests'))).toBe(true);
   });
 
   it('a row shows the version range, a chip per site linking to its deps tab, and the tags', async () => {
@@ -128,6 +133,36 @@ describe('SharedUpdatesComponent', () => {
     const pillow = rowOf(el, 'pillow');
     expect(pillow.querySelector('.shared-updates__versions')!.textContent).toContain('sécurité');
     expect(pillow.querySelector('.shared-updates__severity')!.textContent).toContain('critique');
+    expect(pillow.querySelector('.shared-updates__decide')).toBeNull();
+  });
+
+  it('a major with an alert sits in Sécurité and still shows « à décider »', async () => {
+    const { el } = await mount([group({ kind: 'major', security: { alerts: 1, max_severity: 'high' } })]);
+    expect(sectionKeys(el)).toEqual(['security']);
+    expect(rowOf(el, 'django').querySelector('.shared-updates__decide')!.textContent).toContain('à décider');
+  });
+
+  it('a group with unchecked data shows a notice instead of the copy button (security)', async () => {
+    const { el } = await mount([group({ branch: 'main' })]);
+    const row = rowOf(el, 'django');
+    expect(row.querySelector('.shared-updates__copy')).toBeNull();
+    expect(row.querySelector('.shared-updates__unsafe')!.textContent).toContain('prompt indisponible');
+  });
+
+  it('skips PR and issue links that are not https (security)', async () => {
+    const { el } = await mount([
+      group({
+        progress: ProgressEnum.Waiting,
+        prs: [{ repo: 'Foxugly/a', number: 1, url: 'javascript:alert(1)', checks: 'pending' }],
+        blocked: {
+          issues: [{ repo: 'Foxugly/a', number: 2, url: 'http://evil/2' }],
+          by: [{ package: 'drf', version: '3.16.1', newer: null }],
+        },
+      }),
+    ]);
+    const row = rowOf(el, 'django');
+    expect(row.querySelector('a.shared-updates__pr')).toBeNull();
+    expect(row.querySelector('a.shared-updates__issue')).toBeNull();
   });
 
   it('shows the progress and links the PRs', async () => {
@@ -163,6 +198,8 @@ describe('SharedUpdatesComponent', () => {
     );
     const copy = copyButton(row);
     expect(copy.textContent).toContain('Copier quand même');
+    // WCAG 2.5.3: the accessible name contains the visible label.
+    expect(copy.getAttribute('aria-label')).toContain('Copier quand même');
     expect(copy.disabled).toBe(false);
   });
 
@@ -191,7 +228,7 @@ describe('SharedUpdatesComponent', () => {
     const i18n = TestBed.inject(TranslocoService);
     expect(writeText).toHaveBeenCalledWith(buildPrompt(minor, (k, p) => i18n.translate(k, p as Record<string, unknown>)));
     expect(add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'success' }));
-    expect(el.querySelector('pre')).toBeNull();
+    expect(el.querySelector('.shared-updates__manual')).toBeNull();
   });
 
   it('when the clipboard rejects: an error toast and the prompt in a read-only block (Review Focus 4)', async () => {
@@ -201,8 +238,11 @@ describe('SharedUpdatesComponent', () => {
     copyButton(rowOf(el, 'django')).click();
     await settle(fixture);
     expect(add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
-    const pre = el.querySelector('pre.shared-updates__manual')!;
-    expect(pre.textContent).toContain('Mets à jour `django` vers `6.1.2`');
+    const box = el.querySelector<HTMLTextAreaElement>('textarea.shared-updates__manual')!;
+    expect(box.readOnly).toBe(true);
+    expect(box.value).toContain('Mets à jour `django` vers `6.1.2`');
+    expect(box.getAttribute('aria-label')).toContain('django');
+    expect(document.activeElement).toBe(box);
   });
 
   it('with no clipboard at all (insecure context): the same fallback', async () => {
@@ -212,7 +252,15 @@ describe('SharedUpdatesComponent', () => {
     copyButton(rowOf(el, 'django')).click();
     await settle(fixture);
     expect(add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
-    expect(el.querySelector('pre.shared-updates__manual')).not.toBeNull();
+    expect(el.querySelector('textarea.shared-updates__manual')).not.toBeNull();
+  });
+
+  it('keeps the last groups when a later poll fails', async () => {
+    const { fixture, http, el } = await mount([minor]);
+    fixture.componentInstance.reload();
+    http.expectOne(isUpdates).flush('boom', { status: 503, statusText: 'Service Unavailable' });
+    await settle(fixture);
+    expect(rowOf(el, 'django')).toBeDefined();
   });
 
   it('reload() fetches again', async () => {

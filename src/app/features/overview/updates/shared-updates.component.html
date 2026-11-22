@@ -8,7 +8,7 @@
       @let label = 'updates.section.' + section.key | transloco;
       @let heading = 'updates.section_count' | transloco: { label, n: section.rows.length };
       <section class="shared-updates__section" [attr.data-section]="section.key">
-        <h3 class="shared-updates__heading">
+        <h2 class="shared-updates__heading">
           @if (section.key === 'patch') {
             <button
               type="button"
@@ -23,95 +23,108 @@
           } @else {
             {{ heading }}
           }
-        </h3>
-        @if (isOpen(section.key)) {
-          <ul class="shared-updates__rows" [id]="'shared-updates-' + section.key">
-            @for (row of section.rows; track row.key) {
-              @let g = row.group;
-              <li class="shared-updates__row">
-                <div class="shared-updates__main">
-                  <code class="shared-updates__package">{{ g.package }}</code>
-                  <span class="shared-updates__versions">
-                    @if (g.latest) {
-                      {{ row.versions ? row.versions + ' → ' : '' }}{{ g.latest }}
-                    } @else {
-                      {{ 'updates.security_version' | transloco }}
+        </h2>
+        <!-- Always rendered, so the toggle's aria-controls points at an element. -->
+        <ul class="shared-updates__rows" [id]="'shared-updates-' + section.key" [hidden]="!isOpen(section.key)">
+          @for (row of section.rows; track row.key) {
+            @let g = row.group;
+            <li class="shared-updates__row">
+              <div class="shared-updates__main">
+                <code class="shared-updates__package">{{ g.package }}</code>
+                <span class="shared-updates__versions">
+                  @if (g.latest) {
+                    {{ row.versions ? row.versions + ' → ' : '' }}{{ g.latest }}
+                  } @else {
+                    {{ 'updates.security_version' | transloco }}
+                  }
+                </span>
+                @if (row.severity; as sev) {
+                  <p-tag
+                    class="shared-updates__severity"
+                    [severity]="sev === 'critical' || sev === 'high' ? 'danger' : 'warn'"
+                    [value]="'updates.severity.' + sev | transloco"
+                  />
+                }
+                @if (g.kind === 'major') {
+                  <p-tag class="shared-updates__decide" severity="secondary" [value]="'updates.decide' | transloco" />
+                }
+                <span class="shared-updates__progress shared-updates__progress--{{ g.progress }}">
+                  @switch (g.progress) {
+                    @case (Progress.Waiting) {
+                      {{ 'updates.progress.waiting' | transloco: { package: row.blocker?.package, version: row.blocker?.version } }}
                     }
-                  </span>
-                  @if (row.severity; as sev) {
-                    <p-tag
-                      class="shared-updates__severity"
-                      [severity]="sev === 'critical' || sev === 'high' ? 'danger' : 'warn'"
-                      [value]="'updates.severity.' + sev | transloco"
-                    />
-                  }
-                  @if (section.key === 'major') {
-                    <p-tag class="shared-updates__decide" severity="secondary" [value]="'updates.decide' | transloco" />
-                  }
-                  <span class="shared-updates__progress shared-updates__progress--{{ g.progress }}">
-                    @switch (g.progress) {
-                      @case (Progress.Waiting) {
-                        {{ 'updates.progress.waiting' | transloco: { package: row.blocker?.package, version: row.blocker?.version } }}
-                      }
-                      @case (Progress.Retry) {
-                        {{ 'updates.progress.retry' | transloco: { package: row.blocker?.package, newer: row.blocker?.newer } }}
-                      }
-                      @default {
-                        {{ 'updates.progress.' + g.progress | transloco }}
-                      }
+                    @case (Progress.Retry) {
+                      {{ 'updates.progress.retry' | transloco: { package: row.blocker?.package, newer: row.blocker?.newer } }}
                     }
-                  </span>
-                </div>
-
-                <ul class="shared-updates__sites" [attr.aria-label]="'updates.sites' | transloco">
-                  @for (site of row.sites; track site) {
-                    <li>
-                      <a class="shared-updates__site" [routerLink]="['/sites', site]" [queryParams]="{ tab: 'deps' }">{{ site }}</a>
-                    </li>
+                    @default {
+                      {{ 'updates.progress.' + g.progress | transloco }}
+                    }
                   }
-                </ul>
+                </span>
+              </div>
 
-                @if (g.prs.length || g.blocked?.issues?.length) {
-                  <ul class="shared-updates__links" [attr.aria-label]="'updates.links' | transloco">
-                    @for (pr of g.prs; track pr.url) {
+              <ul class="shared-updates__sites" [attr.aria-label]="'updates.sites' | transloco">
+                @for (site of row.sites; track site) {
+                  <li>
+                    <a class="shared-updates__site" [routerLink]="['/sites', site]" [queryParams]="{ tab: 'deps' }">{{ site }}</a>
+                  </li>
+                }
+              </ul>
+
+              @if (g.prs.length || g.blocked?.issues?.length) {
+                <ul class="shared-updates__links" [attr.aria-label]="'updates.links' | transloco">
+                  @for (pr of g.prs; track pr.url) {
+                    @if (link(pr.url); as href) {
                       <li>
-                        <a class="shared-updates__pr" [href]="pr.url" target="_blank" rel="noopener noreferrer">
+                        <a class="shared-updates__pr" [href]="href" target="_blank" rel="noopener noreferrer">
                           <i class="pi pi-arrow-right-arrow-left" aria-hidden="true"></i> {{ pr.repo }}#{{ pr.number }}
                         </a>
                       </li>
                     }
-                    @for (issue of g.blocked?.issues ?? []; track issue.url) {
+                  }
+                  @for (issue of g.blocked?.issues ?? []; track issue.url) {
+                    @if (link(issue.url); as href) {
                       <li>
-                        <a class="shared-updates__issue" [href]="issue.url" target="_blank" rel="noopener noreferrer">
+                        <a class="shared-updates__issue" [href]="href" target="_blank" rel="noopener noreferrer">
                           <i class="pi pi-exclamation-circle" aria-hidden="true"></i> {{ issue.repo }}#{{ issue.number }}
                         </a>
                       </li>
                     }
-                  </ul>
-                }
+                  }
+                </ul>
+              }
 
+              @if (row.safe) {
+                @let waiting = g.progress === Progress.Waiting;
                 <p-button
                   class="shared-updates__copy"
                   icon="pi pi-copy"
                   size="small"
-                  [severity]="g.progress === Progress.Waiting ? 'secondary' : 'primary'"
-                  [outlined]="g.progress === Progress.Waiting"
-                  [label]="(g.progress === Progress.Waiting ? 'updates.copy_anyway' : 'updates.copy') | transloco"
-                  [ariaLabel]="'updates.copy_aria' | transloco: { package: g.package }"
+                  [severity]="waiting ? 'secondary' : 'primary'"
+                  [outlined]="waiting"
+                  [label]="(waiting ? 'updates.copy_anyway' : 'updates.copy') | transloco"
+                  [ariaLabel]="(waiting ? 'updates.copy_anyway_aria' : 'updates.copy_aria') | transloco: { package: g.package }"
                   (onClick)="copy(row)"
                 />
+              } @else {
+                <p class="shared-updates__unsafe">
+                  <i class="pi pi-ban" aria-hidden="true"></i> {{ 'updates.unsafe' | transloco }}
+                </p>
+              }
 
-                @if (manual()?.key === row.key) {
-                  <pre
-                    class="shared-updates__manual"
-                    tabindex="0"
-                    [attr.aria-label]="'updates.manual_aria' | transloco: { package: g.package }"
-                  >{{ manual()!.text }}</pre>
-                }
-              </li>
-            }
-          </ul>
-        }
+              @if (manual()?.key === row.key) {
+                <textarea
+                  #manualBox
+                  class="shared-updates__manual"
+                  readonly
+                  rows="8"
+                  [value]="manual()!.text"
+                  [attr.aria-label]="'updates.manual_aria' | transloco: { package: g.package }"
+                ></textarea>
+              }
+            </li>
+          }
+        </ul>
       </section>
     }
   </p-panel>
