@@ -18,7 +18,7 @@ interface NavLink {
  * (brand / nav / actions), `[mode]` public|authenticated, borderless action
  * triggers (theme → language → user) and a
  * responsive hamburger drawer below 1024px. SNAPSHOT of FoxRunner_frontend,
- * with Fleet's nav (overview, box).
+ * with Fleet's nav (overview, box, inventory).
  */
 @Component({
   selector: 'app-topmenu',
@@ -37,13 +37,14 @@ export class TopmenuComponent {
   /** Brand target: login for guests, the app for the authenticated shell. */
   readonly brandLink = computed(() => (this.mode() === 'public' ? '/login' : '/'));
 
-  /** No public nav (Fleet has no public pages); authenticated nav = overview + box. */
+  /** No public nav (Fleet has no public pages); authenticated nav = overview + box + inventory. */
   readonly links = computed<NavLink[]>(() =>
     this.mode() === 'public'
       ? []
       : [
           { label: 'chrome.nav.overview', icon: 'pi pi-th-large', link: '/', exact: true },
           { label: 'chrome.nav.box', icon: 'pi pi-server', link: '/box' },
+          { label: 'chrome.nav.inventory', icon: 'pi pi-list', link: '/apps' },
         ],
   );
 

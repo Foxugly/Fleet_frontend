@@ -18,6 +18,7 @@ import * as Sentry from '@sentry/angular';
 import { provideApi } from './api';
 import { runtimeConfig } from './core/runtime-config';
 import { routes } from './app.routes';
+import { PrimeNgI18n } from './core/i18n/primeng-i18n';
 import { authInterceptor } from './core/auth/auth.interceptor';
 import { AuthService } from './core/auth/auth.service';
 import { FleetTitleStrategy } from './core/title/fleet-title.strategy';
@@ -56,6 +57,8 @@ export const appConfig: ApplicationConfig = {
     // One cookie refresh before the first navigation: a remembered session
     // survives a reload and the guard then decides. Never rejects.
     provideAppInitializer(() => inject(AuthService).restoreSession()),
+    // PrimeNG's own labels (chip « Retirer ») follow the Transloco language.
+    provideAppInitializer(() => inject(PrimeNgI18n).start()),
     // Read calls use the Bearer token; only auth calls need cookies (set per call).
     provideApi({ basePath: runtimeConfig().apiBaseUrl, withCredentials: false }),
     { provide: TitleStrategy, useClass: FleetTitleStrategy },

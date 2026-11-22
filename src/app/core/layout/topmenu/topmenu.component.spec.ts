@@ -23,4 +23,11 @@ describe('TopmenuComponent', () => {
     const el = await render('authenticated');
     expect(el.querySelector('app-user-menu')).not.toBeNull();
   });
+
+  it('authenticated nav links the inventory (« Inventaire » → /apps)', async () => {
+    const el = await render('authenticated');
+    const link = el.querySelector<HTMLAnchorElement>('.topbar__nav a[href="/apps"]');
+    expect(link).not.toBeNull();
+    expect(link!.textContent).toContain('Inventaire');
+  });
 });

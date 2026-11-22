@@ -24,8 +24,9 @@ const subj = (data: unknown, extra: Partial<{ ok: boolean | null; error: string;
   ...extra,
 });
 
-const detail = (slug = 'poker'): SiteDetail => ({
+const detail = (slug = 'poker', archived = false): SiteDetail => ({
   slug,
+  archived,
   repos: ['Poker_server'],
   vhosts: ['poker.foxugly.com'],
   deployed: true,
@@ -117,6 +118,23 @@ describe('SiteDetailComponent', () => {
     expect(el.textContent).toContain('poker.foxugly.com');
     expect(el.textContent).toContain('Retour');
     expect(el.textContent).toContain('Déployé');
+  });
+
+  it('shows « Modifier », linking to the inventory form of this app', async () => {
+    const { http, harness, el } = await setup();
+    http.expectOne(isSite('poker')).flush(detail());
+    await settle(harness.fixture);
+    const edit = el.querySelector<HTMLAnchorElement>('a[href="/apps/poker/edit"]');
+    expect(edit).not.toBeNull();
+    expect(edit!.textContent).toContain('Modifier');
+    expect(el.textContent).not.toContain('Archivée');
+  });
+
+  it('an archived app gets an « Archivée » tag', async () => {
+    const { http, harness, el } = await setup();
+    http.expectOne(isSite('poker')).flush(detail('poker', true));
+    await settle(harness.fixture);
+    expect(el.querySelector('.site__tags')!.textContent).toContain('Archivée');
   });
 
   describe('tabs', () => {

@@ -1,0 +1,128 @@
+<app-page-header
+  [title]="editSlug === null ? ('apps.form.new_title' | transloco) : ('apps.form.edit_title' | transloco: { slug: editSlug })"
+  icon="pi-list"
+>
+  <div slot="left">
+    <p-button routerLink="/apps" icon="pi pi-arrow-left" [text]="true" size="small" [label]="'apps.back' | transloco" />
+  </div>
+</app-page-header>
+
+<ng-template #fieldErrors let-key>
+  @let shown = errorsOf(key).length;
+  @for (e of errorsOf(key); track $index) {
+    <span class="meta-hint meta-hint--error" [id]="'app-form-' + key + '-error-' + $index">{{ e.key | transloco: e.params }}</span>
+  }
+  @for (m of serverErrorsOf(key); track $index) {
+    <span class="meta-hint meta-hint--error" [id]="'app-form-' + key + '-error-' + (shown + $index)">{{ m }}</span>
+  }
+</ng-template>
+
+@if (notFound()) {
+  <app-empty-state [title]="'apps.form.unknown_title' | transloco" [subtitle]="'apps.form.unknown_subtitle' | transloco" icon="pi-question-circle">
+    <p-button routerLink="/apps" icon="pi pi-arrow-left" [label]="'apps.back' | transloco" />
+  </app-empty-state>
+} @else if (loadFailed()) {
+  <p-message severity="error">{{ 'apps.form.load_error' | transloco }}</p-message>
+} @else if (!loaded()) {
+  <div aria-busy="true">
+    <p-skeleton height="20rem" />
+  </div>
+} @else {
+  <form class="app-form" [formGroup]="form" (submit)="$event.preventDefault(); save()" novalidate>
+    @if (showSummary()) {
+      <p-message class="app-form__summary" severity="error" role="alert">
+        <span>{{ 'apps.form.summary' | transloco }}</span>
+        @for (m of otherServerErrors(); track $index) {
+          <span class="app-form__other"> {{ m }}</span>
+        }
+      </p-message>
+    }
+
+    <div class="meta-grid cols-2">
+      <div class="meta-item" data-field="slug">
+        <label class="meta-label" for="app-form-slug">{{ 'apps.field.slug' | transloco }}</label>
+        <input
+          pInputText
+          id="app-form-slug"
+          type="text"
+          formControlName="slug"
+          autocomplete="off"
+          spellcheck="false"
+          maxlength="64"
+          [readOnly]="editSlug !== null"
+          [class.ng-dirty]="invalid('slug')"
+          [attr.aria-invalid]="invalid('slug') || null"
+          [attr.aria-describedby]="describedBy('slug')"
+        />
+        <span class="meta-hint" id="app-form-slug-hint">
+          {{ (editSlug === null ? 'apps.form.slug_hint' : 'apps.form.slug_readonly') | transloco }}
+        </span>
+        <ng-container *ngTemplateOutlet="fieldErrors; context: { $implicit: 'slug' }" />
+      </div>
+
+      <div class="meta-item" data-field="health_path">
+        <label class="meta-label" for="app-form-health_path">{{ 'apps.field.health_path' | transloco }}</label>
+        <input
+          pInputText
+          id="app-form-health_path"
+          type="text"
+          formControlName="health_path"
+          autocomplete="off"
+          spellcheck="false"
+          maxlength="200"
+          [class.ng-dirty]="invalid('health_path')"
+          [attr.aria-invalid]="invalid('health_path') || null"
+          [attr.aria-describedby]="describedBy('health_path')"
+        />
+        <span class="meta-hint" id="app-form-health_path-hint">{{ 'apps.form.health_path_hint' | transloco }}</span>
+        <ng-container *ngTemplateOutlet="fieldErrors; context: { $implicit: 'health_path' }" />
+      </div>
+
+      @for (f of listFields; track f.key) {
+        <div class="meta-item meta-item--full" [attr.data-field]="f.key">
+          <label class="meta-label" [for]="'app-form-' + f.key">{{ 'apps.field.' + f.key | transloco }}</label>
+          <p-autocomplete
+            [formControlName]="f.key"
+            [inputId]="'app-form-' + f.key"
+            [multiple]="true"
+            [typeahead]="false"
+            [addOnBlur]="true"
+            [addOnTab]="false"
+            separator=","
+            [suggestions]="[]"
+            [fluid]="true"
+            [pt]="listInputPt(f.key)"
+            [class.ng-dirty]="invalid(f.key)"
+            [class.ng-invalid]="invalid(f.key)"
+            (keydown.enter)="$event.preventDefault()"
+          />
+          <span class="meta-hint" [id]="'app-form-' + f.key + '-hint'">{{ f.hint | transloco }} {{ 'apps.form.list_hint' | transloco }}</span>
+          <ng-container *ngTemplateOutlet="fieldErrors; context: { $implicit: f.key }" />
+        </div>
+      }
+
+      <div class="meta-item" data-field="deployed">
+        <span class="app-form__check">
+          <p-checkbox inputId="app-form-deployed" formControlName="deployed" [binary]="true" />
+          <label for="app-form-deployed">{{ 'apps.field.deployed' | transloco }}</label>
+        </span>
+        <ng-container *ngTemplateOutlet="fieldErrors; context: { $implicit: 'deployed' }" />
+      </div>
+
+      <div class="meta-item" data-field="actions_allowed">
+        <span class="app-form__check">
+          <p-checkbox inputId="app-form-actions_allowed" formControlName="actions_allowed" [binary]="true" />
+          <label for="app-form-actions_allowed">{{ 'apps.field.actions_allowed' | transloco }}</label>
+        </span>
+        <ng-container *ngTemplateOutlet="fieldErrors; context: { $implicit: 'actions_allowed' }" />
+      </div>
+    </div>
+
+    <div class="app-form__actions">
+      <p-button routerLink="/apps" severity="secondary" [text]="true" [label]="'apps.form.cancel' | transloco" />
+      <p-button class="app-form__save" type="submit" icon="pi pi-check" [label]="'apps.form.save' | transloco" [disabled]="stepUp.busy()" />
+    </div>
+  </form>
+}
+
+<app-totp-dialog [(visible)]="stepUp.open" [busy]="stepUp.busy()" [errorKey]="stepUp.errorKey()" [subject]="stepUp.subject()" (confirmed)="stepUp.submit($event)" />

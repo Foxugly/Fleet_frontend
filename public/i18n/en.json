@@ -8,14 +8,16 @@
     "language_switcher": {
       "aria": "Change language"
     },
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "remove": "Remove"
   },
   "chrome": {
     "nav": {
       "overview": "Overview",
       "box": "Box",
       "aria_main": "Main navigation",
-      "aria_mobile": "Mobile navigation"
+      "aria_mobile": "Mobile navigation",
+      "inventory": "Inventory"
     },
     "theme": {
       "toggle": "Toggle theme"
@@ -188,7 +190,9 @@
       "name": "Package",
       "version": "Version",
       "kind": "Kind"
-    }
+    },
+    "edit": "Edit",
+    "archived": "Archived"
   },
   "box": {
     "title": "Box",
@@ -321,5 +325,106 @@
       "retry": "New attempt: {{blocker}} {{newer}} is available. The issues {{issues}} describe the previous failure."
     },
     "none": "No update concerns several apps for now."
+  },
+  "apps": {
+    "title": "Inventory",
+    "new": "New app",
+    "edit": "Edit",
+    "history_link": "History",
+    "archive": "Archive",
+    "restore": "Restore",
+    "archived": "Archived",
+    "undeployed": "not deployed",
+    "show_archived": "Show archived",
+    "back": "Inventory",
+    "load_error": "Could not load the inventory. Please try again shortly.",
+    "empty": {
+      "title": "No apps",
+      "subtitle": "Add a first app to the inventory."
+    },
+    "edit_aria": "Edit {{slug}}",
+    "history_aria": "History of {{slug}}",
+    "archive_aria": "Archive {{slug}}",
+    "restore_aria": "Restore {{slug}}",
+    "toast": {
+      "created": "App {{slug}} created",
+      "updated": "App {{slug}} saved",
+      "archived": "App {{slug}} archived",
+      "restored": "App {{slug}} restored",
+      "refused": "Action refused by the server"
+    },
+    "field": {
+      "slug": "Identifier (slug)",
+      "repos": "GitHub repositories",
+      "vhosts": "Vhosts",
+      "health_path": "Health path",
+      "sentry_projects": "Sentry projects",
+      "python_locks": "Python lock files",
+      "npm_locks": "npm lock files",
+      "deployed": "Deployed in production",
+      "actions_allowed": "Actions allowed",
+      "archived": "Archived"
+    },
+    "form": {
+      "new_title": "New app",
+      "edit_title": "Edit {{slug}}",
+      "save": "Save",
+      "cancel": "Cancel",
+      "summary": "The form has errors: please fix the flagged fields.",
+      "load_error": "Could not load this app. Please try again shortly.",
+      "unknown_title": "Unknown app",
+      "unknown_subtitle": "This app is not in the inventory.",
+      "slug_hint": "Lowercase letters, digits and hyphens; it cannot be changed later.",
+      "slug_readonly": "The identifier cannot be changed.",
+      "list_hint": "Type a value, then Enter or a comma to add it.",
+      "repos_hint": "Format Foxugly/Repo. The \"fleet-read\" GitHub token must cover this repository.",
+      "vhosts_hint": "Host name, for example app.foxugly.com.",
+      "health_path_hint": "Starts with /, for example /health/.",
+      "sentry_hint": "Sentry project slug, for example app-backend.",
+      "locks_hint": "Format repo:path, for example Foxugly/App_server:requirements.txt; the repository must be among the repositories."
+    },
+    "invalid": {
+      "slug": "Invalid identifier: lowercase letters, digits and hyphens, at most 64 characters, no leading hyphen.",
+      "repo": "Invalid repository: {{value}} (format Foxugly/Repo).",
+      "vhost": "Invalid vhost: {{value}}.",
+      "sentry": "Invalid Sentry project: {{value}}.",
+      "lock_format": "Invalid lock file: {{value}} (format repo:path, relative path without a . or .. segment).",
+      "lock_repo": "Lock file {{value}}: the repository {{repo}} is not among the app's repositories.",
+      "health_path": "Invalid path: it starts with / and uses only letters, digits and . _ ~ / - (no . or .. segment).",
+      "too_many": "At most {{max}} entries.",
+      "too_long": "Each entry is at most {{max}} characters."
+    },
+    "totp": {
+      "title": "Confirm with your code",
+      "intro": "Enter the 6-digit code from your authenticator app.",
+      "code": "Verification code",
+      "confirm": "Confirm",
+      "invalid": "Invalid or already used code. Please enter the next code.",
+      "subject_save": "Save {{slug}}",
+      "subject_create": "Create {{slug}}"
+    },
+    "error": {
+      "too_many": "Too many attempts, please try again in a minute.",
+      "unavailable": "Service unavailable. Your input is kept, please try again.",
+      "not_found": "This app no longer exists.",
+      "unavailable_retry": "Service unavailable, please try again."
+    },
+    "history": {
+      "title": "History of {{slug}}",
+      "load_error": "Could not load the history. Please try again shortly.",
+      "by": "by {{user}}",
+      "unknown_user": "unknown user",
+      "empty": "(empty)",
+      "empty_title": "No change recorded.",
+      "yes": "yes",
+      "no": "no",
+      "none": "—",
+      "action": {
+        "create": "Creation",
+        "update": "Update",
+        "archive": "Archiving",
+        "restore": "Restoring"
+      }
+    }
   }
 }

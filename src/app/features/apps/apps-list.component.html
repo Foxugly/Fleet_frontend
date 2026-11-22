@@ -1,0 +1,101 @@
+<app-page-header [title]="'apps.title' | transloco" icon="pi-list">
+  <div slot="right">
+    <a pButton routerLink="/apps/new" size="small">
+      <i pButtonIcon class="pi pi-plus"></i>
+      <span pButtonLabel>{{ 'apps.new' | transloco }}</span>
+    </a>
+  </div>
+</app-page-header>
+
+@if (failed()) {
+  <p-message severity="error" styleClass="apps-list__error">{{ 'apps.load_error' | transloco }}</p-message>
+}
+
+@if (apps(); as list) {
+  @if (list.length) {
+    @if (archivedCount()) {
+      <div class="apps-list__toolbar">
+        <p-checkbox inputId="apps-show-archived" [binary]="true" [ngModel]="showArchived()" (ngModelChange)="showArchived.set($event)" />
+        <label for="apps-show-archived">{{ 'apps.show_archived' | transloco }} ({{ archivedCount() }})</label>
+      </div>
+    }
+    <ul class="apps-list">
+      @for (app of visible(); track app.slug) {
+        <li class="apps-list__row" [class.apps-list__row--archived]="app.archived">
+          <span class="apps-list__head">
+            <a class="apps-list__name" [routerLink]="['/sites', app.slug]">{{ app.slug }}</a>
+            @if (app.archived) {
+              <p-tag severity="warn" [value]="'apps.archived' | transloco" />
+            }
+            @if (!app.deployed) {
+              <p-tag severity="secondary" [value]="'apps.undeployed' | transloco" />
+            }
+          </span>
+          <span class="apps-list__repos">{{ app.repos.join(', ') }}</span>
+          <span class="apps-list__actions">
+            <a
+              pButton
+              [routerLink]="['/apps', app.slug, 'edit']"
+              size="small"
+              severity="secondary"
+              [text]="true"
+              [attr.aria-label]="'apps.edit_aria' | transloco: { slug: app.slug }"
+            >
+              <i pButtonIcon class="pi pi-pencil"></i>
+              <span pButtonLabel>{{ 'apps.edit' | transloco }}</span>
+            </a>
+            <a
+              pButton
+              [routerLink]="['/apps', app.slug, 'history']"
+              size="small"
+              severity="secondary"
+              [text]="true"
+              [attr.aria-label]="'apps.history_aria' | transloco: { slug: app.slug }"
+            >
+              <i pButtonIcon class="pi pi-history"></i>
+              <span pButtonLabel>{{ 'apps.history_link' | transloco }}</span>
+            </a>
+            @if (app.archived) {
+              <p-button
+                class="apps-list__restore"
+                size="small"
+                severity="secondary"
+                [outlined]="true"
+                icon="pi pi-replay"
+                [label]="'apps.restore' | transloco"
+                [ariaLabel]="'apps.restore_aria' | transloco: { slug: app.slug }"
+                (onClick)="restore(app)"
+              />
+            } @else {
+              <p-button
+                class="apps-list__archive"
+                size="small"
+                severity="danger"
+                [text]="true"
+                icon="pi pi-box"
+                [label]="'apps.archive' | transloco"
+                [ariaLabel]="'apps.archive_aria' | transloco: { slug: app.slug }"
+                (onClick)="archive(app)"
+              />
+            }
+          </span>
+        </li>
+      }
+    </ul>
+  } @else {
+    <app-empty-state [title]="'apps.empty.title' | transloco" [subtitle]="'apps.empty.subtitle' | transloco" icon="pi-list">
+      <a pButton routerLink="/apps/new">
+        <i pButtonIcon class="pi pi-plus"></i>
+        <span pButtonLabel>{{ 'apps.new' | transloco }}</span>
+      </a>
+    </app-empty-state>
+  }
+} @else if (!failed()) {
+  <div aria-busy="true">
+    @for (n of skeletons; track n) {
+      <p-skeleton class="apps-list__skeleton" height="3rem" />
+    }
+  </div>
+}
+
+<app-totp-dialog [(visible)]="stepUp.open" [busy]="stepUp.busy()" [errorKey]="stepUp.errorKey()" [subject]="stepUp.subject()" (confirmed)="stepUp.submit($event)" />

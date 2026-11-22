@@ -1,0 +1,53 @@
+<app-page-header [title]="'apps.history.title' | transloco: { slug }" icon="pi-history">
+  <div slot="left">
+    <p-button routerLink="/apps" icon="pi pi-arrow-left" [text]="true" size="small" [label]="'apps.back' | transloco" />
+  </div>
+  <div slot="right">
+    <p-button [routerLink]="['/apps', slug, 'edit']" icon="pi pi-pencil" size="small" severity="secondary" [label]="'apps.edit' | transloco" />
+  </div>
+</app-page-header>
+
+<ng-template #value let-v>
+  @let f = format(v);
+  @if ('key' in f) {
+    <span class="app-history__muted">{{ f.key | transloco }}</span>
+  } @else {
+    <span class="app-history__value">{{ f.text }}</span>
+  }
+</ng-template>
+
+@if (failed()) {
+  <p-message severity="error">{{ 'apps.history.load_error' | transloco }}</p-message>
+} @else if (entries(); as list) {
+  @if (list.length) {
+    <ol class="app-history">
+      @for (e of list; track $index) {
+        <li class="app-history__entry">
+          <div class="app-history__head">
+            <p-tag severity="secondary" [value]="e.actionKey ? (e.actionKey | transloco) : e.action" />
+            <time [attr.datetime]="e.at">{{ e.at | date: 'yyyy-MM-dd HH:mm' }}</time>
+            <span class="app-history__muted">{{ 'apps.history.by' | transloco: { user: e.user ?? ('apps.history.unknown_user' | transloco) } }}</span>
+          </div>
+          <dl class="app-history__changes">
+            @for (r of e.rows; track r.field) {
+              <div class="app-history__change">
+                <dt>{{ labelKey(r.field) ? (labelKey(r.field)! | transloco) : r.field }}</dt>
+                <dd>
+                  <ng-container *ngTemplateOutlet="value; context: { $implicit: r.before }" />
+                  <span class="app-history__arrow" aria-hidden="true"> → </span>
+                  <ng-container *ngTemplateOutlet="value; context: { $implicit: r.after }" />
+                </dd>
+              </div>
+            }
+          </dl>
+        </li>
+      }
+    </ol>
+  } @else {
+    <app-empty-state [title]="'apps.history.empty_title' | transloco" icon="pi-history" />
+  }
+} @else {
+  <div aria-busy="true">
+    <p-skeleton height="8rem" />
+  </div>
+}
