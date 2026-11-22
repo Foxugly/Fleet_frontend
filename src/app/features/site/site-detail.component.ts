@@ -1,12 +1,12 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, OnDestroy, computed, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { Component, DestroyRef, ElementRef, OnDestroy, computed, effect, inject, signal } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
-import { PanelModule } from 'primeng/panel';
 import { SkeletonModule } from 'primeng/skeleton';
+import { TabsModule } from 'primeng/tabs';
 import { TagModule } from 'primeng/tag';
 import { Subject as RxSubject, catchError, distinctUntilChanged, map, of, switchMap } from 'rxjs';
 
@@ -22,9 +22,7 @@ import { DepsSectionComponent } from './sections/deps-section.component';
 import { GithubSectionComponent } from './sections/github-section.component';
 import { HealthSectionComponent } from './sections/health-section.component';
 import { SentrySectionComponent } from './sections/sentry-section.component';
-
-type SourceKey = 'health' | 'github' | 'sentry' | 'deps';
-const SOURCES: readonly SourceKey[] = ['health', 'github', 'sentry', 'deps'];
+import { SOURCES, SourceKey, defaultTab } from './site-helpers';
 
 @Component({
   selector: 'app-site-detail',
@@ -33,7 +31,7 @@ const SOURCES: readonly SourceKey[] = ['health', 'github', 'sentry', 'deps'];
     RouterLink,
     ButtonModule,
     MessageModule,
-    PanelModule,
+    TabsModule,
     SkeletonModule,
     TagModule,
     PageHeaderComponent,
@@ -52,6 +50,9 @@ const SOURCES: readonly SourceKey[] = ['health', 'github', 'sentry', 'deps'];
 export class SiteDetailComponent implements OnDestroy {
   private readonly api = inject(SitesService);
   private readonly visits = inject(LastVisitService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly request$ = new RxSubject<string>();
 
   protected readonly slug = signal('');
@@ -72,9 +73,37 @@ export class SiteDetailComponent implements OnDestroy {
       items: Object.entries(s.sources[key].items).map(([name, subject]) => ({ name, subject })),
     }));
   });
+  private readonly tabParam = toSignal(this.route.queryParamMap.pipe(map((p) => p.get('tab'))), { initialValue: null });
+  /** Open tab: the `tab` query param when valid, else the worst source. */
+  protected readonly activeTab = computed<SourceKey>(() => {
+    const found = SOURCES.find((k) => k === this.tabParam());
+    if (found) return found;
+    const s = this.site();
+    if (!s) return SOURCES[0];
+    return defaultTab({
+      health: s.sources.health.cell,
+      github: s.sources.github.cell,
+      sentry: s.sources.sentry.cell,
+      deps: s.sources.deps.cell,
+    });
+  });
   protected readonly skeletons = [1, 2, 3, 4];
 
   constructor() {
+    // On a phone the tab list scrolls: bring the active tab into view (it can be the last one).
+    // On the next task, once the tabs of a just-loaded site are rendered (zoneless: an
+    // afterNextRender queued from an effect may wait for an unrelated change; a frame
+    // callback never runs in a background tab).
+    effect((onCleanup) => {
+      const key = this.activeTab();
+      if (!this.site()) return;
+      const timer = setTimeout(() => {
+        const tab = this.host.nativeElement.querySelector<HTMLElement>(`p-tab[data-source="${key}"]`);
+        tab?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+      });
+      onCleanup(() => clearTimeout(timer));
+    });
+
     this.request$
       .pipe(
         switchMap((slug) =>
@@ -98,8 +127,8 @@ export class SiteDetailComponent implements OnDestroy {
         }
       });
 
-    inject(ActivatedRoute)
-      .paramMap.pipe(
+    this.route.paramMap
+      .pipe(
         map((p) => p.get('slug') ?? ''),
         distinctUntilChanged(),
         takeUntilDestroyed(inject(DestroyRef)),
@@ -109,6 +138,16 @@ export class SiteDetailComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     this.markLoadedVisit();
+  }
+
+  protected selectTab(value: string | number | undefined): void {
+    if (value === undefined || value === this.activeTab()) return;
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab: value },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   protected reload(): void {

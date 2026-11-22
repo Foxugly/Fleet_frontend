@@ -88,6 +88,32 @@
       "github": "GitHub",
       "sentry": "Sentry",
       "deps": "Dependencies"
+    },
+    "chip": "{{source}}: {{reason}}",
+    "sources": "Re-run a collection per source",
+    "summary": {
+      "aria": "Summary",
+      "handle": "{{n}} to handle",
+      "watch": "{{n}} to watch",
+      "ok": "{{n}} OK"
+    },
+    "view": {
+      "aria": "View",
+      "list": "List",
+      "mosaic": "Mosaic"
+    },
+    "list": {
+      "show_ok": "+{{n}} sites OK",
+      "hide_ok": "Hide the {{n}} OK sites"
+    },
+    "filter": {
+      "search_placeholder": "Search an app",
+      "search_aria": "Search an app by name",
+      "source_placeholder": "Problem on…",
+      "source_aria": "Only keep apps with a problem on this source",
+      "clear": "Clear filters",
+      "empty": "No app matches these filters.",
+      "results": "{{n}} app(s) shown"
     }
   },
   "site": {
@@ -205,14 +231,43 @@
       "none": "No data"
     },
     "dot": {
-      "aria": "{{label}}: {{state}}, {{count}}, {{age}}",
-      "aria_error": "{{label}}: {{state}}, {{count}}, {{age}}, {{error}}"
+      "aria": "{{label}}: {{state}}, {{count}}, {{age}} · {{reason}}",
+      "aria_error": "{{label}}: {{state}}, {{count}}, {{age}}, {{error}} · {{reason}}"
     },
     "refresh": {
       "aria": "Refresh collection",
+      "aria_source": "Re-run collection: {{source}}",
       "started": "Collection started",
       "already": "Already running",
       "error": "Could not start the collection."
+    }
+  },
+  "reason": {
+    "http_status": "Responds {{status}}",
+    "unreachable": "Unreachable",
+    "tls_error": "Certificate error",
+    "tls_expiring": "Certificate: {{days}} d",
+    "main_ci_failed": "CI failing on main",
+    "secret_alert": "{{n}} secret alert(s)",
+    "high_alert": "{{n}} critical alert(s)",
+    "open_items": "{{n}} open",
+    "unresolved": "{{n}} unresolved",
+    "outdated": "{{n}} outdated",
+    "failed_units": "{{n}} failed unit(s)",
+    "security_updates": "{{n}} security update(s)",
+    "disk_full": "Disk {{pct}}% full",
+    "updates": "{{n}} update(s)",
+    "reboot_required": "Reboot required",
+    "stale": "Stale data",
+    "never_collected": "Never collected",
+    "collect_error": "Collection error",
+    "fallback": {
+      "error": "Collection error",
+      "red": "{{n}} issue(s)",
+      "stale": "Stale data",
+      "orange": "{{n}} warning(s)",
+      "green": "OK",
+      "none": "No data"
     }
   }
 }

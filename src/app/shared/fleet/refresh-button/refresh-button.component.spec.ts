@@ -29,7 +29,7 @@ describe('RefreshButtonComponent', () => {
 
   it('is icon-only with a translated aria-label', async () => {
     const { button } = await setup();
-    expect(button().getAttribute('aria-label')).toBe('Relancer la collecte');
+    expect(button().getAttribute('aria-label')).toBe('Relancer la collecte : GitHub');
     expect(button().textContent!.trim()).toBe('');
   });
 

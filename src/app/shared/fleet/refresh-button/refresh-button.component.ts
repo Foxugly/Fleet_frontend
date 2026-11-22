@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, input, output, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, input, output, signal } from '@angular/core';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -6,6 +6,15 @@ import { ButtonModule } from 'primeng/button';
 import { RefreshService } from '../../../api';
 
 export type RefreshSource = 'health' | 'github' | 'sentry' | 'box' | 'deps';
+
+/** Existing label keys, so the aria label names the source. */
+const SOURCE_LABEL: Record<RefreshSource, string> = {
+  health: 'overview.col.health',
+  github: 'overview.col.github',
+  sentry: 'overview.col.sentry',
+  deps: 'overview.col.deps',
+  box: 'overview.box',
+};
 
 /** The server dedupes refreshes for 60 s: stay disabled for the same window. */
 export const REFRESH_COOLDOWN_MS = 60_000;
@@ -22,7 +31,7 @@ export const REFRESH_COOLDOWN_MS = 60_000;
       size="small"
       severity="secondary"
       [disabled]="busy()"
-      [ariaLabel]="'fleet.refresh.aria' | transloco"
+      [ariaLabel]="'fleet.refresh.aria_source' | transloco: { source: (sourceKey() | transloco) }"
       (onClick)="refresh()"
     />
   `,
@@ -30,6 +39,7 @@ export const REFRESH_COOLDOWN_MS = 60_000;
 export class RefreshButtonComponent {
   readonly source = input.required<RefreshSource>();
   readonly queued = output<void>();
+  protected readonly sourceKey = computed(() => SOURCE_LABEL[this.source()]);
 
   private readonly api = inject(RefreshService);
   private readonly messages = inject(MessageService);

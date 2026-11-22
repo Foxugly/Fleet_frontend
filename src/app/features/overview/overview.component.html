@@ -18,65 +18,124 @@
   <p-message severity="error" styleClass="overview__error">{{ 'overview.error' | transloco }}</p-message>
 }
 
-@if (data(); as d) {
-  <div class="table-scroll">
-    <table class="overview__table">
-      <thead>
-        <tr>
-          <th scope="col">{{ 'overview.col.site' | transloco }}</th>
-          @for (col of columns; track col.key) {
-            <th scope="col">
-              <span class="overview__head">
-                {{ col.label | transloco }}
-                <app-refresh-button [source]="col.key" />
-              </span>
-            </th>
+@if (data()) {
+  @let s = summary();
+  <div class="overview__toolbar">
+    <div class="overview__summary" role="group" [attr.aria-label]="'overview.summary.aria' | transloco">
+      @for (b of buckets; track b) {
+        <button
+          type="button"
+          class="overview__count overview__count--{{ b }}"
+          [class.overview__count--active]="filter().bucket === b"
+          [attr.data-bucket]="b"
+          [attr.aria-pressed]="filter().bucket === b"
+          (click)="toggleBucket(b)"
+        >
+          @if (filter().bucket === b) {
+            <i class="pi pi-check overview__count-check" aria-hidden="true"></i>
           }
-        </tr>
-      </thead>
-      <tbody>
-        <tr class="overview__box">
-          <th scope="row">
-            <span class="overview__head">
-              <a routerLink="/box">{{ 'overview.box' | transloco }}</a>
-              <app-refresh-button source="box" />
-            </span>
-          </th>
-          <td [attr.colspan]="columns.length">
-            <app-state-dot [cell]="d.box.box" [label]="'overview.box' | transloco" />
-          </td>
-        </tr>
-        @for (site of d.sites; track site.slug) {
-          <tr>
-            <th scope="row">
-              <a [routerLink]="['/sites', site.slug]">{{ site.slug }}</a>
-              @if (!site.deployed) {
-                <p-tag class="overview__undeployed" severity="secondary" [value]="'overview.undeployed' | transloco" />
-              }
-            </th>
-            @for (col of columns; track col.key) {
-              <td>
-                <app-state-dot [cell]="site.cells[col.key]" [label]="(col.label | transloco) + ' · ' + site.slug" />
-              </td>
-            }
-          </tr>
-        }
-      </tbody>
-    </table>
+          {{ 'overview.summary.' + b | transloco: { n: s[b] } }}
+        </button>
+      }
+    </div>
+    <div class="overview__view" role="group" [attr.aria-label]="'overview.view.aria' | transloco">
+      @for (v of views; track v.key) {
+        <button
+          type="button"
+          pButton
+          size="small"
+          severity="secondary"
+          [outlined]="view() !== v.key"
+          [attr.data-view]="v.key"
+          [attr.aria-pressed]="view() === v.key"
+          (click)="setView(v.key)"
+        >
+          <i pButtonIcon class="pi {{ v.icon }}"></i>
+          <span pButtonLabel>{{ v.label | transloco }}</span>
+        </button>
+      }
+    </div>
   </div>
+
+  <div class="overview__filters">
+    <p-iconfield class="overview__search">
+      <p-inputicon styleClass="pi pi-search" />
+      <input
+        pInputText
+        type="search"
+        class="overview__search-input"
+        maxlength="100"
+        [value]="filter().q"
+        [placeholder]="'overview.filter.search_placeholder' | transloco"
+        [attr.aria-label]="'overview.filter.search_aria' | transloco"
+        (input)="setSearch($any($event.target).value)"
+        (keydown.escape)="setSearch('')"
+      />
+    </p-iconfield>
+    <p-select
+      class="overview__source-filter"
+      [options]="sourceOptions()"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="filter().source"
+      (ngModelChange)="setSource($event)"
+      [showClear]="true"
+      [placeholder]="'overview.filter.source_placeholder' | transloco"
+      [ariaLabel]="'overview.filter.source_aria' | transloco"
+    />
+    @if (filtering()) {
+      <p-button
+        class="overview__clear"
+        icon="pi pi-filter-slash"
+        size="small"
+        severity="secondary"
+        [text]="true"
+        [label]="'overview.filter.clear' | transloco"
+        (onClick)="clearFilters()"
+      />
+    }
+  </div>
+
+  <ul class="overview__sources" [attr.aria-label]="'overview.sources' | transloco">
+    @for (src of sources; track src.key) {
+      <li class="overview__source">
+        {{ src.label | transloco }}
+        <app-refresh-button [source]="src.key" />
+      </li>
+    }
+  </ul>
+
+  <!-- Always rendered, so screen readers announce each change of the result. -->
+  <p class="overview__live" role="status" aria-live="polite">
+    @if (filtering()) {
+      {{ shown().length ? ('overview.filter.results' | transloco: { n: shown().length }) : ('overview.filter.empty' | transloco) }}
+    }
+  </p>
+
+  @if (filtering() && !shown().length) {
+    <div class="overview__empty">
+      <p>{{ 'overview.filter.empty' | transloco }}</p>
+      <p-button
+        class="overview__empty-clear"
+        icon="pi pi-filter-slash"
+        size="small"
+        severity="secondary"
+        [label]="'overview.filter.clear' | transloco"
+        (onClick)="clearFilters()"
+      />
+    </div>
+  } @else if (view() === 'mosaic') {
+    <app-overview-mosaic [entries]="shown()" />
+  } @else {
+    <app-overview-list [entries]="shown()" [collapseOk]="!filtering()" />
+  }
 } @else if (!failed()) {
-  <div class="table-scroll" aria-busy="true">
-    <table class="overview__table">
-      <tbody>
-        @for (row of skeletonRows; track row) {
-          <tr>
-            <th scope="row"><p-skeleton width="6rem" height="1.25rem" /></th>
-            @for (col of columns; track col.key) {
-              <td><p-skeleton width="5rem" height="1.25rem" /></td>
-            }
-          </tr>
-        }
-      </tbody>
-    </table>
-  </div>
+  <ul class="overview__skeleton" aria-busy="true">
+    @for (row of skeletonRows; track row) {
+      <li>
+        <p-skeleton width="8rem" height="1.25rem" />
+        <p-skeleton width="16rem" height="1.25rem" />
+      </li>
+    }
+  </ul>
 }

@@ -8,6 +8,7 @@
  * Do not edit the class manually.
  */
 import { StateEnum } from './state-enum';
+import { Reason } from './reason';
 
 
 export interface Cell { 
@@ -15,6 +16,7 @@ export interface Cell {
     count: number;
     collected_at: string | null;
     error: string;
+    reason: Reason | null;
 }
 
 

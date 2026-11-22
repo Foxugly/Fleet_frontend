@@ -88,6 +88,32 @@
       "github": "GitHub",
       "sentry": "Sentry",
       "deps": "Dépendances"
+    },
+    "chip": "{{source}} : {{reason}}",
+    "sources": "Relancer une collecte par source",
+    "summary": {
+      "aria": "Résumé",
+      "handle": "{{n}} à traiter",
+      "watch": "{{n}} à surveiller",
+      "ok": "{{n}} OK"
+    },
+    "view": {
+      "aria": "Affichage",
+      "list": "Liste",
+      "mosaic": "Mosaïque"
+    },
+    "list": {
+      "show_ok": "+{{n}} sites OK",
+      "hide_ok": "Masquer les {{n}} sites OK"
+    },
+    "filter": {
+      "search_placeholder": "Rechercher une app",
+      "search_aria": "Rechercher une app par son nom",
+      "source_placeholder": "Problème sur…",
+      "source_aria": "Ne garder que les apps qui ont un problème sur cette source",
+      "clear": "Effacer les filtres",
+      "empty": "Aucune app ne correspond à ces filtres.",
+      "results": "{{n}} app(s) affichée(s)"
     }
   },
   "site": {
@@ -205,14 +231,43 @@
       "none": "Aucune donnée"
     },
     "dot": {
-      "aria": "{{label}} : {{state}}, {{count}}, {{age}}",
-      "aria_error": "{{label}} : {{state}}, {{count}}, {{age}}, {{error}}"
+      "aria": "{{label}} : {{state}}, {{count}}, {{age}} · {{reason}}",
+      "aria_error": "{{label}} : {{state}}, {{count}}, {{age}}, {{error}} · {{reason}}"
     },
     "refresh": {
       "aria": "Relancer la collecte",
+      "aria_source": "Relancer la collecte : {{source}}",
       "started": "Collecte lancée",
       "already": "Déjà en cours",
       "error": "Impossible de lancer la collecte."
+    }
+  },
+  "reason": {
+    "http_status": "Répond {{status}}",
+    "unreachable": "Injoignable",
+    "tls_error": "Erreur de certificat",
+    "tls_expiring": "Certificat : {{days}} j",
+    "main_ci_failed": "CI rouge sur main",
+    "secret_alert": "{{n}} alerte(s) de secret",
+    "high_alert": "{{n}} alerte(s) critique(s)",
+    "open_items": "{{n}} ouvert(s)",
+    "unresolved": "{{n}} non résolu(s)",
+    "outdated": "{{n}} obsolète(s)",
+    "failed_units": "{{n}} unité(s) en échec",
+    "security_updates": "{{n}} mise(s) à jour de sécurité",
+    "disk_full": "Disque plein à {{pct}} %",
+    "updates": "{{n}} mise(s) à jour",
+    "reboot_required": "Redémarrage nécessaire",
+    "stale": "Données anciennes",
+    "never_collected": "Jamais collecté",
+    "collect_error": "Erreur de collecte",
+    "fallback": {
+      "error": "Erreur de collecte",
+      "red": "{{n}} problème(s)",
+      "stale": "Données anciennes",
+      "orange": "{{n}} point(s) d'attention",
+      "green": "OK",
+      "none": "Aucune donnée"
     }
   }
 }

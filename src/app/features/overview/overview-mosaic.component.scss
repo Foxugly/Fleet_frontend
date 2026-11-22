@@ -1,0 +1,78 @@
+@use '../../shared/fleet/state-colors';
+@use '../../../styles/breakpoints' as bp;
+
+:host {
+  display: block;
+}
+
+.overview-mosaic {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @include bp.below(bp.$bp-sm) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.overview-mosaic__tile {
+  @include state-colors.modifiers;
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--state-color);
+  border-radius: 0.5rem;
+}
+
+.overview-mosaic__tile--none {
+  color: var(--p-text-muted-color);
+  border-style: dashed;
+}
+
+.overview-mosaic__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.overview-mosaic__dot {
+  flex: none;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: var(--state-color);
+}
+
+.overview-mosaic__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: inherit;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+  }
+}
+
+.overview-mosaic__undeployed {
+  flex: none;
+  margin-left: auto;
+  opacity: 0.8;
+}
+
+.overview-mosaic__headline {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
