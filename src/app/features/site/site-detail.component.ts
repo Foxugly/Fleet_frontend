@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, OnDestroy, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, OnDestroy, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -52,6 +52,7 @@ export class SiteDetailComponent implements OnDestroy {
   private readonly visits = inject(LastVisitService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly request$ = new RxSubject<string>();
 
   protected readonly slug = signal('');
@@ -89,6 +90,20 @@ export class SiteDetailComponent implements OnDestroy {
   protected readonly skeletons = [1, 2, 3, 4];
 
   constructor() {
+    // On a phone the tab list scrolls: bring the active tab into view (it can be the last one).
+    // On the next task, once the tabs of a just-loaded site are rendered (zoneless: an
+    // afterNextRender queued from an effect may wait for an unrelated change; a frame
+    // callback never runs in a background tab).
+    effect((onCleanup) => {
+      const key = this.activeTab();
+      if (!this.site()) return;
+      const timer = setTimeout(() => {
+        const tab = this.host.nativeElement.querySelector<HTMLElement>(`p-tab[data-source="${key}"]`);
+        tab?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+      });
+      onCleanup(() => clearTimeout(timer));
+    });
+
     this.request$
       .pipe(
         switchMap((slug) =>

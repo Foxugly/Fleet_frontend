@@ -16,4 +16,6 @@ import { ReasonLabelPipe } from '../reason-label.pipe';
 export class StateDotComponent {
   readonly cell = input.required<Cell>();
   readonly label = input.required<string>();
+  /** Hide the age text (still in the aria label): for tight places like tab labels. */
+  readonly compact = input(false);
 }

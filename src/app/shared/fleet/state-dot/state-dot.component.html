@@ -27,5 +27,7 @@
   @if (c.state !== 'none') {
     <span class="state-dot__count" aria-hidden="true">{{ c.count }}</span>
   }
-  <span class="state-dot__age" aria-hidden="true">{{ c.collected_at | age }}</span>
+  @if (!compact()) {
+    <span class="state-dot__age" aria-hidden="true">{{ c.collected_at | age }}</span>
+  }
 </span>

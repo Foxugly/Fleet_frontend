@@ -8,13 +8,14 @@ import { StateDotComponent } from './state-dot.component';
 const NOW = new Date('2026-11-21T12:00:00Z');
 const FIVE_MIN_AGO = '2026-11-21T11:55:00Z';
 
-async function mount(cell: Cell, label = 'GitHub'): Promise<HTMLElement> {
+async function mount(cell: Cell, label = 'GitHub', compact = false): Promise<HTMLElement> {
   TestBed.configureTestingModule({
     providers: [...authTestProviders(), { provide: Clock, useValue: { now: () => NOW } }],
   });
   const fixture: ComponentFixture<StateDotComponent> = TestBed.createComponent(StateDotComponent);
   fixture.componentRef.setInput('cell', cell);
   fixture.componentRef.setInput('label', label);
+  fixture.componentRef.setInput('compact', compact);
   await fixture.whenStable();
   fixture.detectChanges();
   await fixture.whenStable();
@@ -36,6 +37,13 @@ const reasonText = (state: StateEnum, count: number) =>
   ({ green: 'OK', orange: `${count} point(s) d'attention`, red: `${count} problème(s)` })[state as 'green'];
 
 describe('StateDotComponent', () => {
+  it('compact hides the age text but keeps it in the accessible name', async () => {
+    const el = await mount(cell(StateEnum.Orange, { count: 2 }), 'GitHub', true);
+    expect(el.querySelector('.state-dot__age')).toBeNull();
+    expect(el.textContent).toContain('2');
+    expect(root(el).getAttribute('aria-label')).toContain('il y a 5 min');
+  });
+
   it.each([
     [StateEnum.Green, 'Vert', 0],
     [StateEnum.Orange, 'Orange', 3],

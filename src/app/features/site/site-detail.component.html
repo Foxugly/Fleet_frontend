@@ -44,7 +44,7 @@
           <p-tab [value]="src.key" [attr.data-source]="src.key">
             <span class="site__tab-label">
               {{ 'site.source.' + src.key | transloco }}
-              <app-state-dot [cell]="src.cell" [label]="'site.source.' + src.key | transloco" />
+              <app-state-dot [cell]="src.cell" [label]="'site.source.' + src.key | transloco" [compact]="true" />
             </span>
           </p-tab>
         }

@@ -139,6 +139,24 @@ describe('SiteDetailComponent', () => {
       expect(el.textContent).toContain('Foxugly/Poker_server');
     });
 
+    it('scrolls the active tab into view (the tab list scrolls on a phone)', async () => {
+      const scroll = vi.fn();
+      const proto = HTMLElement.prototype as { scrollIntoView?: unknown };
+      const original = proto.scrollIntoView;
+      proto.scrollIntoView = function (this: HTMLElement, ...args: unknown[]) {
+        scroll(this.getAttribute('data-source'), ...args);
+      };
+      try {
+        const { http, harness } = await setup('poker', null, '?tab=deps');
+        http.expectOne(isSite('poker')).flush(detail());
+        await settle(harness.fixture);
+        await new Promise((r) => setTimeout(r));
+        expect(scroll).toHaveBeenCalledWith('deps', { block: 'nearest', inline: 'nearest' });
+      } finally {
+        proto.scrollIntoView = original;
+      }
+    });
+
     it('clicking a tab navigates with the tab query param, replacing history', async () => {
       const { http, harness, el, router } = await setup();
       http.expectOne(isSite('poker')).flush(detail());
