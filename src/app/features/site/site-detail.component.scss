@@ -2,8 +2,16 @@
   display: block;
 }
 
+.site__actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
 .site__tags {
   display: inline-flex;
+  flex-wrap: wrap;
   gap: 0.4rem;
   margin-left: 0.6rem;
 }

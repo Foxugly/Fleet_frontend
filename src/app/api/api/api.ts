@@ -1,3 +1,6 @@
+export * from './apps.service';
+import { AppsService } from './apps.service';
+export * from './apps.serviceInterface';
 export * from './auth.service';
 import { AuthService } from './auth.service';
 export * from './auth.serviceInterface';
@@ -16,4 +19,4 @@ export * from './sites.serviceInterface';
 export * from './updates.service';
 import { UpdatesService } from './updates.service';
 export * from './updates.serviceInterface';
-export const APIS = [AuthService, BoxService, OverviewService, RefreshService, SitesService, UpdatesService];
+export const APIS = [AppsService, AuthService, BoxService, OverviewService, RefreshService, SitesService, UpdatesService];

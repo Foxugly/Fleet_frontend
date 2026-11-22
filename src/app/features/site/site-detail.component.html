@@ -12,10 +12,17 @@
         severity="secondary"
         [value]="(s.actions_allowed ? 'site.actions_allowed' : 'site.read_only') | transloco"
       />
+      @if (s.archived) {
+        <p-tag severity="warn" [value]="'site.archived' | transloco" />
+      }
     </span>
   }
-  <div slot="right">
+  <div slot="right" class="site__actions">
     @if (!notFound()) {
+      <a pButton class="site__edit" [routerLink]="['/apps', slug(), 'edit']" size="small" severity="secondary" [outlined]="true">
+        <i pButtonIcon class="pi pi-pencil"></i>
+        <span pButtonLabel>{{ 'site.edit' | transloco }}</span>
+      </a>
       <p-button
         class="site__reload"
         icon="pi pi-refresh"
