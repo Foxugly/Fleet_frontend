@@ -321,6 +321,50 @@ describe('OverviewComponent', () => {
       expect(m.el.querySelector('.overview__clear')).toBeNull();
     });
 
+    it('announces the result count in a live region, and the active bucket is not colour-only', async () => {
+      const m = await loaded();
+      const live = () => m.el.querySelector('.overview__live')!;
+      expect(live().getAttribute('role')).toBe('status');
+      expect(live().textContent!.trim()).toBe('');
+      bucketButton(m.el, 'handle').click();
+      await settle(m.fixture);
+      expect(live().textContent).toContain('2 app(s) affichée(s)');
+      expect(bucketButton(m.el, 'handle').querySelector('.pi-check')).not.toBeNull();
+      expect(bucketButton(m.el, 'watch').querySelector('.pi-check')).toBeNull();
+      await go(m, '/?q=zzz');
+      expect(live().textContent).toContain('Aucune app ne correspond');
+    });
+
+    it('Escape or an emptied search box removes the search from the URL', async () => {
+      const m = await loaded();
+      await go(m, '/?q=po');
+      const input = search(m.el);
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      await settle(m.fixture);
+      expect(TestBed.inject(Router).url).toBe('/');
+      await go(m, '/?q=po');
+      input.value = '';
+      input.dispatchEvent(new Event('input'));
+      await settle(m.fixture);
+      expect(TestBed.inject(Router).url).toBe('/');
+    });
+
+    it('keeps unrelated query params', async () => {
+      const m = await loaded();
+      await go(m, '/?foo=1');
+      bucketButton(m.el, 'watch').click();
+      await settle(m.fixture);
+      expect(TestBed.inject(Router).url).toBe('/?foo=1&bucket=watch');
+    });
+
+    it('the empty state has its own "clear filters" button', async () => {
+      const m = await loaded();
+      await go(m, '/?q=zzz');
+      m.el.querySelector<HTMLButtonElement>('.overview__empty-clear button')!.click();
+      await settle(m.fixture);
+      expect(TestBed.inject(Router).url).toBe('/');
+    });
+
     it('ignores unknown filter values in the URL', async () => {
       const m = await loaded();
       await go(m, '/?bucket=nope&source=box');

@@ -29,9 +29,11 @@
           [class.overview__count--active]="filter().bucket === b"
           [attr.data-bucket]="b"
           [attr.aria-pressed]="filter().bucket === b"
-          [attr.title]="'overview.filter.bucket_hint' | transloco"
           (click)="toggleBucket(b)"
         >
+          @if (filter().bucket === b) {
+            <i class="pi pi-check overview__count-check" aria-hidden="true"></i>
+          }
           {{ 'overview.summary.' + b | transloco: { n: s[b] } }}
         </button>
       }
@@ -62,10 +64,12 @@
         pInputText
         type="search"
         class="overview__search-input"
+        maxlength="100"
         [value]="filter().q"
         [placeholder]="'overview.filter.search_placeholder' | transloco"
         [attr.aria-label]="'overview.filter.search_aria' | transloco"
         (input)="setSearch($any($event.target).value)"
+        (keydown.escape)="setSearch('')"
       />
     </p-iconfield>
     <p-select
@@ -101,8 +105,25 @@
     }
   </ul>
 
+  <!-- Always rendered, so screen readers announce each change of the result. -->
+  <p class="overview__live" role="status" aria-live="polite">
+    @if (filtering()) {
+      {{ shown().length ? ('overview.filter.results' | transloco: { n: shown().length }) : ('overview.filter.empty' | transloco) }}
+    }
+  </p>
+
   @if (filtering() && !shown().length) {
-    <p class="overview__empty" role="status">{{ 'overview.filter.empty' | transloco }}</p>
+    <div class="overview__empty">
+      <p>{{ 'overview.filter.empty' | transloco }}</p>
+      <p-button
+        class="overview__empty-clear"
+        icon="pi pi-filter-slash"
+        size="small"
+        severity="secondary"
+        [label]="'overview.filter.clear' | transloco"
+        (onClick)="clearFilters()"
+      />
+    </div>
   } @else if (view() === 'mosaic') {
     <app-overview-mosaic [entries]="shown()" />
   } @else {

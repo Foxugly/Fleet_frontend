@@ -113,7 +113,7 @@
       "source_aria": "Ne garder que les apps qui ont un problème sur cette source",
       "clear": "Effacer les filtres",
       "empty": "Aucune app ne correspond à ces filtres.",
-      "bucket_hint": "Cliquez pour filtrer, et encore une fois pour retirer le filtre"
+      "results": "{{n}} app(s) affichée(s)"
     }
   },
   "site": {

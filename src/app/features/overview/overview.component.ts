@@ -86,7 +86,7 @@ export class OverviewComponent {
     { initialValue: [] as string[] },
   );
   protected readonly sourceOptions = computed(() =>
-    SITE_SOURCES.map((key, i) => ({ value: key, label: this.sourceLabels()[i] ?? key })),
+    SITE_SOURCES.map((key, i) => ({ value: key, label: this.sourceLabels()[i] ?? '' })),
   );
   protected readonly sources = SOURCES;
   protected readonly views: readonly { key: OverviewView; label: string; icon: string }[] = [
