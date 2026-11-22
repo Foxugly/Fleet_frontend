@@ -51,7 +51,24 @@
   border: 1px solid var(--state-color);
   border-left-width: 4px;
   border-radius: 0.5rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
   font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--state-color) 10%, transparent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--state-color);
+    outline-offset: 2px;
+  }
+}
+
+.overview__count--active {
+  background: color-mix(in srgb, var(--state-color) 18%, transparent);
 }
 
 // Bucket -> the colour of the state that defines it.
@@ -92,4 +109,31 @@
   flex-wrap: wrap;
   gap: 1rem;
   padding: 0.6rem 0.9rem;
+}
+
+.overview__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.overview__search {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+.overview__search-input {
+  width: 100%;
+}
+
+.overview__source-filter {
+  flex: 0 1 14rem;
+  min-width: 0;
+}
+
+.overview__empty {
+  padding: 1rem 0;
+  color: var(--text-muted, var(--p-text-muted-color));
 }

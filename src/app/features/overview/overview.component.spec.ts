@@ -1,6 +1,7 @@
 import { HttpTestingController } from '@angular/common/http/testing';
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 
 import { Cell, Overview } from '../../api';
@@ -61,6 +62,7 @@ function mount(): Mounted {
   TestBed.configureTestingModule({
     providers: [
       ...authTestProviders([
+        { path: '', component: Stub },
         { path: 'box', component: Stub },
         { path: 'sites/:slug', component: Stub },
       ]),
@@ -260,5 +262,70 @@ describe('OverviewComponent', () => {
     await settle(fixture);
     expect(el.querySelector('p-message')).not.toBeNull();
     expect(el.querySelector('p-skeleton')).toBeNull();
+  });
+
+  describe('search and filters', () => {
+    const bucketButton = (el: HTMLElement, b: string) => el.querySelector<HTMLButtonElement>(`.overview__count[data-bucket="${b}"]`)!;
+    const search = (el: HTMLElement) => el.querySelector<HTMLInputElement>('.overview__search-input')!;
+    const go = async (m: Mounted, url: string) => {
+      await TestBed.inject(Router).navigateByUrl(url);
+      await settle(m.fixture);
+    };
+
+    it('typing in the search box filters by name and keeps it in the URL', async () => {
+      const m = await loaded();
+      const input = search(m.el);
+      input.value = 'PO';
+      input.dispatchEvent(new Event('input'));
+      await settle(m.fixture);
+      expect(names(rows(m.el))).toEqual(['poker']);
+      expect(TestBed.inject(Router).url).toBe('/?q=PO');
+    });
+
+    it('a summary bucket toggles a filter; matching greens are shown, not collapsed', async () => {
+      const m = await loaded();
+      bucketButton(m.el, 'ok').click();
+      await settle(m.fixture);
+      expect(bucketButton(m.el, 'ok').getAttribute('aria-pressed')).toBe('true');
+      expect(names(rows(m.el))).toEqual(['quiz', 'ical']);
+      expect(m.el.querySelector('.overview-list__more')).toBeNull();
+
+      bucketButton(m.el, 'ok').click();
+      await settle(m.fixture);
+      expect(bucketButton(m.el, 'ok').getAttribute('aria-pressed')).toBe('false');
+      expect(names(rows(m.el))).toEqual(['Box', 'chronos', 'poker', 'ghost']);
+    });
+
+    it('the source filter keeps the apps with a problem on that source (from the URL)', async () => {
+      const m = await loaded();
+      await go(m, '/?source=deps');
+      expect(names(rows(m.el))).toEqual(['chronos']);
+    });
+
+    it('filters also apply to the mosaic', async () => {
+      const m = await loaded();
+      viewButton(m.el, 'mosaic').click();
+      await go(m, '/?bucket=handle');
+      expect(names(tiles(m.el))).toEqual(['chronos', 'poker']);
+    });
+
+    it('no match shows a message, and "clear filters" brings everything back', async () => {
+      const m = await loaded();
+      await go(m, '/?q=zzz&source=sentry');
+      expect(rows(m.el)).toEqual([]);
+      expect(m.el.querySelector('.overview__empty')!.textContent).toContain('Aucune app ne correspond');
+      m.el.querySelector<HTMLButtonElement>('.overview__clear button')!.click();
+      await settle(m.fixture);
+      expect(TestBed.inject(Router).url).toBe('/');
+      expect(names(rows(m.el))).toEqual(['Box', 'chronos', 'poker', 'ghost']);
+      expect(m.el.querySelector('.overview__clear')).toBeNull();
+    });
+
+    it('ignores unknown filter values in the URL', async () => {
+      const m = await loaded();
+      await go(m, '/?bucket=nope&source=box');
+      expect(names(rows(m.el))).toEqual(['Box', 'chronos', 'poker', 'ghost']);
+      expect(m.el.querySelector('.overview__clear')).toBeNull();
+    });
   });
 });

@@ -80,3 +80,47 @@ export function buildEntries(overview: Overview): OverviewEntry[] {
 export function worstCell(entry: OverviewEntry): Cell | undefined {
   return SOURCES.map((s) => entry.cells[s.key]).find((c) => c?.state === entry.worst);
 }
+
+/** A source that can be filtered on: the four site sources (the box has its own entry). */
+export type SiteSource = Exclude<Source, 'box'>;
+export const SITE_SOURCES: readonly SiteSource[] = ['health', 'github', 'sentry', 'deps'];
+
+export interface OverviewFilter {
+  /** Case-insensitive substring of the app name. */
+  q: string;
+  bucket: Bucket | null;
+  /** Keep only entries with a problem (to handle or to watch) on this source. */
+  source: SiteSource | null;
+}
+
+export const NO_FILTER: OverviewFilter = { q: '', bucket: null, source: null };
+
+export function isFiltering(f: OverviewFilter): boolean {
+  return f.q.trim() !== '' || f.bucket !== null || f.source !== null;
+}
+
+/** Keeps the order of `entries`. The box matches the search on its key (`box`). */
+export function filterEntries(entries: readonly OverviewEntry[], f: OverviewFilter): OverviewEntry[] {
+  const q = f.q.trim().toLowerCase();
+  return entries.filter((e) => {
+    if (q && !e.key.toLowerCase().includes(q)) return false;
+    if (f.bucket && bucket(e.worst) !== f.bucket) return false;
+    if (f.source) {
+      const c = e.cells[f.source];
+      const b = c ? bucket(c.state) : null;
+      if (b !== 'handle' && b !== 'watch') return false;
+    }
+    return true;
+  });
+}
+
+/** Parses untrusted query-param values; anything unknown is ignored. */
+export function parseFilter(params: { get(name: string): string | null }): OverviewFilter {
+  const b = params.get('bucket');
+  const s = params.get('source');
+  return {
+    q: (params.get('q') ?? '').slice(0, 100),
+    bucket: b === 'handle' || b === 'watch' || b === 'ok' ? b : null,
+    source: SITE_SOURCES.includes(s as SiteSource) ? (s as SiteSource) : null,
+  };
+}

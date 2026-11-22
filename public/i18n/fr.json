@@ -105,6 +105,15 @@
     "list": {
       "show_ok": "+{{n}} sites OK",
       "hide_ok": "Masquer les {{n}} sites OK"
+    },
+    "filter": {
+      "search_placeholder": "Rechercher une app",
+      "search_aria": "Rechercher une app par son nom",
+      "source_placeholder": "Problème sur…",
+      "source_aria": "Ne garder que les apps qui ont un problème sur cette source",
+      "clear": "Effacer les filtres",
+      "empty": "Aucune app ne correspond à ces filtres.",
+      "bucket_hint": "Cliquez pour filtrer, et encore une fois pour retirer le filtre"
     }
   },
   "site": {

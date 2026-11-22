@@ -1,5 +1,16 @@
 import { Cell, Overview, OverviewSite } from '../../api';
-import { BOX_KEY, OverviewEntry, bucket, buildEntries, summarize, worstState } from './overview-model';
+import {
+  BOX_KEY,
+  NO_FILTER,
+  OverviewEntry,
+  bucket,
+  buildEntries,
+  filterEntries,
+  isFiltering,
+  parseFilter,
+  summarize,
+  worstState,
+} from './overview-model';
 
 const cell = (state: string, count = 0): Cell => ({
   state: state as Cell['state'],
@@ -87,5 +98,54 @@ describe('overview model', () => {
 
   it('summarize of nothing is all zero', () => {
     expect(summarize([] as OverviewEntry[])).toEqual({ handle: 0, watch: 0, ok: 0 });
+  });
+});
+
+describe('overview filters', () => {
+  const entries = buildEntries(
+    overview('orange', [
+      site('poker', ['red', 'green', 'green', 'green']),
+      site('quiz', ['green', 'green', 'green', 'green']),
+      site('chronos', ['green', 'green', 'green', 'orange']),
+      site('ghost', ['none', 'none', 'none', 'none'], false),
+    ]),
+  );
+  const keys = (es: readonly OverviewEntry[]) => es.map((e) => e.key);
+  const params = (q: Record<string, string>) => ({ get: (k: string) => q[k] ?? null });
+
+  it('no filter keeps every entry, in order', () => {
+    expect(isFiltering(NO_FILTER)).toBe(false);
+    expect(keys(filterEntries(entries, NO_FILTER))).toEqual(keys(entries));
+  });
+
+  it('search is a case-insensitive substring of the name; the box matches "box"', () => {
+    expect(keys(filterEntries(entries, { ...NO_FILTER, q: '  PO ' }))).toEqual(['poker']);
+    expect(keys(filterEntries(entries, { ...NO_FILTER, q: 'box' }))).toEqual([BOX_KEY]);
+    expect(isFiltering({ ...NO_FILTER, q: '   ' })).toBe(false);
+  });
+
+  it('bucket keeps the entries whose worst state is in it; all-none is in no bucket', () => {
+    expect(keys(filterEntries(entries, { ...NO_FILTER, bucket: 'handle' }))).toEqual(['poker']);
+    expect(keys(filterEntries(entries, { ...NO_FILTER, bucket: 'watch' }))).toEqual([BOX_KEY, 'chronos']);
+    expect(keys(filterEntries(entries, { ...NO_FILTER, bucket: 'ok' }))).toEqual(['quiz']);
+  });
+
+  it('source keeps the entries with a problem on it (never the box, never a green or none cell)', () => {
+    expect(keys(filterEntries(entries, { ...NO_FILTER, source: 'health' }))).toEqual(['poker']);
+    expect(keys(filterEntries(entries, { ...NO_FILTER, source: 'deps' }))).toEqual(['chronos']);
+    expect(keys(filterEntries(entries, { ...NO_FILTER, source: 'sentry' }))).toEqual([]);
+  });
+
+  it('filters combine', () => {
+    expect(keys(filterEntries(entries, { q: 'o', bucket: 'watch', source: 'deps' }))).toEqual(['chronos']);
+  });
+
+  it('parseFilter ignores unknown values and caps the search length', () => {
+    expect(parseFilter(params({ bucket: 'nope', source: 'box' }))).toEqual(NO_FILTER);
+    expect(parseFilter(params({ q: 'x'.repeat(500), bucket: 'ok', source: 'sentry' }))).toEqual({
+      q: 'x'.repeat(100),
+      bucket: 'ok',
+      source: 'sentry',
+    });
   });
 });

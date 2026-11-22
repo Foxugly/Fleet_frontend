@@ -9,20 +9,22 @@
         <ng-container *ngTemplateOutlet="row; context: { $implicit: e }" />
       }
     }
-    <li class="overview-list__more">
-      <button
-        type="button"
-        pButton
-        size="small"
-        [text]="true"
-        severity="secondary"
-        [attr.aria-expanded]="showOk()"
-        (click)="showOk.set(!showOk())"
-      >
-        <i pButtonIcon class="pi" [class.pi-chevron-up]="showOk()" [class.pi-chevron-down]="!showOk()"></i>
-        <span pButtonLabel>{{ (showOk() ? 'overview.list.hide_ok' : 'overview.list.show_ok') | transloco: { n: g.ok.length } }}</span>
-      </button>
-    </li>
+    @if (collapseOk()) {
+      <li class="overview-list__more">
+        <button
+          type="button"
+          pButton
+          size="small"
+          [text]="true"
+          severity="secondary"
+          [attr.aria-expanded]="showOk()"
+          (click)="expanded.set(!expanded())"
+        >
+          <i pButtonIcon class="pi" [class.pi-chevron-up]="showOk()" [class.pi-chevron-down]="!showOk()"></i>
+          <span pButtonLabel>{{ (showOk() ? 'overview.list.hide_ok' : 'overview.list.show_ok') | transloco: { n: g.ok.length } }}</span>
+        </button>
+      </li>
+    }
   }
   @for (e of g.after; track e.key) {
     <ng-container *ngTemplateOutlet="row; context: { $implicit: e }" />

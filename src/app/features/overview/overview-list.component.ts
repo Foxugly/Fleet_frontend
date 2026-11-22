@@ -21,10 +21,13 @@ import { BOX_KEY, OverviewEntry } from './overview-model';
 })
 export class OverviewListComponent {
   readonly entries = input.required<readonly OverviewEntry[]>();
+  /** False while a search or filter is active: what matched is shown, green included. */
+  readonly collapseOk = input(true);
 
   protected readonly boxKey = BOX_KEY;
   /** In memory only: every visit starts collapsed. */
-  protected readonly showOk = signal(false);
+  protected readonly expanded = signal(false);
+  protected readonly showOk = computed(() => this.expanded() || !this.collapseOk());
 
   /** The box stays first whatever its state; only green sites collapse. */
   protected readonly groups = computed(() => {
