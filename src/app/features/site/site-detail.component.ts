@@ -112,7 +112,8 @@ export class SiteDetailComponent implements OnDestroy {
         }
       });
 
-    this.route.paramMap.pipe(
+    this.route.paramMap
+      .pipe(
         map((p) => p.get('slug') ?? ''),
         distinctUntilChanged(),
         takeUntilDestroyed(inject(DestroyRef)),

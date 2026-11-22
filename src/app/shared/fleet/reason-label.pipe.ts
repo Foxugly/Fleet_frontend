@@ -4,7 +4,7 @@ import { TranslocoService } from '@jsverse/transloco';
 import { Cell } from '../../api';
 
 /**
- * Cell -> short human reason ("Répond 502", "3 à traiter"...), translated from the
+ * Cell -> short human reason ("Répond 502", "3 ouvert(s)"...), translated from the
  * API's `reason {code, params}`. With no reason, or a code this UI does not know yet,
  * falls back to the generic per-state text, so a raw key is never shown.
  * Impure on purpose: it must follow a language switch (as `AgePipe` does).

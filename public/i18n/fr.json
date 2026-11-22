@@ -227,6 +227,7 @@
     },
     "refresh": {
       "aria": "Relancer la collecte",
+      "aria_source": "Relancer la collecte : {{source}}",
       "started": "Collecte lancée",
       "already": "Déjà en cours",
       "error": "Impossible de lancer la collecte."
@@ -240,7 +241,7 @@
     "main_ci_failed": "CI rouge sur main",
     "secret_alert": "{{n}} alerte(s) de secret",
     "high_alert": "{{n}} alerte(s) critique(s)",
-    "open_items": "{{n}} à traiter",
+    "open_items": "{{n}} ouvert(s)",
     "unresolved": "{{n}} non résolu(s)",
     "outdated": "{{n}} obsolète(s)",
     "failed_units": "{{n}} unité(s) en échec",
@@ -249,6 +250,7 @@
     "updates": "{{n}} mise(s) à jour",
     "reboot_required": "Redémarrage nécessaire",
     "stale": "Données anciennes",
+    "never_collected": "Jamais collecté",
     "collect_error": "Erreur de collecte",
     "fallback": {
       "error": "Erreur de collecte",

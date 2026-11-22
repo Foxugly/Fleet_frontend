@@ -30,6 +30,12 @@ describe('ReasonLabelPipe', () => {
     expect(text).toContain('12');
   });
 
+  it('never_collected and open_items use the new wording', async () => {
+    const p = await pipe();
+    expect(p.transform(cell(StateEnum.Stale, 0, { code: 'never_collected', params: {} }))).toBe('Jamais collecté');
+    expect(p.transform(cell(StateEnum.Orange, 3, { code: 'open_items', params: { n: 3 } }))).toBe('3 ouvert(s)');
+  });
+
   it('unknown code on a red cell falls back to the red text with the count, never a raw key', async () => {
     const text = (await pipe()).transform(cell(StateEnum.Red, 2, { code: 'brand_new', params: {} }));
     expect(text).toContain('2');
