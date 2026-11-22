@@ -269,5 +269,52 @@
       "green": "OK",
       "none": "Aucune donnée"
     }
+  },
+  "updates": {
+    "title": "Mises à jour communes ({{n}})",
+    "section": {
+      "security": "Sécurité",
+      "major": "Majeures",
+      "updates": "Mises à jour",
+      "patch": "Patchs"
+    },
+    "section_count": "{{label}} ({{n}})",
+    "security_version": "sécurité",
+    "decide": "à décider",
+    "sites": "Applications concernées",
+    "links": "Liens GitHub",
+    "severity": {
+      "critical": "critique",
+      "high": "élevée",
+      "medium": "moyenne",
+      "low": "faible",
+      "unknown": "inconnue"
+    },
+    "progress": {
+      "none": "Pas commencé",
+      "in_progress": "En cours",
+      "possible": "Possible",
+      "blocked": "Bloqué",
+      "waiting": "En attente de {{package}} > {{version}}",
+      "retry": "À retenter : {{package}} {{newer}} disponible"
+    },
+    "copy": "Copier le prompt",
+    "copy_anyway": "Copier quand même",
+    "copy_anyway_aria": "Copier quand même le prompt Claude Code pour {{package}}",
+    "copy_aria": "Copier le prompt Claude Code pour {{package}}",
+    "unsafe": "Données inattendues reçues de l'API : prompt indisponible.",
+    "copied": "Prompt copié : collez-le dans Claude Code.",
+    "copy_failed": "Copie impossible : sélectionnez le prompt affiché sous la ligne.",
+    "manual_aria": "Prompt pour {{package}}, à copier manuellement",
+    "prompt": {
+      "intro": "Mets à jour `{{package}}` vers `{{latest}}` ({{ecosystem}}) dans ces dépôts Foxugly : {{targets}}.",
+      "intro_security": "Corrige l'alerte Dependabot `{{package}}` (sévérité {{severity}}) dans ces dépôts Foxugly : {{targets}}.",
+      "severity_unknown": "inconnue",
+      "steps": "Pour chaque dépôt : lis son CLAUDE.md, crée la branche `{{branch}}`, mets à jour la dépendance et régénère le verrou avec la commande documentée, lance les tests et le lint, pousse et ouvre une PR. Ne merge pas. Termine par la liste des PR et l'état de leur CI.",
+      "major": "Montée majeure : lis les notes de version et liste les changements cassants avant de modifier quoi que ce soit.",
+      "angular": "Politique de flotte : les majeures Angular se font ensemble, sur décision de Renaud.",
+      "failure": "Si la mise à jour est impossible dans un dépôt : n'ouvre pas de PR (ferme-la si sa CI reste rouge malgré tes corrections) et ouvre une issue titrée `[fleet] {{package}} {{latest}} bloqué` dont le corps contient la ligne `Fleet-Update: {{package}} {{latest}}`, une ligne `Fleet-Blocked-By: <paquet> <version>` par paquet bloquant, puis la raison en clair. Quand une mise à jour passe, ajoute `Fixes #<numéro>` à la PR si une issue `[fleet]` existait.",
+      "retry": "Nouvelle tentative : {{blocker}} {{newer}} est disponible. Les issues {{issues}} décrivent l'échec précédent."
+    }
   }
 }

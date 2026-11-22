@@ -51,6 +51,7 @@ const overview = (): Overview => ({
 });
 
 const isOverview = (r: { url: string }) => r.url.endsWith('/api/v1/overview/');
+const isUpdates = (r: { url: string }) => r.url.endsWith('/api/v1/updates/');
 
 interface Mounted {
   fixture: ComponentFixture<OverviewComponent>;
@@ -228,6 +229,25 @@ describe('OverviewComponent', () => {
     expect(el.querySelector('.overview__generated')!.textContent).toContain('Généré il y a 2 min');
     el.querySelector<HTMLButtonElement>('.overview__reload button')!.click();
     http.expectOne(isOverview).flush(overview());
+  });
+
+  it('renders the shared-updates panel between the filters and the list, and reloads it too', async () => {
+    const { fixture, http, el } = await loaded();
+    const panel = el.querySelector('app-shared-updates')!;
+    expect(panel).not.toBeNull();
+    const filters = el.querySelector('.overview__filters')!;
+    const list = el.querySelector('app-overview-list')!;
+    expect(filters.compareDocumentPosition(panel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(panel.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    http.expectOne(isUpdates).flush({ generated_at: '2026-11-21T11:58:00Z', groups: [] });
+
+    el.querySelector<HTMLButtonElement>('.overview__reload button')!.click();
+    http.expectOne(isOverview).flush(overview());
+    http.expectOne(isUpdates).flush('boom', { status: 500, statusText: 'Server Error' });
+    await settle(fixture);
+    // A failing /updates/ leaves the overview untouched (Review Focus 5).
+    expect(el.querySelector('p-message')).toBeNull();
+    expect(rows(el).length).toBe(4);
   });
 
   it('keeps the last data, the error banner and the view when a later poll fails, then clears it (Review Focus 5)', async () => {

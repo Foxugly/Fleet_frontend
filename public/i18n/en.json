@@ -269,5 +269,52 @@
       "green": "OK",
       "none": "No data"
     }
+  },
+  "updates": {
+    "title": "Shared updates ({{n}})",
+    "section": {
+      "security": "Security",
+      "major": "Major",
+      "updates": "Updates",
+      "patch": "Patches"
+    },
+    "section_count": "{{label}} ({{n}})",
+    "security_version": "security",
+    "decide": "to decide",
+    "sites": "Apps concerned",
+    "links": "GitHub links",
+    "severity": {
+      "critical": "critical",
+      "high": "high",
+      "medium": "medium",
+      "low": "low",
+      "unknown": "unknown"
+    },
+    "progress": {
+      "none": "Not started",
+      "in_progress": "In progress",
+      "possible": "Possible",
+      "blocked": "Blocked",
+      "waiting": "Waiting for {{package}} > {{version}}",
+      "retry": "Retry: {{package}} {{newer}} available"
+    },
+    "copy": "Copy the prompt",
+    "copy_anyway": "Copy anyway",
+    "copy_anyway_aria": "Copy anyway the Claude Code prompt for {{package}}",
+    "copy_aria": "Copy the Claude Code prompt for {{package}}",
+    "unsafe": "Unexpected data from the API: prompt unavailable.",
+    "copied": "Prompt copied: paste it into Claude Code.",
+    "copy_failed": "Copy failed: select the prompt shown below the row.",
+    "manual_aria": "Prompt for {{package}}, to copy by hand",
+    "prompt": {
+      "intro": "Update `{{package}}` to `{{latest}}` ({{ecosystem}}) in these Foxugly repositories: {{targets}}.",
+      "intro_security": "Fix the Dependabot alert `{{package}}` (severity {{severity}}) in these Foxugly repositories: {{targets}}.",
+      "severity_unknown": "unknown",
+      "steps": "For each repository: read its CLAUDE.md, create the branch `{{branch}}`, update the dependency and regenerate the lock file with the documented command, run the tests and the linter, push and open a PR. Do not merge. Finish with the list of PRs and the state of their CI.",
+      "major": "Major upgrade: read the release notes and list the breaking changes before changing anything.",
+      "angular": "Fleet policy: Angular majors are done together, on Renaud's decision.",
+      "failure": "If the update is impossible in a repository: do not open a PR (close it if its CI stays red despite your fixes) and open an issue titled `[fleet] {{package}} {{latest}} blocked` whose body contains the line `Fleet-Update: {{package}} {{latest}}`, one line `Fleet-Blocked-By: <package> <version>` per blocking package, then the reason in plain words. When an update goes through, add `Fixes #<number>` to the PR if a `[fleet]` issue existed.",
+      "retry": "New attempt: {{blocker}} {{newer}} is available. The issues {{issues}} describe the previous failure."
+    }
   }
 }

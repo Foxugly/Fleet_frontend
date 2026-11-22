@@ -96,6 +96,8 @@
     }
   </div>
 
+  <app-shared-updates />
+
   <ul class="overview__sources" [attr.aria-label]="'overview.sources' | transloco">
     @for (src of sources; track src.key) {
       <li class="overview__source">

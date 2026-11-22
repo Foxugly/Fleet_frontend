@@ -13,6 +13,8 @@ api/refresh.service.ts
 api/refresh.serviceInterface.ts
 api/sites.service.ts
 api/sites.serviceInterface.ts
+api/updates.service.ts
+api/updates.serviceInterface.ts
 configuration.ts
 encoder.ts
 git_push.sh
@@ -30,6 +32,7 @@ model/models.ts
 model/overview-box.ts
 model/overview-site.ts
 model/overview.ts
+model/progress-enum.ts
 model/queued.ts
 model/reason.ts
 model/refresh-request.ts
@@ -41,6 +44,14 @@ model/state-enum.ts
 model/subject.ts
 model/token-refresh-response.ts
 model/token-response.ts
+model/update-blocked.ts
+model/update-blocker.ts
+model/update-group.ts
+model/update-issue.ts
+model/update-member.ts
+model/update-pr.ts
+model/update-security.ts
+model/updates.ts
 model/user.ts
 param.ts
 provide-api.ts

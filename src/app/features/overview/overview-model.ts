@@ -3,6 +3,9 @@ import { stateRank, worstState } from '../../shared/fleet/state-order';
 
 export { worstState };
 
+/** Poll period of the overview and of its shared-updates panel. */
+export const OVERVIEW_POLL_MS = 60_000;
+
 export type State = StateEnum;
 export type Source = 'health' | 'github' | 'sentry' | 'deps' | 'box';
 export type Bucket = 'handle' | 'watch' | 'ok';
