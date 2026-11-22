@@ -1,3 +1,18 @@
+import { Cell } from '../../api';
+import { stateRank } from '../../shared/fleet/state-order';
+
+export type SourceKey = 'health' | 'github' | 'sentry' | 'deps';
+export const SOURCES: readonly SourceKey[] = ['health', 'github', 'sentry', 'deps'];
+
+/** Tab to open by default: the worst state, ties broken in source order. */
+export function defaultTab(cells: Record<SourceKey, Cell>): SourceKey {
+  let best = SOURCES[0];
+  for (const key of SOURCES) {
+    if (stateRank(cells[key].state) < stateRank(cells[best].state)) best = key;
+  }
+  return best;
+}
+
 /** Only https links from the GitHub/Sentry APIs are rendered as anchors. */
 export function safeUrl(url: string | null | undefined): string | null {
   return typeof url === 'string' && url.startsWith('https://') ? url : null;

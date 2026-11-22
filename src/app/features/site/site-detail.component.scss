@@ -13,16 +13,21 @@
   margin-bottom: 1rem;
 }
 
-.site__panel,
 .site__skeleton {
   display: block;
   margin-bottom: 1rem;
 }
 
-.site__panel-head {
+.site__tab-label {
   display: inline-flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.5rem;
+}
+
+.site__panel-head {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
 }
 
 .site__subject {

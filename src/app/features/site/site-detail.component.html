@@ -38,54 +38,65 @@
   }
 
   @if (site()) {
-    @for (src of sources(); track src.key) {
-      <p-panel class="site__panel" [toggleable]="false">
-        <ng-template #header>
-          <span class="site__panel-head">
-            <strong>{{ 'site.source.' + src.key | transloco }}</strong>
-            <app-state-dot [cell]="src.cell" [label]="'site.source.' + src.key | transloco" />
-            <app-refresh-button [source]="src.key" />
-          </span>
-        </ng-template>
-
-        @for (item of src.items; track item.name) {
-          <section class="site__subject">
-            <h3 class="site__subject-name">
-              {{ item.name }}
-              <span class="site__age">{{ item.subject.collected_at | age }}</span>
-            </h3>
-            @if (item.subject.ok === false) {
-              <p-message severity="warn" styleClass="site__warn">
-                {{ item.subject.error }}
-                @if (item.subject.data) {
-                  — {{ 'site.last_good' | transloco: { age: item.subject.collected_at | age } }}
-                }
-              </p-message>
-            }
-            @if (item.subject.data === null) {
-              <p class="site__never">{{ 'fleet.age.never' | transloco }}</p>
-            } @else {
-              @switch (src.key) {
-                @case ('health') {
-                  <app-health-section [data]="health(item.subject)!" />
-                }
-                @case ('github') {
-                  <app-github-section [data]="github(item.subject)!" [since]="since()" />
-                }
-                @case ('sentry') {
-                  <app-sentry-section [data]="sentry(item.subject)!" [since]="since()" />
-                }
-                @case ('deps') {
-                  <app-deps-section [data]="deps(item.subject)!" />
-                }
+    <p-tabs [value]="activeTab()" (valueChange)="selectTab($event)" scrollable>
+      <p-tablist>
+        @for (src of sources(); track src.key) {
+          <p-tab [value]="src.key" [attr.data-source]="src.key">
+            <span class="site__tab-label">
+              {{ 'site.source.' + src.key | transloco }}
+              <app-state-dot [cell]="src.cell" [label]="'site.source.' + src.key | transloco" />
+            </span>
+          </p-tab>
+        }
+      </p-tablist>
+      <p-tabpanels>
+        @for (src of sources(); track src.key) {
+          <p-tabpanel [value]="src.key">
+            @if (activeTab() === src.key) {
+              <div class="site__panel-head">
+                <app-refresh-button [source]="src.key" />
+              </div>
+              @for (item of src.items; track item.name) {
+                <section class="site__subject">
+                  <h3 class="site__subject-name">
+                    {{ item.name }}
+                    <span class="site__age">{{ item.subject.collected_at | age }}</span>
+                  </h3>
+                  @if (item.subject.ok === false) {
+                    <p-message severity="warn" styleClass="site__warn">
+                      {{ item.subject.error }}
+                      @if (item.subject.data) {
+                        — {{ 'site.last_good' | transloco: { age: item.subject.collected_at | age } }}
+                      }
+                    </p-message>
+                  }
+                  @if (item.subject.data === null) {
+                    <p class="site__never">{{ 'fleet.age.never' | transloco }}</p>
+                  } @else {
+                    @switch (src.key) {
+                      @case ('health') {
+                        <app-health-section [data]="health(item.subject)!" />
+                      }
+                      @case ('github') {
+                        <app-github-section [data]="github(item.subject)!" [since]="since()" />
+                      }
+                      @case ('sentry') {
+                        <app-sentry-section [data]="sentry(item.subject)!" [since]="since()" />
+                      }
+                      @case ('deps') {
+                        <app-deps-section [data]="deps(item.subject)!" />
+                      }
+                    }
+                  }
+                </section>
+              } @empty {
+                <p class="site__never">{{ 'site.no_items' | transloco }}</p>
               }
             }
-          </section>
-        } @empty {
-          <p class="site__never">{{ 'site.no_items' | transloco }}</p>
+          </p-tabpanel>
         }
-      </p-panel>
-    }
+      </p-tabpanels>
+    </p-tabs>
   } @else if (!failed()) {
     <div aria-busy="true">
       @for (n of skeletons; track n) {
