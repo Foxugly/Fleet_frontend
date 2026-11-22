@@ -8,7 +8,7 @@ Angular SPA served as static files by nginx at `fleet.foxugly.com`. It calls the
 | What | Where | Owner / mode |
 |---|---|---|
 | Docroot | `/srv/fleet/Fleet_frontend/dist/fleet-frontend/browser` | `fleet:www-data`, dirs `2750`, files `640` |
-| Bundle generations | `/srv/fleet/Fleet_frontend/dist/.bundle-{current,prev}` | same, outside the docroot |
+| Bundle generations | `/srv/fleet/Fleet_frontend/dist/.bundle-{current,prev}` (+ `.release`) | same, outside the docroot |
 | Root's mirror | `/var/lib/fleet-deploy/Fleet_frontend.git` | `root:root 700` |
 | Runtime fetch | `/usr/local/sbin/fleet-app-frontend-runtime-fetch.sh` + `fleet-app-frontend-runtime-fetch.service` | `root:root` |
 | Vhost | `/etc/nginx/sites-available/fleet.foxugly.com` (symlinked in `sites-enabled`) | `root:root 0644` |
@@ -31,8 +31,13 @@ Push to `main` → `deploy.yml` calls `ci.yml` (tests + build) → the `deploy` 
    - fetch the SHA into root's bare mirror; install the runtime-fetch script and unit **from the
      mirror only** (never from `/srv/fleet`);
    - root downloads the bundle into a private `mktemp -d`; **`fleet`** extracts it from stdin into
-     `dist/.bundle-new`, rotates it to `.bundle-current` (old one to `.bundle-prev`) and rsyncs
-     current ∪ previous into the docroot (a tab opened before the deploy keeps its lazy chunks);
+     `dist/.bundle-new`, then runs `deploy/publish-bundle.sh` (read from the mirror into a root-owned
+     0644 temp file): rotation to `.bundle-current`/`.bundle-prev` only when the SHA changes
+     (`.release` in each generation, so a retry keeps the previous one); current files except
+     `index.html` (no delete), then the previous generation's missing files, then `index.html`
+     last via `index.html.new` + `mv`, then a prune of what is in neither generation. No request
+     sees an `index.html` referencing a missing file, and a tab opened before the deploy keeps its
+     lazy chunks for one more deploy;
    - permissions as root: owner root and no "other" bits first (fleet locked out), `chgrp -R -h
      www-data`, dirs `2750`, files `640`, owner back to `fleet`;
    - vhost from the mirror with a `.deploybak` copy, rolled back if `nginx -t` fails; version

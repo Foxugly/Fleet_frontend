@@ -75,9 +75,9 @@ if not re.fullmatch(r"https://[A-Za-z0-9.-]+(:[0-9]{1,5})?/?", values["API_BASE_
 csp_report = ""
 dsn = values["SENTRY_DSN"]
 if dsn:
-    m = re.fullmatch(r"https://([0-9a-f]+)@([A-Za-z0-9.-]+\.sentry\.io)/([0-9]+)", dsn)
+    m = re.fullmatch(r"https://([0-9a-f]+)@([a-z0-9]+\.ingest\.de\.sentry\.io)/([0-9]+)", dsn)
     if not m:
-        fail("SENTRY_DSN is not a https://<key>@<host>.sentry.io/<project> DSN")
+        fail("SENTRY_DSN is not a https://<key>@<org>.ingest.de.sentry.io/<project> DSN (the CSP allows only that ingest)")
     key, host, project = m.groups()
     csp_report = f"; report-uri https://{host}/api/{project}/security/?sentry_key={key}"
 

@@ -145,8 +145,10 @@ describe('nginx vhost fleet.foxugly.com', () => {
     const i18n = locs.get('~* ^/i18n/.+\\.json$') ?? '';
     expect(i18n).toContain('add_header Cache-Control "no-cache" always;');
     const assets = [...locs.entries()].find(([k]) => k.includes('js|css'))?.[1] ?? '';
-    expect(assets).toContain('add_header Cache-Control "public, max-age=31536000, immutable" always;');
-    expect(locs.get('/')).toContain('try_files $uri $uri/ /index.html;');
+    // No `always`: a 404 for a missing chunk must not be cached immutable for a year.
+    expect(assets).toContain('add_header Cache-Control "public, max-age=31536000, immutable";');
+    expect(assets).not.toMatch(/immutable" always|expires/);
+    expect(locs.get('/')).toContain('try_files $uri /index.html;');
   });
 });
 
@@ -192,6 +194,8 @@ describe('runtime fetch script and unit', () => {
       'ProtectSystem=full',
       'ReadWritePaths=/etc/nginx/snippets',
       'ProtectHome=yes',
+      'ProtectKernelTunables=yes',
+      'ProtectControlGroups=yes',
       'NoNewPrivileges=yes',
       'RestrictSUIDSGID=yes',
       'ExecStart=/usr/local/sbin/fleet-app-frontend-runtime-fetch.sh',
@@ -311,6 +315,9 @@ const bashRun = (script: string, args: string[] = [], env: NodeJS.ProcessEnv = p
 const HAS_PYTHON = BASH !== null && bashRun('python3 -c "print(1)"').stdout?.trim() === '1';
 const withBash = BASH ? it : it.skip;
 const withPython = HAS_PYTHON ? it : it.skip;
+// publish-bundle.sh needs rsync (absent from Git Bash; present on the ubuntu runner and the box).
+const HAS_RSYNC = BASH !== null && bashRun('command -v rsync').status === 0;
+const withRsync = HAS_RSYNC ? it : it.skip;
 
 /** POSIX form of a native path, for bash (cygpath under Git Bash). */
 function posix(p: string): string {
@@ -540,7 +547,7 @@ describe('deploy.yml behaviour: SSM command list', () => {
       expect(cmds[0]).toBe('set -eu');
       expect(cmds[1]).toBe('export HOME=/root AWS_SHARED_CREDENTIALS_FILE=/dev/null AWS_CONFIG_FILE=/dev/null');
       expect(cmds).toContain(`SHA=${SHA}`);
-      expect(cmds).toContain(`trap 'rm -rf "$T"' EXIT`);
+      expect(cmds).toContain(`trap 'rm -rf "$T" "$S"' EXIT`);
       expect(r.params?.['executionTimeout']).toEqual(['600']);
       expect(r.awsArgs[r.awsArgs.indexOf('--timeout-seconds') + 1]).toBe('120');
     },
@@ -568,10 +575,9 @@ describe('deploy.yml behaviour: SSM command list', () => {
         'install -d -m 2750 -o fleet -g www-data "$A"',
         'aws s3 cp --only-show-errors "s3://foxugly-deploy/builds/fleet-frontend/$SHA.tar.gz" "$T/bundle.tar.gz"',
         'tar --no-same-owner --no-overwrite-dir -xzf - -C /srv/fleet/Fleet_frontend/dist/.bundle-new',
-        'mv .bundle-current .bundle-prev',
-        'mv .bundle-new .bundle-current',
-        'rsync -rlt --delete .bundle-current/ fleet-frontend/browser/',
-        'rsync -rlt --ignore-existing .bundle-prev/ fleet-frontend/browser/',
+        'git --git-dir="$M" show "$SHA:deploy/publish-bundle.sh" > "$S"',
+        'chmod 0644 "$S"',
+        'sudo -u fleet sh "$S" /srv/fleet/Fleet_frontend/dist "$SHA"',
         'chown -R -h root "$A"',
         'chgrp -R -h www-data "$A"',
         'chmod -R g-w,o-rwx "$A"',
@@ -609,7 +615,14 @@ describe('deploy.yml behaviour: SSM command list', () => {
         expect(cmd).not.toMatch(/(^|[;&|]\s*)(bash|sh|\.)\s+"?(\$A|\/srv\/fleet)/);
         if (/^install -m/.test(cmd)) expect(cmd).toMatch(/^install -m 0\d{3} -o root -g root "\$T\//);
         // Everything fleet runs is a fixed string: no root-side variable reaches it.
-        if (cmd.startsWith('sudo -u fleet')) expect(cmd.replace(/< "\$T\/bundle\.tar\.gz"$/, '')).not.toContain('"$');
+        // Its only inputs: the bundle on stdin, the publish script (root-owned copy
+        // of the mirror blob) and the validated SHA.
+        if (cmd.startsWith('sudo -u fleet')) {
+          const rest = cmd
+            .replace(/< "\$T\/bundle\.tar\.gz"$/, '')
+            .replace(/^sudo -u fleet sh "\$S" \S+ "\$SHA"$/, '');
+          expect(rest).not.toContain('"$');
+        }
       }
       // Blobs root installs come from the mirror only.
       expect(cmds.filter((c) => c.includes(' show "$SHA:')).every((c) => c.startsWith('git --git-dir="$M" show'))).toBe(
@@ -913,11 +926,17 @@ describe('runtime fetch script behaviour', () => {
   );
 
   withPython(
-    'refuses a DSN that is not a Sentry https DSN',
+    'refuses a DSN that is not a de.sentry.io ingest DSN',
     () => {
-      const r = fetchRun({ ...GOOD, SENTRY_DSN: 'https://evil.example/1' });
-      expect(r.code).not.toBe(0);
-      expect(r.snippet).toBeNull();
+      for (const dsn of [
+        'https://evil.example/1',
+        'https://0123abcd@evil.sentry.io/1',
+        'https://0123abcd@o42.ingest.us.sentry.io/4711', // the CSP connect-src allows only the de ingest
+      ]) {
+        const r = fetchRun({ ...GOOD, SENTRY_DSN: dsn });
+        expect(r.code, dsn).not.toBe(0);
+        expect(r.snippet, dsn).toBeNull();
+      }
     },
     SLOW,
   );
@@ -951,6 +970,217 @@ describe('runtime fetch script behaviour', () => {
       const r = fetchRun(GOOD, { nginxRc: 1 });
       expect(r.code).not.toBe(0);
       expect(r.snippet).toBeNull();
+    },
+    SLOW,
+  );
+});
+
+// ---------------------------------------------------------------------------
+// behaviour: publish-bundle.sh (run by fleet on the box)
+// ---------------------------------------------------------------------------
+
+describe('publish-bundle.sh behaviour', () => {
+  const PUBLISH = 'deploy/publish-bundle.sh';
+  const sha = (c: string): string => c.repeat(40);
+
+  /** A generation: index.html referencing main-<g>.js, styles-<g>.css; main loads a lazy chunk. */
+  function generation(g: string): Record<string, string> {
+    return {
+      'index.html':
+        `<html><head><link rel="stylesheet" href="styles-${g}.css"></head>` +
+        `<body><script src="main-${g}.js" type="module"></script></body></html>`,
+      [`main-${g}.js`]: `import("./chunk-${g}.js")`,
+      [`styles-${g}.css`]: 'x',
+      [`chunk-${g}.js`]: 'x',
+      'i18n/fr.json': `{"g":"${g}"}`,
+      'favicon.ico': 'x',
+    };
+  }
+
+  interface Env {
+    sb: Sandbox;
+    dist: string;
+    violations: string;
+  }
+
+  /**
+   * rsync, cp, mv, rm and rmdir are wrapped: each runs the real command, then
+   * checks that the served index.html references only files present in the
+   * docroot, logging any violation. Every intermediate state is checked.
+   */
+  function setup(): Env {
+    const sb = sandbox();
+    const dist = join(sb.tmp, 'dist');
+    mkdirSync(dist);
+    const violations = join(sb.tmp, 'violations');
+    const doc = `${posix(dist)}/fleet-frontend/browser`;
+    for (const cmd of ['rsync', 'cp', 'mv', 'rm', 'rmdir']) {
+      const real = bashRun(`command -v ${cmd}`).stdout.trim();
+      if (!real) throw new Error(`${cmd} not found`);
+      stub(
+        sb.stubs,
+        cmd,
+        `"${real}" "$@"; rc=$?\n` +
+          `if [ -f "${doc}/index.html" ]; then\n` +
+          `  for ref in $(grep -o '\\(src\\|href\\)="[^"]*"' "${doc}/index.html" | sed 's/^[a-z]*="//; s/"$//'); do\n` +
+          `    [ -e "${doc}/$ref" ] || echo "after ${cmd} $*: index.html references missing $ref" >> "${posix(violations)}"\n` +
+          '  done\n' +
+          'fi\n' +
+          'exit $rc',
+      );
+    }
+    return { sb, dist, violations };
+  }
+
+  function publish(env: Env, g: string | null, release: string) {
+    if (g !== null) {
+      for (const [name, body] of Object.entries(generation(g))) {
+        const path = join(env.dist, '.bundle-new', name);
+        mkdirSync(join(path, '..'), { recursive: true });
+        writeFileSync(path, body);
+      }
+    }
+    return bashRun('PATH="$1:$PATH"; exec sh "$2" "$3" "$4"', [
+      posix(env.sb.stubs),
+      posix(join(ROOT, PUBLISH)),
+      posix(env.dist),
+      release,
+    ]);
+  }
+
+  const docPath = (env: Env, name: string): string => join(env.dist, 'fleet-frontend', 'browser', name);
+  const served = (env: Env, name: string): boolean => existsSync(docPath(env, name));
+  const release = (env: Env, gen: string): string =>
+    existsSync(join(env.dist, gen, '.release')) ? readFileSync(join(env.dist, gen, '.release'), 'utf-8').trim() : '';
+
+  withRsync(
+    'never serves an index.html referencing a missing file; keeps one generation back; prunes older ones',
+    () => {
+      const env = setup();
+      for (const g of ['a', 'b', 'c']) {
+        const res = publish(env, g, sha(g));
+        expect(res.status, res.stdout + res.stderr).toBe(0);
+        expect(readFileSync(docPath(env, 'index.html'), 'utf-8')).toContain(`main-${g}.js`);
+        expect(served(env, `chunk-${g}.js`)).toBe(true);
+        expect(served(env, 'index.html.new')).toBe(false);
+        expect(served(env, '.release')).toBe(false);
+        if (g === 'b') {
+          // The previous generation's files survive one deploy.
+          for (const f of ['main-a.js', 'styles-a.css', 'chunk-a.js']) expect(served(env, f), f).toBe(true);
+        }
+      }
+      // Two generations back: gone. The previous one (b) is still served.
+      for (const f of ['main-a.js', 'styles-a.css', 'chunk-a.js']) expect(served(env, f), f).toBe(false);
+      for (const f of ['main-b.js', 'styles-b.css', 'chunk-b.js']) expect(served(env, f), f).toBe(true);
+      // Non-hashed files carry the current generation.
+      expect(readFileSync(docPath(env, 'i18n/fr.json'), 'utf-8')).toContain('"c"');
+      expect(release(env, '.bundle-current')).toBe(sha('c'));
+      expect(release(env, '.bundle-prev')).toBe(sha('b'));
+      // The wrappers never saw a broken index.html (sanity of the checker below).
+      expect(existsSync(env.violations) ? readFileSync(env.violations, 'utf-8') : '').toBe('');
+    },
+    SLOW,
+  );
+
+  withRsync(
+    'the checker itself flags an index.html that references a missing file',
+    () => {
+      const env = setup();
+      mkdirSync(docPath(env, ''), { recursive: true });
+      writeFileSync(docPath(env, 'index.html'), '<script src="main-x.js"></script>');
+      bashRun('PATH="$1:$PATH"; rm -f "$2/nothing"', [posix(env.sb.stubs), posix(env.dist)]);
+      expect(readFileSync(env.violations, 'utf-8')).toContain('references missing main-x.js');
+    },
+    SLOW,
+  );
+
+  withRsync(
+    'regression reference: the first version (one rsync --delete) dropped the previous chunks',
+    () => {
+      const env = setup();
+      expect(publish(env, 'a', sha('a')).status).toBe(0);
+      for (const [name, body] of Object.entries(generation('b'))) {
+        const path = join(env.dist, 'gen-b', name);
+        mkdirSync(join(path, '..'), { recursive: true });
+        writeFileSync(path, body);
+      }
+      bashRun('cd "$1" && rsync -rlt --delete gen-b/ fleet-frontend/browser/', [posix(env.dist)]);
+      // An open tab of generation a now 404s on its lazy chunk; publish-bundle.sh keeps it (test above).
+      expect(served(env, 'chunk-a.js')).toBe(false);
+    },
+    SLOW,
+  );
+
+  withRsync(
+    'a retry of the same SHA does not rotate: the previous generation is kept',
+    () => {
+      const env = setup();
+      expect(publish(env, 'a', sha('a')).status).toBe(0);
+      expect(publish(env, 'b', sha('b')).status).toBe(0);
+      const retry = publish(env, 'b', sha('b'));
+      expect(retry.status, retry.stdout + retry.stderr).toBe(0);
+      expect(retry.stdout).toContain('already current');
+      expect(release(env, '.bundle-prev')).toBe(sha('a'));
+      expect(served(env, 'chunk-a.js')).toBe(true);
+      expect(existsSync(join(env.dist, '.bundle-new'))).toBe(false);
+    },
+    SLOW,
+  );
+
+  withRsync(
+    'a crash between the two renames keeps the previous generation on retry',
+    () => {
+      const env = setup();
+      expect(publish(env, 'a', sha('a')).status).toBe(0);
+      // Crash right after `mv .bundle-current .bundle-prev`: no .bundle-current.
+      bashRun('cd "$1" && mv .bundle-current .bundle-prev', [posix(env.dist)]);
+      const res = publish(env, 'b', sha('b'));
+      expect(res.status, res.stdout + res.stderr).toBe(0);
+      expect(release(env, '.bundle-prev')).toBe(sha('a'));
+      expect(release(env, '.bundle-current')).toBe(sha('b'));
+      expect(served(env, 'chunk-a.js')).toBe(true);
+    },
+    SLOW,
+  );
+
+  withRsync(
+    'removes leftovers of no generation, nested dirs and a stale index.html.new included',
+    () => {
+      const env = setup();
+      expect(publish(env, 'a', sha('a')).status).toBe(0);
+      mkdirSync(docPath(env, 'old/deep'), { recursive: true });
+      writeFileSync(docPath(env, 'old/deep/x.js'), 'x');
+      writeFileSync(docPath(env, 'index.html.new'), 'stale');
+      expect(publish(env, 'b', sha('b')).status).toBe(0);
+      expect(served(env, 'old')).toBe(false);
+      expect(served(env, 'index.html.new')).toBe(false);
+      expect(served(env, 'i18n/fr.json')).toBe(true);
+    },
+    SLOW,
+  );
+
+  withRsync.each([['abc'], ['A'.repeat(40)], [`${'a'.repeat(40)};x`]])(
+    'refuses a malformed SHA %j and touches nothing',
+    (bad) => {
+      const env = setup();
+      const res = publish(env, 'a', bad as string);
+      expect(res.status).not.toBe(0);
+      expect(existsSync(join(env.dist, '.bundle-current'))).toBe(false);
+    },
+    SLOW,
+  );
+
+  withRsync(
+    'refuses a new bundle without index.html and leaves the docroot as it was',
+    () => {
+      const env = setup();
+      expect(publish(env, 'a', sha('a')).status).toBe(0);
+      mkdirSync(join(env.dist, '.bundle-new'));
+      writeFileSync(join(env.dist, '.bundle-new', 'main-b.js'), 'x');
+      const res = publish(env, null, sha('b'));
+      expect(res.status).not.toBe(0);
+      expect(release(env, '.bundle-current')).toBe(sha('a'));
+      expect(readFileSync(docPath(env, 'index.html'), 'utf-8')).toContain('main-a.js');
     },
     SLOW,
   );

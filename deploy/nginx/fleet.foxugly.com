@@ -59,7 +59,7 @@ server {
     include /etc/nginx/snippets/fleet-frontend-runtime*.conf;
 
     location / {
-        try_files $uri $uri/ /index.html;
+        try_files $uri /index.html;
     }
 
     location = /index.html {
@@ -100,8 +100,9 @@ server {
         try_files $uri =404;
     }
 
-    # Hashed bundles: immutable long cache. brotli_static/gzip_static fall back
-    # to the plain file when no .br/.gz exists.
+    # Hashed bundles: immutable long cache. No `always` on Cache-Control (and no
+    # `expires`): a 404 for a missing chunk must not be cached for a year.
+    # brotli_static/gzip_static fall back to the plain file when no .br/.gz exists.
     location ~* \.(?:js|css|woff2?|ttf|eot|svg|png|jpg|jpeg|gif|ico|webp)$ {
         add_header Strict-Transport-Security "max-age=63072000; includeSubDomains" always;
         add_header X-Content-Type-Options    "nosniff" always;
@@ -110,8 +111,7 @@ server {
         add_header Permissions-Policy        "geolocation=(), microphone=(), camera=()" always;
         brotli_static on;
         gzip_static on;
-        add_header Cache-Control "public, max-age=31536000, immutable" always;
-        expires 1y;
+        add_header Cache-Control "public, max-age=31536000, immutable";
         access_log off;
         try_files $uri =404;
     }

@@ -158,9 +158,11 @@ jobs:
           #      from GitHub (public repo, anonymous HTTPS) at the pushed SHA;
           #   2. the runtime-fetch script and unit, read from the mirror only;
           #   3. root downloads the bundle into a private mktemp -d; FLEET extracts
-          #      it (from stdin) into dist/.bundle-new, rotates .bundle-current ->
-          #      .bundle-prev and publishes current UNION previous into the docroot
-          #      (a tab opened before the deploy still finds its lazy chunks).
+          #      it (from stdin) into dist/.bundle-new, then runs publish-bundle.sh
+          #      (read from root's mirror into a root-owned 0644 file): rotation
+          #      only on a new SHA, chunks first, index.html last and atomic,
+          #      docroot = current UNION previous generation (a tab opened before
+          #      the deploy still finds its lazy chunks), older files pruned.
           #      Root never writes into a fleet-owned directory;
           #   4. permissions, as root, with fleet locked out first (owner root,
           #      no "other" bits) so it cannot swap a path under the find/chmod;
@@ -181,7 +183,8 @@ jobs:
             'A=/srv/fleet/Fleet_frontend'
             'VHOST=/etc/nginx/sites-available/fleet.foxugly.com'
             'T=$(mktemp -d)'
-            "trap 'rm -rf \"\$T\"' EXIT"
+            'S=$(mktemp)'
+            "trap 'rm -rf \"\$T\" \"\$S\"' EXIT"
             'install -d -m 700 -o root -g root /var/lib/fleet-deploy'
             '[ -d "$M" ] || git init --quiet --bare "$M"'
             'git --git-dir="$M" fetch --quiet --depth=1 https://github.com/Foxugly/Fleet_frontend.git "$SHA"'
@@ -197,8 +200,9 @@ jobs:
             'aws s3 cp --only-show-errors "s3://foxugly-deploy/builds/fleet-frontend/$SHA.tar.gz" "$T/bundle.tar.gz" --region eu-west-1'
             "sudo -u fleet sh -c 'umask 027; mkdir -p /srv/fleet/Fleet_frontend/dist && rm -rf /srv/fleet/Fleet_frontend/dist/.bundle-new && mkdir /srv/fleet/Fleet_frontend/dist/.bundle-new && tar --no-same-owner --no-overwrite-dir -xzf - -C /srv/fleet/Fleet_frontend/dist/.bundle-new' < \"\$T/bundle.tar.gz\""
             'sudo -u fleet test -s /srv/fleet/Fleet_frontend/dist/.bundle-new/index.html'
-            "sudo -u fleet sh -c 'cd /srv/fleet/Fleet_frontend/dist && rm -rf .bundle-prev && if [ -d .bundle-current ]; then mv .bundle-current .bundle-prev; fi && mv .bundle-new .bundle-current'"
-            "sudo -u fleet sh -c 'umask 027; cd /srv/fleet/Fleet_frontend/dist && mkdir -p fleet-frontend/browser && rsync -rlt --delete .bundle-current/ fleet-frontend/browser/ && if [ -d .bundle-prev ]; then rsync -rlt --ignore-existing .bundle-prev/ fleet-frontend/browser/; fi'"
+            'git --git-dir="$M" show "$SHA:deploy/publish-bundle.sh" > "$S"'
+            'chmod 0644 "$S"'
+            'sudo -u fleet sh "$S" /srv/fleet/Fleet_frontend/dist "$SHA"'
             'chown -R -h root "$A"'
             'chgrp -R -h www-data "$A"'
             'chmod -R g-w,o-rwx "$A"'
@@ -215,7 +219,7 @@ jobs:
             "if ! nginx -t; then echo 'ERROR: nginx -t rejects the config; back to the previous vhost.' >&2; if [ -e \"\$VHOST.deploybak\" ]; then mv -f \"\$VHOST.deploybak\" \"\$VHOST\"; else rm -f /etc/nginx/sites-enabled/fleet.foxugly.com \"\$VHOST\"; fi; exit 1; fi"
             'systemctl restart fleet-app-frontend-runtime-fetch'
             'nginx -t && systemctl reload nginx || exit 1'
-            'rm -rf "$T"'
+            'rm -rf "$T" "$S"'
             'echo "Fleet_frontend $SHA deployed."'
           )
           params="$RUNNER_TEMP/ssm-params.json"
