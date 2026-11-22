@@ -114,6 +114,10 @@
       "clear": "Effacer les filtres",
       "empty": "Aucune app ne correspond à ces filtres.",
       "results": "{{n}} app(s) affichée(s)"
+    },
+    "tab": {
+      "apps": "Apps",
+      "deps": "Dépendances"
     }
   },
   "site": {
@@ -315,6 +319,7 @@
       "angular": "Politique de flotte : les majeures Angular se font ensemble, sur décision de Renaud.",
       "failure": "Si la mise à jour est impossible dans un dépôt : n'ouvre pas de PR (ferme-la si sa CI reste rouge malgré tes corrections) et ouvre une issue titrée `[fleet] {{package}} {{latest}} bloqué` dont le corps contient la ligne `Fleet-Update: {{package}} {{latest}}`, une ligne `Fleet-Blocked-By: <paquet> <version>` par paquet bloquant, puis la raison en clair. Quand une mise à jour passe, ajoute `Fixes #<numéro>` à la PR si une issue `[fleet]` existait.",
       "retry": "Nouvelle tentative : {{blocker}} {{newer}} est disponible. Les issues {{issues}} décrivent l'échec précédent."
-    }
+    },
+    "none": "Aucune mise à jour ne concerne plusieurs apps pour l'instant."
   }
 }

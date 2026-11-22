@@ -114,6 +114,10 @@
       "clear": "Clear filters",
       "empty": "No app matches these filters.",
       "results": "{{n}} app(s) shown"
+    },
+    "tab": {
+      "apps": "Apps",
+      "deps": "Dependencies"
     }
   },
   "site": {
@@ -315,6 +319,7 @@
       "angular": "Fleet policy: Angular majors are done together, on Renaud's decision.",
       "failure": "If the update is impossible in a repository: do not open a PR (close it if its CI stays red despite your fixes) and open an issue titled `[fleet] {{package}} {{latest}} blocked` whose body contains the line `Fleet-Update: {{package}} {{latest}}`, one line `Fleet-Blocked-By: <package> <version>` per blocking package, then the reason in plain words. When an update goes through, add `Fixes #<number>` to the PR if a `[fleet]` issue existed.",
       "retry": "New attempt: {{blocker}} {{newer}} is available. The issues {{issues}} describe the previous failure."
-    }
+    },
+    "none": "No update concerns several apps for now."
   }
 }

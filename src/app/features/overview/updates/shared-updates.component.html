@@ -1,9 +1,5 @@
 @if (groups().length) {
-  <p-panel
-    class="shared-updates"
-    [toggleable]="true"
-    [header]="'updates.title' | transloco: { n: groups().length }"
-  >
+  <div class="shared-updates">
     @for (section of sections(); track section.key) {
       @let label = 'updates.section.' + section.key | transloco;
       @let heading = 'updates.section_count' | transloco: { label, n: section.rows.length };
@@ -127,5 +123,7 @@
         </ul>
       </section>
     }
-  </p-panel>
+  </div>
+} @else if (loaded()) {
+  <p class="shared-updates__none">{{ 'updates.none' | transloco }}</p>
 }
