@@ -112,7 +112,7 @@ describe('nginx vhost fleet.foxugly.com', () => {
     expect(index).toContain(
       `sub_filter '</head>' '<script nonce="$request_id">` +
         'window.__FLEET__={apiBaseUrl:"$fleet_api_base",sentry:{dsn:"$fleet_sentry_dsn",' +
-        'environment:"$fleet_sentry_env",release:"$fleet_sentry_release"}};' +
+        'environment:"$fleet_sentry_env",release:"$fleet_release"}};' +
         `window.__FLEET_VERSION="$fleet_version";</script></head>';`,
     );
     // Each pattern is replaced once: two different patterns, two substitutions.
@@ -121,9 +121,11 @@ describe('nginx vhost fleet.foxugly.com', () => {
 
   it('defaults every $fleet_* variable, then includes the runtime snippets', () => {
     const server = serverLevel(conf);
-    for (const v of ['api_base', 'sentry_dsn', 'sentry_release', 'csp_report', 'version']) {
+    for (const v of ['api_base', 'sentry_dsn', 'csp_report', 'version', 'release']) {
       expect(server).toMatch(new RegExp(`set \\$fleet_${v}\\s+"";`));
     }
+    // The Sentry release is the deploy's full SHA ($fleet_release), not SSM.
+    expect(conf).not.toContain('sentry_release');
     expect(server).toMatch(/set \$fleet_sentry_env\s+"production";/);
     expect(server).toContain('include /etc/nginx/snippets/fleet-frontend-runtime*.conf;');
     expect(server.indexOf('include /etc/nginx/snippets')).toBeGreaterThan(server.indexOf('set $fleet_version'));
@@ -165,9 +167,11 @@ describe('runtime fetch script and unit', () => {
     expect(script).toContain('set -euo pipefail');
     expect(script).toContain('SSM_PREFIX="${FLEET_FRONTEND_SSM_PREFIX:-/fleet-frontend/prod}"');
     expect(script).toContain('/etc/nginx/snippets/fleet-frontend-runtime.conf');
-    for (const v of ['api_base', 'sentry_dsn', 'sentry_env', 'sentry_release', 'csp_report']) {
+    for (const v of ['api_base', 'sentry_dsn', 'sentry_env', 'csp_report']) {
       expect(script).toContain(`set $fleet_${v}`);
     }
+    // The release is the deploy's SHA (version snippet), never an SSM value.
+    expect(script).not.toMatch(/SENTRY_RELEASE|sentry_release|set \$fleet_release/);
     expect(script).not.toMatch(/facilitation|turnstile|django/i);
   });
 
@@ -589,6 +593,7 @@ describe('deploy.yml behaviour: SSM command list', () => {
         'install -m 0644 -o root -g root "$T/vhost" "$VHOST"',
         'ln -sfn ../sites-available/fleet.foxugly.com /etc/nginx/sites-enabled/fleet.foxugly.com',
         `printf '%s\\n' 'set $fleet_version "${SHA.slice(0, 7)} (`,
+        `'set $fleet_release "${SHA}";'`,
         '/etc/nginx/snippets/fleet-frontend-runtime-version.conf',
         'if ! nginx -t; then',
         'systemctl restart fleet-app-frontend-runtime-fetch',
@@ -601,6 +606,23 @@ describe('deploy.yml behaviour: SSM command list', () => {
         expect(next, `missing or out of order: ${fragment}`).toBeGreaterThan(pos);
         pos = next;
       }
+    },
+    SLOW,
+  );
+
+  withPython(
+    'writes $fleet_version and $fleet_release (the full SHA, for Sentry) into the version snippet',
+    () => {
+      const cmds = ssm().params?.['commands'] as string[];
+      const write = cmds.find((c) => c.includes('version.conf"') && c.startsWith('printf'));
+      expect(write).toBeDefined();
+      const sb = sandbox();
+      const res = bashRun(`T="$1"; ${write}`, [posix(sb.tmp)]);
+      expect(res.status, res.stderr).toBe(0);
+      const lines = readFileSync(join(sb.tmp, 'version.conf'), 'utf-8').trim().split('\n');
+      expect(lines).toHaveLength(2);
+      expect(lines[0]).toMatch(new RegExp(`^set \\$fleet_version "${SHA.slice(0, 7)} \\(\\d{4}-\\d{2}-\\d{2}\\)";$`));
+      expect(lines[1]).toBe(`set $fleet_release "${SHA}";`);
     },
     SLOW,
   );
@@ -871,7 +893,6 @@ describe('runtime fetch script behaviour', () => {
     API_BASE_URL: 'https://fleet-api.foxugly.com',
     SENTRY_DSN: DSN,
     SENTRY_ENV: 'production',
-    SENTRY_RELEASE: 'fleet-frontend@1.0',
   };
 
   withPython(
@@ -882,7 +903,7 @@ describe('runtime fetch script behaviour', () => {
       expect(r.snippet).toContain('set $fleet_api_base       "https://fleet-api.foxugly.com";');
       expect(r.snippet).toContain(`set $fleet_sentry_dsn     "${DSN}";`);
       expect(r.snippet).toContain('set $fleet_sentry_env     "production";');
-      expect(r.snippet).toContain('set $fleet_sentry_release "fleet-frontend@1.0";');
+      expect(r.snippet).not.toContain('release');
       expect(r.snippet).toContain(
         'set $fleet_csp_report     "; report-uri https://o42.ingest.de.sentry.io/api/4711/security/?sentry_key=0123abcd";',
       );
@@ -906,10 +927,10 @@ describe('runtime fetch script behaviour', () => {
   withPython.each([['"'], ['\\'], ['$'], [';'], ["'"], ['\n'], ['\r'], ['<'], ['>']])(
     'refuses a value containing %j and writes nothing',
     (ch) => {
-      const r = fetchRun({ ...GOOD, SENTRY_RELEASE: `v1${ch}x` });
+      const r = fetchRun({ ...GOOD, SENTRY_ENV: `prod${ch}x` });
       expect(r.code).not.toBe(0);
       expect(r.snippet).toBeNull();
-      expect(r.out).toContain('SENTRY_RELEASE');
+      expect(r.out).toContain('SENTRY_ENV');
       expect(r.calls).not.toContain('reload');
     },
     SLOW,

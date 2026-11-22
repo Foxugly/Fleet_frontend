@@ -169,7 +169,8 @@ jobs:
           #      then dirs 2750 (setgid: new files inherit www-data), files 640,
           #      owner back to fleet. -R -h never follows a link;
           #   5. the vhost from the mirror, with .deploybak and a rollback if
-          #      `nginx -t` fails; the version snippet;
+          #      `nginx -t` fails; the version snippet ($fleet_version for the
+          #      footer, $fleet_release = full SHA for the SPA's Sentry release);
           #   6. the runtime fetch (SSM -> snippet), then an explicit
           #      `nginx -t && systemctl reload nginx`: the fetch skips its reload
           #      when the snippet is unchanged, and the vhost must still apply.
@@ -214,7 +215,7 @@ jobs:
             'git --git-dir="$M" show "$SHA:deploy/nginx/fleet.foxugly.com" > "$T/vhost"'
             'install -m 0644 -o root -g root "$T/vhost" "$VHOST"'
             'ln -sfn ../sites-available/fleet.foxugly.com /etc/nginx/sites-enabled/fleet.foxugly.com'
-            "printf '%s\\n' 'set \$fleet_version \"$VERSION\";' > \"\$T/version.conf\""
+            "printf '%s\\n' 'set \$fleet_version \"$VERSION\";' 'set \$fleet_release \"$GITHUB_SHA\";' > \"\$T/version.conf\""
             'install -m 0644 -o root -g root "$T/version.conf" /etc/nginx/snippets/fleet-frontend-runtime-version.conf'
             "if ! nginx -t; then echo 'ERROR: nginx -t rejects the config; back to the previous vhost.' >&2; if [ -e \"\$VHOST.deploybak\" ]; then mv -f \"\$VHOST.deploybak\" \"\$VHOST\"; else rm -f /etc/nginx/sites-enabled/fleet.foxugly.com \"\$VHOST\"; fi; exit 1; fi"
             'systemctl restart fleet-app-frontend-runtime-fetch'

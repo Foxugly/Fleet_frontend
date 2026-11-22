@@ -11,6 +11,9 @@
 # Each value ends up inside "..." twice: an nginx `set` string and a JS string
 # literal inside <script>. Values that could break out of either are refused
 # (nothing is written, the unit fails, the deploy goes red).
+#
+# No Sentry release here: the deploy writes the full SHA as $fleet_release in
+# fleet-frontend-runtime-version.conf, so every release is tagged with no SSM edit.
 # =============================================================================
 set -euo pipefail
 
@@ -44,7 +47,6 @@ values = {
     "API_BASE_URL": "",
     "SENTRY_DSN": "",
     "SENTRY_ENV": "production",
-    "SENTRY_RELEASE": "",
 }
 
 # " \ ' end or escape the JS / nginx strings, $ is nginx interpolation, ; ends an
@@ -86,7 +88,6 @@ lines = [
     f'set $fleet_api_base       "{values["API_BASE_URL"]}";',
     f'set $fleet_sentry_dsn     "{values["SENTRY_DSN"]}";',
     f'set $fleet_sentry_env     "{values["SENTRY_ENV"]}";',
-    f'set $fleet_sentry_release "{values["SENTRY_RELEASE"]}";',
     f'set $fleet_csp_report     "{csp_report}";',
 ]
 with open(out_path, "w", encoding="utf-8", newline="\n") as fh:

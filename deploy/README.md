@@ -55,13 +55,13 @@ Push to `main` → `deploy.yml` calls `ci.yml` (tests + build) → the `deploy` 
 | `API_BASE_URL` | `https://fleet-api.foxugly.com` | required, an `https://` origin |
 | `SENTRY_DSN` | `https://<key>@o….ingest.de.sentry.io/<id>` | optional (empty = Sentry off); project `fleet-frontend` |
 | `SENTRY_ENV` | `production` | optional |
-| `SENTRY_RELEASE` | | optional |
 
 The fetch script refuses any value containing `"`, `\`, `'`, `$`, `;`, `<`, `>` or a control
 character (newline included): each value lands in an nginx `set "…"` and in a JS string inside
 `<script>`. A refused value writes nothing and fails the unit, so the deploy goes red. With a
 DSN, it also writes `$fleet_csp_report` (`; report-uri https://<host>/api/<id>/security/?sentry_key=<key>`)
-so CSP violations reach Sentry.
+so CSP violations reach Sentry. The Sentry `release` is not an SSM value: the deploy writes the
+full SHA (`$fleet_release`) in `fleet-frontend-runtime-version.conf`.
 
 To change a value: edit SSM, then `sudo systemctl restart fleet-app-frontend-runtime-fetch`
 (it reloads nginx itself when the snippet changed).

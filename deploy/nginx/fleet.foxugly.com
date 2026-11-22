@@ -47,15 +47,15 @@ server {
 
     # Empty defaults so nginx -t passes and the page is served before the first
     # SSM fetch (the SPA then refuses to start without an API URL, by design).
-    # The runtime-fetch snippet overrides the first five; the deploy writes
-    # $fleet_version (fleet-frontend-runtime-version.conf). The glob tolerates
-    # absent files.
+    # The runtime-fetch snippet overrides the first four; the deploy writes
+    # $fleet_version and $fleet_release, the full SHA used as Sentry release
+    # (fleet-frontend-runtime-version.conf). The glob tolerates absent files.
     set $fleet_api_base       "";
     set $fleet_sentry_dsn     "";
     set $fleet_sentry_env     "production";
-    set $fleet_sentry_release "";
     set $fleet_csp_report     "";   # "; report-uri <sentry>" written by the fetch script
     set $fleet_version        "";
+    set $fleet_release        "";
     include /etc/nginx/snippets/fleet-frontend-runtime*.conf;
 
     location / {
@@ -84,7 +84,7 @@ server {
         # sub_filter compares literal strings: the bare form would match nothing.
         # sub_filter_once on: each of the two patterns is replaced once.
         sub_filter '<script data-theme-init="">' '<script nonce="$request_id">';
-        sub_filter '</head>' '<script nonce="$request_id">window.__FLEET__={apiBaseUrl:"$fleet_api_base",sentry:{dsn:"$fleet_sentry_dsn",environment:"$fleet_sentry_env",release:"$fleet_sentry_release"}};window.__FLEET_VERSION="$fleet_version";</script></head>';
+        sub_filter '</head>' '<script nonce="$request_id">window.__FLEET__={apiBaseUrl:"$fleet_api_base",sentry:{dsn:"$fleet_sentry_dsn",environment:"$fleet_sentry_env",release:"$fleet_release"}};window.__FLEET_VERSION="$fleet_version";</script></head>';
         sub_filter_once on;
     }
 
