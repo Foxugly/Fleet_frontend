@@ -15,7 +15,8 @@
       "overview": "Vue d'ensemble",
       "box": "Box",
       "aria_main": "Navigation principale",
-      "aria_mobile": "Navigation mobile"
+      "aria_mobile": "Navigation mobile",
+      "inventory": "Inventaire"
     },
     "theme": {
       "toggle": "Basculer le thème"
@@ -184,7 +185,9 @@
       "name": "Paquet",
       "version": "Version",
       "kind": "Type"
-    }
+    },
+    "edit": "Modifier",
+    "archived": "Archivée"
   },
   "box": {
     "title": "Box",
@@ -315,6 +318,104 @@
       "angular": "Politique de flotte : les majeures Angular se font ensemble, sur décision de Renaud.",
       "failure": "Si la mise à jour est impossible dans un dépôt : n'ouvre pas de PR (ferme-la si sa CI reste rouge malgré tes corrections) et ouvre une issue titrée `[fleet] {{package}} {{latest}} bloqué` dont le corps contient la ligne `Fleet-Update: {{package}} {{latest}}`, une ligne `Fleet-Blocked-By: <paquet> <version>` par paquet bloquant, puis la raison en clair. Quand une mise à jour passe, ajoute `Fixes #<numéro>` à la PR si une issue `[fleet]` existait.",
       "retry": "Nouvelle tentative : {{blocker}} {{newer}} est disponible. Les issues {{issues}} décrivent l'échec précédent."
+    }
+  },
+  "apps": {
+    "title": "Inventaire",
+    "new": "Nouvelle app",
+    "edit": "Modifier",
+    "history_link": "Historique",
+    "archive": "Archiver",
+    "restore": "Restaurer",
+    "archived": "Archivée",
+    "undeployed": "non déployée",
+    "show_archived": "Voir les archivées",
+    "back": "Inventaire",
+    "load_error": "Impossible de charger l'inventaire. Réessayez dans un instant.",
+    "empty": {
+      "title": "Aucune app",
+      "subtitle": "Ajoutez une première app à l'inventaire."
+    },
+    "edit_aria": "Modifier {{slug}}",
+    "history_aria": "Historique de {{slug}}",
+    "archive_aria": "Archiver {{slug}}",
+    "restore_aria": "Restaurer {{slug}}",
+    "toast": {
+      "created": "App {{slug}} créée",
+      "updated": "App {{slug}} enregistrée",
+      "archived": "App {{slug}} archivée",
+      "restored": "App {{slug}} restaurée",
+      "refused": "Action refusée par le serveur"
+    },
+    "field": {
+      "slug": "Identifiant (slug)",
+      "repos": "Dépôts GitHub",
+      "vhosts": "Vhosts",
+      "health_path": "Chemin de santé",
+      "sentry_projects": "Projets Sentry",
+      "python_locks": "Verrous Python",
+      "npm_locks": "Verrous npm",
+      "deployed": "Déployée en production",
+      "actions_allowed": "Actions autorisées",
+      "archived": "Archivée"
+    },
+    "form": {
+      "new_title": "Nouvelle app",
+      "edit_title": "Modifier {{slug}}",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "summary": "Le formulaire contient des erreurs : corrigez les champs signalés.",
+      "load_error": "Impossible de charger cette app. Réessayez dans un instant.",
+      "unknown_title": "App inconnue",
+      "unknown_subtitle": "Cette app n'existe pas dans l'inventaire.",
+      "slug_hint": "Lettres minuscules, chiffres et tirets ; il ne pourra plus être modifié.",
+      "slug_readonly": "L'identifiant ne peut pas être modifié.",
+      "list_hint": "Saisissez une valeur, puis Entrée ou une virgule pour l'ajouter.",
+      "repos_hint": "Format Foxugly/Depot. Le token GitHub « fleet-read » doit couvrir ce dépôt.",
+      "vhosts_hint": "Nom d'hôte, par exemple app.foxugly.com.",
+      "health_path_hint": "Commence par /, par exemple /health/.",
+      "sentry_hint": "Slug du projet Sentry, par exemple app-backend.",
+      "locks_hint": "Format depot:chemin, par exemple Foxugly/App_server:requirements.txt ; le dépôt doit figurer parmi les dépôts."
+    },
+    "invalid": {
+      "slug": "Identifiant invalide : lettres minuscules, chiffres et tirets, 64 caractères au plus, sans tiret en tête.",
+      "repo": "Dépôt invalide : {{value}} (format Foxugly/Depot).",
+      "vhost": "Vhost invalide : {{value}}.",
+      "sentry": "Projet Sentry invalide : {{value}}.",
+      "lock_format": "Verrou invalide : {{value}} (format depot:chemin, chemin relatif sans segment . ou ..).",
+      "lock_repo": "Verrou {{value}} : le dépôt {{repo}} n'est pas dans les dépôts de l'app.",
+      "health_path": "Chemin invalide : il commence par / et n'utilise que lettres, chiffres et . _ ~ / - (sans segment . ou ..).",
+      "too_many": "{{max}} entrées au plus.",
+      "too_long": "Chaque entrée fait {{max}} caractères au plus."
+    },
+    "totp": {
+      "title": "Confirmer avec votre code",
+      "intro": "Saisissez le code à 6 chiffres de votre application d'authentification.",
+      "code": "Code de vérification",
+      "confirm": "Confirmer",
+      "invalid": "Code invalide ou déjà utilisé. Saisissez le code suivant."
+    },
+    "error": {
+      "too_many": "Trop de tentatives, réessayez dans une minute.",
+      "unavailable": "Service indisponible. Vos saisies sont conservées, réessayez.",
+      "not_found": "Cette app n'existe plus."
+    },
+    "history": {
+      "title": "Historique de {{slug}}",
+      "load_error": "Impossible de charger l'historique. Réessayez dans un instant.",
+      "by": "par {{user}}",
+      "unknown_user": "utilisateur inconnu",
+      "empty": "(vide)",
+      "empty_title": "Aucune modification enregistrée.",
+      "yes": "oui",
+      "no": "non",
+      "none": "—",
+      "action": {
+        "create": "Création",
+        "update": "Modification",
+        "archive": "Archivage",
+        "restore": "Restauration"
+      }
     }
   }
 }

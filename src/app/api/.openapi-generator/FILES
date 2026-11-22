@@ -3,6 +3,8 @@ README.md
 api.base.service.ts
 api.module.ts
 api/api.ts
+api/apps.service.ts
+api/apps.serviceInterface.ts
 api/auth.service.ts
 api/auth.serviceInterface.ts
 api/box.service.ts
@@ -19,6 +21,10 @@ configuration.ts
 encoder.ts
 git_push.sh
 index.ts
+model/app-change.ts
+model/app-create.ts
+model/app-out.ts
+model/app-update.ts
 model/box.ts
 model/cell.ts
 model/login-response.ts
@@ -44,6 +50,7 @@ model/state-enum.ts
 model/subject.ts
 model/token-refresh-response.ts
 model/token-response.ts
+model/totp-only.ts
 model/update-blocked.ts
 model/update-blocker.ts
 model/update-group.ts

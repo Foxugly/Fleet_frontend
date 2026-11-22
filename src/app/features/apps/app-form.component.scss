@@ -1,0 +1,56 @@
+:host {
+  display: block;
+}
+
+.app-form {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  max-width: 60rem;
+}
+
+:host ::ng-deep .app-form__summary {
+  display: block;
+}
+
+.app-form .meta-item input[pInputText] {
+  width: 100%;
+}
+
+// Long chips (lock paths) wrap instead of widening the page.
+:host ::ng-deep .p-autocomplete-input-multiple {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+:host ::ng-deep .p-autocomplete-chip-item {
+  max-width: 100%;
+  min-width: 0;
+
+  .p-chip {
+    max-width: 100%;
+  }
+
+  .p-chip-label {
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+}
+
+.app-form .meta-hint {
+  overflow-wrap: anywhere;
+}
+
+.app-form__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.app-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}

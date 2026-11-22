@@ -12,6 +12,7 @@ import { SiteSources } from './site-sources';
 
 export interface SiteDetail { 
     slug: string;
+    archived: boolean;
     repos: Array<string>;
     vhosts: Array<string>;
     deployed: boolean;

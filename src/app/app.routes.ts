@@ -25,6 +25,27 @@ export const routes: Routes = [
         data: { titleKey: 'site.title', titleParam: 'slug' },
       },
       { path: 'box', loadComponent: () => import('./features/box/box.component').then((m) => m.BoxComponent), data: { titleKey: 'box.title' } },
+      // Inventory (menu « Inventaire »): the overview already has an « Apps » tab.
+      {
+        path: 'apps',
+        loadComponent: () => import('./features/apps/apps-list.component').then((m) => m.AppsListComponent),
+        data: { titleKey: 'apps.title' },
+      },
+      {
+        path: 'apps/new',
+        loadComponent: () => import('./features/apps/app-form.component').then((m) => m.AppFormComponent),
+        data: { titleKey: 'apps.title' },
+      },
+      {
+        path: 'apps/:slug/edit',
+        loadComponent: () => import('./features/apps/app-form.component').then((m) => m.AppFormComponent),
+        data: { titleKey: 'apps.title' },
+      },
+      {
+        path: 'apps/:slug/history',
+        loadComponent: () => import('./features/apps/app-history.component').then((m) => m.AppHistoryComponent),
+        data: { titleKey: 'apps.title' },
+      },
     ],
   },
 
