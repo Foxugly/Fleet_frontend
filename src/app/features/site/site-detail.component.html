@@ -50,7 +50,8 @@
         @for (src of sources(); track src.key) {
           <p-tab [value]="src.key" [attr.data-source]="src.key">
             <span class="site__tab-label">
-              {{ 'site.source.' + src.key | transloco }}
+              <i class="pi {{ sourceIcons[src.key] }} site__tab-icon" aria-hidden="true"></i>
+              <span class="site__tab-text">{{ 'site.source.' + src.key | transloco }}</span>
               <app-state-dot [cell]="src.cell" [label]="'site.source.' + src.key | transloco" [compact]="true" />
             </span>
           </p-tab>

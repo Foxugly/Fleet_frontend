@@ -46,3 +46,25 @@
   color: var(--p-text-muted-color);
   font-size: 0.75rem;
 }
+
+// Compact pill for tab labels: tinted with the state colour, the count (or a check
+// when green with nothing open) inside. Readable in light and dark themes.
+.state-dot--pill {
+  gap: 0.25rem;
+  min-width: 1.6rem;
+  justify-content: center;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--state-color) 45%, transparent);
+  background: color-mix(in srgb, var(--state-color) 14%, transparent);
+  font-size: 0.78rem;
+  line-height: 1.3;
+
+  .state-dot__icon {
+    font-size: 0.72rem;
+  }
+}
+
+.state-dot--pill.state-dot--error {
+  padding: 0.05rem 0.45rem;
+}

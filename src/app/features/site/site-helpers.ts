@@ -4,6 +4,14 @@ import { stateRank } from '../../shared/fleet/state-order';
 export type SourceKey = 'health' | 'github' | 'sentry' | 'deps';
 export const SOURCES: readonly SourceKey[] = ['health', 'github', 'sentry', 'deps'];
 
+/** Tab icon of each source (Optimus `pi` icon classes). */
+export const SOURCE_ICONS: Readonly<Record<SourceKey, string>> = {
+  health: 'pi-heart',
+  github: 'pi-github',
+  sentry: 'pi-exclamation-circle',
+  deps: 'pi-box',
+};
+
 /** Tab to open by default: the worst state, ties broken in source order. */
 export function defaultTab(cells: Record<SourceKey, Cell>): SourceKey {
   let best = SOURCES[0];

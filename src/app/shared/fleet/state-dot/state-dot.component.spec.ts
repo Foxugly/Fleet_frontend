@@ -45,6 +45,23 @@ describe('StateDotComponent', () => {
     expect(root(el).getAttribute('aria-label')).toContain('il y a 5 min');
   });
 
+  it('compact renders a pill: the count when there is something open', async () => {
+    const el = await mount(cell(StateEnum.Orange, { count: 2 }), 'GitHub', true);
+    expect(root(el).classList).toContain('state-dot--pill');
+    expect(el.querySelector('.state-dot__dot')).toBeNull();
+    expect(el.querySelector('.state-dot__count')?.textContent).toBe('2');
+  });
+
+  it.each([
+    [StateEnum.Green, 'pi-check'],
+    [StateEnum.Stale, 'pi-clock'],
+  ])('compact %s with nothing open: icon only, no meaningless 0', async (state, icon) => {
+    const el = await mount(cell(state), 'Santé', true);
+    expect(el.querySelector(`.${icon}`)).not.toBeNull();
+    expect(el.querySelector('.state-dot__count')).toBeNull();
+    expect(root(el).getAttribute('aria-label')).toContain('0');
+  });
+
   it.each([
     [StateEnum.Green, 'Vert', 0],
     [StateEnum.Orange, 'Orange', 3],

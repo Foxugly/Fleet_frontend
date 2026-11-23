@@ -32,7 +32,7 @@ import { DepsSectionComponent } from './sections/deps-section.component';
 import { GithubSectionComponent } from './sections/github-section.component';
 import { HealthSectionComponent } from './sections/health-section.component';
 import { SentrySectionComponent } from './sections/sentry-section.component';
-import { SOURCES, SourceKey, defaultTab } from './site-helpers';
+import { SOURCES, SOURCE_ICONS, SourceKey, defaultTab } from './site-helpers';
 
 @Component({
   selector: 'app-site-detail',
@@ -66,6 +66,7 @@ export class SiteDetailComponent implements OnDestroy {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly request$ = new RxSubject<string>();
 
+  protected readonly sourceIcons = SOURCE_ICONS;
   protected readonly slug = signal('');
   /** Previous visit, read once when the slug is opened so « nouveau » markers survive until we leave. */
   protected readonly since = signal<Date | null>(null);

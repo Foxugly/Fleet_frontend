@@ -22,8 +22,12 @@
   @let s = summary();
   <p-tabs class="overview__tabs" [value]="tab()" (valueChange)="setTab($any($event))">
     <p-tablist>
-      <p-tab value="apps" data-tab="apps">{{ 'overview.tab.apps' | transloco }}</p-tab>
+      <p-tab value="apps" data-tab="apps">
+        <i class="pi pi-th-large overview__tab-icon" aria-hidden="true"></i>
+        {{ 'overview.tab.apps' | transloco }}
+      </p-tab>
       <p-tab value="deps" data-tab="deps">
+        <i class="pi pi-box overview__tab-icon" aria-hidden="true"></i>
         {{ 'overview.tab.deps' | transloco }}
         @if (updates()?.count(); as n) {
           <span class="overview__tab-count">{{ n }}</span>
