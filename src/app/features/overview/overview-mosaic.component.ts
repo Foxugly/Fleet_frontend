@@ -1,7 +1,7 @@
 import { Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { TagModule } from 'primeng/tag';
+import { TagModule } from '@openng/optimus-ui/tag';
 
 import { ReasonLabelPipe } from '../../shared/fleet/reason-label.pipe';
 import { OverviewChipsComponent } from './overview-chips.component';

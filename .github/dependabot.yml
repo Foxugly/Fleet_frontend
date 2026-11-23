@@ -57,14 +57,15 @@ updates:
           - "minor"
           - "patch"
     ignore:
-      # Angular / PrimeNG majors are a decision, not routine (they pull the whole toolchain).
+      # Angular / Optimus UI majors are a decision, not routine (they pull the whole toolchain;
+      # Optimus UI major = Angular major). Optimus UI (@openng/*) replaced PrimeNG on 2026-11-23.
       - dependency-name: "@angular/*"
         update-types: ["version-update:semver-major"]
       - dependency-name: "@angular-devkit/*"
         update-types: ["version-update:semver-major"]
-      - dependency-name: "primeng"
+      - dependency-name: "@openng/optimus-ui*"
         update-types: ["version-update:semver-major"]
-      - dependency-name: "@primeuix/*"
+      - dependency-name: "@openng/icons"
         update-types: ["version-update:semver-major"]
 
   # Les actions de workflow n'etaient mises a jour par personne : sans ce

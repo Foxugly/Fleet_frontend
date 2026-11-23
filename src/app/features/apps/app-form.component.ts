@@ -1,22 +1,37 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { MessageService } from 'primeng/api';
-import { AutoCompleteModule } from 'primeng/autocomplete';
-import { ButtonModule } from 'primeng/button';
-import { CheckboxModule } from 'primeng/checkbox';
-import { InputTextModule } from 'primeng/inputtext';
-import { MessageModule } from 'primeng/message';
-import { SkeletonModule } from 'primeng/skeleton';
+import { MessageService } from '@openng/optimus-ui/api';
+import { AutoCompleteModule } from '@openng/optimus-ui/autocomplete';
+import { ButtonModule } from '@openng/optimus-ui/button';
+import { CheckboxModule } from '@openng/optimus-ui/checkbox';
+import { InputTextModule } from '@openng/optimus-ui/inputtext';
+import { MessageModule } from '@openng/optimus-ui/message';
+import { SkeletonModule } from '@openng/optimus-ui/skeleton';
 
 import { AppOut, AppsService } from '../../api';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
-import { AppFields, FIELD_ORDER, FieldError, FieldKey, ListField, emptyApp, validateApp } from './inventory-model';
+import {
+  AppFields,
+  FIELD_ORDER,
+  FieldError,
+  FieldKey,
+  ListField,
+  emptyApp,
+  validateApp,
+} from './inventory-model';
 import { StepUp } from './step-up';
 import { TotpDialogComponent } from './totp-dialog.component';
 
@@ -110,21 +125,25 @@ export class AppFormComponent {
       .flatMap(([, v]) => v),
   );
   protected readonly showSummary = computed(
-    () => (this.submitted() && Object.keys(this.clientErrors()).length > 0) || Object.keys(this.serverErrors()).length > 0,
+    () =>
+      (this.submitted() && Object.keys(this.clientErrors()).length > 0) ||
+      Object.keys(this.serverErrors()).length > 0,
   );
 
   constructor() {
     const destroyRef = inject(DestroyRef);
     for (const key of FIELD_ORDER) {
-      (this.form.controls[key] as AbstractControl).valueChanges.pipe(takeUntilDestroyed(destroyRef)).subscribe(() => {
-        this.value.set(this.current());
-        this.edited.update((s) => new Set(s).add(key));
-        this.serverErrors.update((errors) => {
-          if (!(key in errors)) return errors;
-          const { [key]: _gone, ...rest } = errors;
-          return rest;
+      (this.form.controls[key] as AbstractControl).valueChanges
+        .pipe(takeUntilDestroyed(destroyRef))
+        .subscribe(() => {
+          this.value.set(this.current());
+          this.edited.update((s) => new Set(s).add(key));
+          this.serverErrors.update((errors) => {
+            if (!(key in errors)) return errors;
+            const { [key]: _gone, ...rest } = errors;
+            return rest;
+          });
         });
-      });
     }
     if (this.editSlug !== null) this.load(this.editSlug);
   }
@@ -144,12 +163,20 @@ export class AppFormComponent {
   /** Ids of the hint and of every error shown under a field (for `aria-describedby`). */
   protected describedBy(key: FieldKey): string {
     const n = this.errorsOf(key).length + this.serverErrorsOf(key).length;
-    return [`app-form-${key}-hint`, ...Array.from({ length: n }, (_, i) => `app-form-${key}-error-${i}`)].join(' ');
+    return [
+      `app-form-${key}-hint`,
+      ...Array.from({ length: n }, (_, i) => `app-form-${key}-error-${i}`),
+    ].join(' ');
   }
 
-  /** PrimeNG pass-through to the autocomplete's inner input (it has no describedby input of its own). */
+  /** Optimus UI pass-through to the autocomplete's inner input (it has no describedby input of its own). */
   protected listInputPt(key: FieldKey): Record<string, unknown> {
-    return { input: { 'aria-describedby': this.describedBy(key), 'aria-invalid': this.invalid(key) ? 'true' : undefined } };
+    return {
+      input: {
+        'aria-describedby': this.describedBy(key),
+        'aria-invalid': this.invalid(key) ? 'true' : undefined,
+      },
+    };
   }
 
   protected save(): void {
@@ -160,7 +187,10 @@ export class AppFormComponent {
     const slug = this.editSlug;
     const { slug: _slug, ...rest } = fields;
     this.stepUp.start({
-      subject: this.i18n.translate(slug === null ? 'apps.totp.subject_create' : 'apps.totp.subject_save', { slug: fields.slug }),
+      subject: this.i18n.translate(
+        slug === null ? 'apps.totp.subject_create' : 'apps.totp.subject_save',
+        { slug: fields.slug },
+      ),
       send: (code) =>
         slug === null
           ? this.api.appsCreate({ appCreate: { ...fields, totp_code: code } })
@@ -168,7 +198,10 @@ export class AppFormComponent {
       done: (app: AppOut) => {
         this.messages.add({
           severity: 'success',
-          summary: this.i18n.translate(slug === null ? 'apps.toast.created' : 'apps.toast.updated', { slug: app.slug }),
+          summary: this.i18n.translate(
+            slug === null ? 'apps.toast.created' : 'apps.toast.updated',
+            { slug: app.slug },
+          ),
           life: 4000,
         });
         void this.router.navigateByUrl('/apps');

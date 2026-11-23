@@ -12,9 +12,9 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { MessageService } from 'primeng/api';
-import { ButtonModule } from 'primeng/button';
-import { TagModule } from 'primeng/tag';
+import { MessageService } from '@openng/optimus-ui/api';
+import { ButtonModule } from '@openng/optimus-ui/button';
+import { TagModule } from '@openng/optimus-ui/tag';
 import { Subject, catchError, map, merge, of, switchMap } from 'rxjs';
 
 import { ProgressEnum, UpdateGroup, UpdatesService } from '../../../api';
@@ -66,9 +66,10 @@ export class SharedUpdatesComponent {
   readonly count = computed(() => this.groups().length);
   protected readonly sections = computed(() => {
     const rows = this.groups().map((g) => this.toRow(g));
-    return UPDATE_SECTIONS.map((key) => ({ key, rows: rows.filter((r) => sectionOf(r.group) === key) })).filter(
-      (s) => s.rows.length,
-    );
+    return UPDATE_SECTIONS.map((key) => ({
+      key,
+      rows: rows.filter((r) => sectionOf(r.group) === key),
+    })).filter((s) => s.rows.length);
   });
   protected readonly patchesOpen = signal(false);
   /** The prompt shown inline after a failed copy, by group key. */
@@ -113,19 +114,32 @@ export class SharedUpdatesComponent {
   }
 
   protected copy(row: Row): void {
-    const text = buildPrompt(row.group, (key, params) => this.i18n.translate(key, params as Record<string, unknown>));
+    const text = buildPrompt(row.group, (key, params) =>
+      this.i18n.translate(key, params as Record<string, unknown>),
+    );
     if (text === null) return; // unsafe data: the template renders no button then
     // navigator.clipboard is undefined outside a secure context.
     const write = navigator.clipboard?.writeText(text) ?? Promise.reject(new Error('no clipboard'));
     write.then(
       () => {
         if (this.manual()?.key === row.key) this.manual.set(null);
-        this.messages.add({ severity: 'success', summary: this.i18n.translate('updates.copied'), life: 4000 });
+        this.messages.add({
+          severity: 'success',
+          summary: this.i18n.translate('updates.copied'),
+          life: 4000,
+        });
       },
       () => {
         this.manual.set({ key: row.key, text });
-        afterNextRender({ write: () => this.manualBox()?.nativeElement.focus() }, { injector: this.injector });
-        this.messages.add({ severity: 'error', summary: this.i18n.translate('updates.copy_failed'), life: 6000 });
+        afterNextRender(
+          { write: () => this.manualBox()?.nativeElement.focus() },
+          { injector: this.injector },
+        );
+        this.messages.add({
+          severity: 'error',
+          summary: this.i18n.translate('updates.copy_failed'),
+          life: 6000,
+        });
       },
     );
   }

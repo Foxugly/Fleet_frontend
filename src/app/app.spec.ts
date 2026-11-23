@@ -3,7 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { Router, provideRouter } from '@angular/router';
 import { provideTransloco } from '@jsverse/transloco';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from '@openng/optimus-ui/api';
 import { App } from './app';
 import { MainLayoutComponent } from './core/layout/main-layout/main-layout.component';
 import { TranslocoHttpLoader } from './core/i18n/transloco-loader';
@@ -22,7 +22,10 @@ const providers = [
 describe('App', () => {
   it('renders the shell', async () => {
     TestBed.configureTestingModule({
-      providers: [...providers, provideRouter([{ path: '', component: MainLayoutComponent, children: [] }])],
+      providers: [
+        ...providers,
+        provideRouter([{ path: '', component: MainLayoutComponent, children: [] }]),
+      ],
     });
     const fixture = TestBed.createComponent(App);
     await TestBed.inject(Router).navigateByUrl('/');

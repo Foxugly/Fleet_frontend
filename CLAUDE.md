@@ -1,7 +1,12 @@
 # CLAUDE.md
 
-Fleet_frontend: Angular 21 SPA (standalone components, signals, PrimeNG 21 Aura/emerald, Transloco).
+Fleet_frontend: Angular 21 SPA (standalone components, signals, Optimus UI 1 Aura/emerald, Transloco).
 Single-operator dashboard over `Fleet_server`. Fleet-wide rules: `~/.claude/CLAUDE.md`, `OPERATIONS.md`.
+
+UI library: **Optimus UI** (`@openng/optimus-ui`, MIT community fork of PrimeNG 21: same components,
+selectors and Aura theme via `@openng/optimus-ui-themes`, `pi pi-*` icons via `@openng/icons`, configured
+with `provideOptimus`). **PrimeNG >= 22 is banned in the fleet** (commercial licence key, banner without
+one); see foxugly-ops `STANDARD-frontend-layout.md` « Bibliothèque UI ».
 
 ## Layout
 

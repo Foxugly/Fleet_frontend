@@ -1,6 +1,6 @@
 import { Component, computed, input } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { TagModule } from 'primeng/tag';
+import { TagModule } from '@openng/optimus-ui/tag';
 
 import { AgePipe } from '../../../shared/fleet/age.pipe';
 import { SentryData } from '../../../shared/fleet/source-data';
@@ -30,7 +30,9 @@ import { NewTagComponent } from './new-tag';
         @for (i of issues(); track $index) {
           <li class="issue-row">
             @if (link(i.url); as href) {
-              <a class="row-title" [href]="href" target="_blank" rel="noopener noreferrer">{{ i.title ?? '—' }}</a>
+              <a class="row-title" [href]="href" target="_blank" rel="noopener noreferrer">{{
+                i.title ?? '—'
+              }}</a>
             } @else {
               <span class="row-title">{{ i.title ?? '—' }}</span>
             }
@@ -38,7 +40,10 @@ import { NewTagComponent } from './new-tag';
               <app-new-tag />
             }
             @if (i.level) {
-              <p-tag [severity]="i.level === 'fatal' || i.level === 'error' ? 'danger' : 'warn'" [value]="i.level" />
+              <p-tag
+                [severity]="i.level === 'fatal' || i.level === 'error' ? 'danger' : 'warn'"
+                [value]="i.level"
+              />
             }
             @if (i.culprit) {
               <span class="muted">{{ i.culprit }}</span>

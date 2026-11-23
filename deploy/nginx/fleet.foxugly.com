@@ -77,7 +77,7 @@ server {
 
         # Enforced nonce CSP (AOT build: no eval). The two inline scripts (anti-FOUC
         # theme, runtime config) carry $request_id as nonce, reused in the header.
-        # style-src 'unsafe-inline': PrimeNG injects <style> elements at runtime.
+        # style-src 'unsafe-inline': Optimus UI injects <style> elements at runtime.
         # inlineCritical is off in the build, so no CSS onload handler to allow.
         # connect-src: the API and Sentry ingest (errors only, no tracing/replay,
         # hence no worker-src).

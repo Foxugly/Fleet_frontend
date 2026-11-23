@@ -1,6 +1,6 @@
 import { Component, computed, input } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { TooltipModule } from 'primeng/tooltip';
+import { TooltipModule } from '@openng/optimus-ui/tooltip';
 
 import { ReasonLabelPipe } from '../../shared/fleet/reason-label.pipe';
 import { OverviewEntry, SOURCES } from './overview-model';

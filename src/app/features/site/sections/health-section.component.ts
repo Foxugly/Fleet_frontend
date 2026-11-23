@@ -1,6 +1,6 @@
 import { Component, input } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { TagModule } from 'primeng/tag';
+import { TagModule } from '@openng/optimus-ui/tag';
 
 import { HealthData } from '../../../shared/fleet/source-data';
 
@@ -29,7 +29,11 @@ export const TLS_WARN_DAYS = 14;
           } @else {
             {{ 'site.health.tls_days' | transloco: { n: d.tls_days_left } }}
             @if (d.tls_days_left < warnDays) {
-              <p-tag class="tls-warn" severity="danger" [value]="'site.health.tls_soon' | transloco" />
+              <p-tag
+                class="tls-warn"
+                severity="danger"
+                [value]="'site.health.tls_soon' | transloco"
+              />
             }
           }
         </dd>

@@ -1,13 +1,22 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, ElementRef, OnDestroy, computed, effect, inject, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  OnDestroy,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { ButtonModule } from 'primeng/button';
-import { MessageModule } from 'primeng/message';
-import { SkeletonModule } from 'primeng/skeleton';
-import { TabsModule } from 'primeng/tabs';
-import { TagModule } from 'primeng/tag';
+import { ButtonModule } from '@openng/optimus-ui/button';
+import { MessageModule } from '@openng/optimus-ui/message';
+import { SkeletonModule } from '@openng/optimus-ui/skeleton';
+import { TabsModule } from '@openng/optimus-ui/tabs';
+import { TagModule } from '@openng/optimus-ui/tag';
 import { Subject as RxSubject, catchError, distinctUntilChanged, map, of, switchMap } from 'rxjs';
 
 import { SiteDetail, SitesService, Subject } from '../../api';
@@ -73,7 +82,9 @@ export class SiteDetailComponent implements OnDestroy {
       items: Object.entries(s.sources[key].items).map(([name, subject]) => ({ name, subject })),
     }));
   });
-  private readonly tabParam = toSignal(this.route.queryParamMap.pipe(map((p) => p.get('tab'))), { initialValue: null });
+  private readonly tabParam = toSignal(this.route.queryParamMap.pipe(map((p) => p.get('tab'))), {
+    initialValue: null,
+  });
   /** Open tab: the `tab` query param when valid, else the worst source. */
   protected readonly activeTab = computed<SourceKey>(() => {
     const found = SOURCES.find((k) => k === this.tabParam());
@@ -98,7 +109,9 @@ export class SiteDetailComponent implements OnDestroy {
       const key = this.activeTab();
       if (!this.site()) return;
       const timer = setTimeout(() => {
-        const tab = this.host.nativeElement.querySelector<HTMLElement>(`p-tab[data-source="${key}"]`);
+        const tab = this.host.nativeElement.querySelector<HTMLElement>(
+          `p-tab[data-source="${key}"]`,
+        );
         tab?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
       });
       onCleanup(() => clearTimeout(timer));
@@ -109,7 +122,9 @@ export class SiteDetailComponent implements OnDestroy {
         switchMap((slug) =>
           this.api.siteRetrieve({ slug }).pipe(
             map((site) => ({ site, status: 0 })),
-            catchError((e: unknown) => of({ site: null, status: e instanceof HttpErrorResponse ? e.status : -1 })),
+            catchError((e: unknown) =>
+              of({ site: null, status: e instanceof HttpErrorResponse ? e.status : -1 }),
+            ),
           ),
         ),
         takeUntilDestroyed(inject(DestroyRef)),

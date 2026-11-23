@@ -1,6 +1,6 @@
 import { Component, input } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { TooltipModule } from 'primeng/tooltip';
+import { TooltipModule } from '@openng/optimus-ui/tooltip';
 
 import { Cell } from '../../../api';
 import { AgePipe } from '../age.pipe';

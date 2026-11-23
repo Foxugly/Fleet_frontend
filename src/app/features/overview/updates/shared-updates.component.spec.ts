@@ -2,7 +2,7 @@ import { HttpTestingController } from '@angular/common/http/testing';
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TranslocoService } from '@jsverse/transloco';
-import { MessageService } from 'primeng/api';
+import { MessageService } from '@openng/optimus-ui/api';
 
 import { ProgressEnum, UpdateGroup } from '../../../api';
 import { authTestProviders } from '../../auth/auth-test-setup.testing';
@@ -27,9 +27,20 @@ const security = group({
     { site: 'b', repo: 'Foxugly/b', lock: null, current: null },
   ],
 });
-const major = group({ package: '@angular/core', ecosystem: 'npm', kind: 'major', latest: '22.0.0', branch: 'deps/@angular/core-22.0.0' });
+const major = group({
+  package: '@angular/core',
+  ecosystem: 'npm',
+  kind: 'major',
+  latest: '22.0.0',
+  branch: 'deps/@angular/core-22.0.0',
+});
 const minor = group();
-const patch = group({ package: 'requests', kind: 'patch', latest: '2.32.5', branch: 'deps/requests-2.32.5' });
+const patch = group({
+  package: 'requests',
+  kind: 'patch',
+  latest: '2.32.5',
+  branch: 'deps/requests-2.32.5',
+});
 
 interface Mounted {
   fixture: ComponentFixture<SharedUpdatesComponent>;
@@ -60,8 +71,11 @@ async function mount(groups: UpdateGroup[] | 'error'): Promise<Mounted> {
 }
 
 const sectionKeys = (el: HTMLElement) =>
-  Array.from(el.querySelectorAll<HTMLElement>('.shared-updates__section')).map((s) => s.dataset['section']);
-const copyButton = (row: HTMLElement) => row.querySelector<HTMLButtonElement>('.shared-updates__copy button')!;
+  Array.from(el.querySelectorAll<HTMLElement>('.shared-updates__section')).map(
+    (s) => s.dataset['section'],
+  );
+const copyButton = (row: HTMLElement) =>
+  row.querySelector<HTMLButtonElement>('.shared-updates__copy button')!;
 const rowOf = (el: HTMLElement, pkg: string) =>
   Array.from(el.querySelectorAll<HTMLElement>('.shared-updates__row')).find(
     (r) => r.querySelector('.shared-updates__package')!.textContent!.trim() === pkg,
@@ -87,7 +101,9 @@ describe('SharedUpdatesComponent', () => {
 
   it('says there is nothing to do once an empty answer arrived', async () => {
     const { el } = await mount([]);
-    expect(el.querySelector('.shared-updates__none')!.textContent).toContain('Aucune mise à jour ne concerne plusieurs apps');
+    expect(el.querySelector('.shared-updates__none')!.textContent).toContain(
+      'Aucune mise à jour ne concerne plusieurs apps',
+    );
   });
 
   it('is hidden, without a console error, when the request fails (Review Focus 5)', async () => {
@@ -110,7 +126,9 @@ describe('SharedUpdatesComponent', () => {
 
   it('starts with the patches collapsed; the toggle reveals them', async () => {
     const { fixture, el } = await mount([minor, patch]);
-    const toggle = el.querySelector<HTMLButtonElement>('[data-section="patch"] .shared-updates__toggle')!;
+    const toggle = el.querySelector<HTMLButtonElement>(
+      '[data-section="patch"] .shared-updates__toggle',
+    )!;
     const list = el.querySelector<HTMLElement>('#' + toggle.getAttribute('aria-controls'))!;
     expect(list).not.toBeNull();
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
@@ -126,11 +144,15 @@ describe('SharedUpdatesComponent', () => {
   it('a row shows the version range, a chip per site linking to its deps tab, and the tags', async () => {
     const { el } = await mount([security, major, minor]);
     const django = rowOf(el, 'django');
-    expect(django.querySelector('.shared-updates__versions')!.textContent).toContain('5.2 – 6.0.1 → 6.1.2');
+    expect(django.querySelector('.shared-updates__versions')!.textContent).toContain(
+      '5.2 – 6.0.1 → 6.1.2',
+    );
     const chips = Array.from(django.querySelectorAll<HTMLAnchorElement>('a.shared-updates__site'));
     expect(chips.map((a) => a.textContent!.trim())).toEqual(['billing', 'poker']);
     expect(chips[0].getAttribute('href')).toBe('/sites/billing?tab=deps');
-    expect(django.querySelector('.shared-updates__progress')!.textContent).toContain('Pas commencé');
+    expect(django.querySelector('.shared-updates__progress')!.textContent).toContain(
+      'Pas commencé',
+    );
 
     const angular = rowOf(el, '@angular/core');
     expect(angular.querySelector('.shared-updates__decide')!.textContent).toContain('à décider');
@@ -142,16 +164,22 @@ describe('SharedUpdatesComponent', () => {
   });
 
   it('a major with an alert sits in Sécurité and still shows « à décider »', async () => {
-    const { el } = await mount([group({ kind: 'major', security: { alerts: 1, max_severity: 'high' } })]);
+    const { el } = await mount([
+      group({ kind: 'major', security: { alerts: 1, max_severity: 'high' } }),
+    ]);
     expect(sectionKeys(el)).toEqual(['security']);
-    expect(rowOf(el, 'django').querySelector('.shared-updates__decide')!.textContent).toContain('à décider');
+    expect(rowOf(el, 'django').querySelector('.shared-updates__decide')!.textContent).toContain(
+      'à décider',
+    );
   });
 
   it('a group with unchecked data shows a notice instead of the copy button (security)', async () => {
     const { el } = await mount([group({ branch: 'main' })]);
     const row = rowOf(el, 'django');
     expect(row.querySelector('.shared-updates__copy')).toBeNull();
-    expect(row.querySelector('.shared-updates__unsafe')!.textContent).toContain('prompt indisponible');
+    expect(row.querySelector('.shared-updates__unsafe')!.textContent).toContain(
+      'prompt indisponible',
+    );
   });
 
   it('skips PR and issue links that are not https (security)', async () => {
@@ -174,7 +202,14 @@ describe('SharedUpdatesComponent', () => {
     const { el } = await mount([
       group({
         progress: ProgressEnum.Blocked,
-        prs: [{ repo: 'Foxugly/billing_server', number: 7, url: 'https://github.com/Foxugly/billing_server/pull/7', checks: 'failure' }],
+        prs: [
+          {
+            repo: 'Foxugly/billing_server',
+            number: 7,
+            url: 'https://github.com/Foxugly/billing_server/pull/7',
+            checks: 'failure',
+          },
+        ],
       }),
     ]);
     const row = rowOf(el, 'django');
@@ -191,16 +226,24 @@ describe('SharedUpdatesComponent', () => {
       group({
         progress: ProgressEnum.Waiting,
         blocked: {
-          issues: [{ repo: 'Foxugly/billing_server', number: 12, url: 'https://github.com/Foxugly/billing_server/issues/12' }],
+          issues: [
+            {
+              repo: 'Foxugly/billing_server',
+              number: 12,
+              url: 'https://github.com/Foxugly/billing_server/issues/12',
+            },
+          ],
           by: [{ package: 'djangorestframework', version: '3.16.1', newer: null }],
         },
       }),
     ]);
     const row = rowOf(el, 'django');
-    expect(row.querySelector('.shared-updates__progress')!.textContent).toContain('En attente de djangorestframework > 3.16.1');
-    expect(row.querySelector<HTMLAnchorElement>('a.shared-updates__issue')!.getAttribute('href')).toBe(
-      'https://github.com/Foxugly/billing_server/issues/12',
+    expect(row.querySelector('.shared-updates__progress')!.textContent).toContain(
+      'En attente de djangorestframework > 3.16.1',
     );
+    expect(
+      row.querySelector<HTMLAnchorElement>('a.shared-updates__issue')!.getAttribute('href'),
+    ).toBe('https://github.com/Foxugly/billing_server/issues/12');
     const copy = copyButton(row);
     expect(copy.textContent).toContain('Copier quand même');
     // WCAG 2.5.3: the accessible name contains the visible label.
@@ -223,7 +266,7 @@ describe('SharedUpdatesComponent', () => {
     expect(progress.classList).toContain('shared-updates__progress--retry');
   });
 
-  it('« Copier le prompt » copies buildPrompt\'s text and shows a success toast', async () => {
+  it("« Copier le prompt » copies buildPrompt's text and shows a success toast", async () => {
     const { fixture, el, messages } = await mount([minor]);
     const add = vi.spyOn(messages, 'add');
     const copy = copyButton(rowOf(el, 'django'));
@@ -231,7 +274,9 @@ describe('SharedUpdatesComponent', () => {
     copy.click();
     await settle(fixture);
     const i18n = TestBed.inject(TranslocoService);
-    expect(writeText).toHaveBeenCalledWith(buildPrompt(minor, (k, p) => i18n.translate(k, p as Record<string, unknown>)));
+    expect(writeText).toHaveBeenCalledWith(
+      buildPrompt(minor, (k, p) => i18n.translate(k, p as Record<string, unknown>)),
+    );
     expect(add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'success' }));
     expect(el.querySelector('.shared-updates__manual')).toBeNull();
   });
