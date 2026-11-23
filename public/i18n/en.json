@@ -191,7 +191,8 @@
       "version": "Version",
       "kind": "Kind",
       "blocked_by": "blocked by {{package}}@{{version}} ({{range}})",
-      "blocked_newer": "{{package}} {{newer}} lifts it"
+      "blocked_newer": "{{package}} {{newer}} lifts it",
+      "held_by": "held by {{file}} ({{range}})"
     },
     "edit": "Edit",
     "archived": "Archived"
@@ -279,7 +280,8 @@
       "green": "OK",
       "none": "No data"
     },
-    "blocked_updates": "{{n}} blocked update(s): {{package}} {{latest}} ← {{by}} {{version}}"
+    "blocked_updates": "{{n}} blocked update(s): {{package}} {{latest}} ← {{by}} {{version}}",
+    "held_updates": "{{n}} update(s) held by {{file}} ({{range}}): {{package}} {{latest}}"
   },
   "updates": {
     "title": "Shared updates ({{n}})",
@@ -307,7 +309,8 @@
       "possible": "Possible",
       "blocked": "Blocked",
       "waiting": "Waiting for {{package}} > {{version}}",
-      "retry": "Retry: {{package}} {{newer}} available"
+      "retry": "Retry: {{package}} {{newer}} available",
+      "held": "Held on purpose ({{file}} {{range}})"
     },
     "copy": "Copy the prompt",
     "copy_anyway": "Copy anyway",
@@ -329,7 +332,8 @@
       "retry_auto": "New attempt: {{blocker}} {{newer}} is available and accepts {{package}} {{latest}}; update {{blocker}} first if it is not already done."
     },
     "none": "No update concerns several apps for now.",
-    "blocked_auto": "Blocked by {{package}} {{version}}, which requires {{range}}"
+    "blocked_auto": "Blocked by {{package}} {{version}}, which requires {{range}}",
+    "held_auto": "Held on purpose by {{file}} ({{range}})"
   },
   "apps": {
     "title": "Inventory",

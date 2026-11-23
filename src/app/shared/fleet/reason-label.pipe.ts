@@ -1,7 +1,22 @@
 import { Pipe, PipeTransform, inject } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
 
-import { Cell } from '../../api';
+import { Cell, Reason } from '../../api';
+
+/**
+ * A reason's text in the active language. A string `note` param (a hold's comment, taken
+ * from a repository: untrusted) is appended after the translation, never interpolated
+ * into it, and only ever rendered as plain text. Its `{{` / `}}` get a zero-width space:
+ * the text is later passed as a param of other translations (tooltips, aria-labels),
+ * whose interpolation would otherwise read them as placeholders.
+ */
+export function reasonText(i18n: TranslocoService, reason: Reason): string {
+  const params = reason.params ?? {};
+  const text = i18n.translate(`reason.${reason.code}`, params);
+  const note = params['note'];
+  if (typeof note !== 'string' || !note.trim()) return text;
+  return `${text} — ${note.trim().replace(/([{}])(?=[{}])/g, '$1​')}`;
+}
 
 /**
  * Cell -> short human reason ("Répond 502", "3 ouvert(s)"...), translated from the
@@ -17,7 +32,7 @@ export class ReasonLabelPipe implements PipeTransform {
     const reason = cell.reason;
     if (reason) {
       const key = `reason.${reason.code}`;
-      if (this.has(key)) return this.i18n.translate(key, reason.params ?? {});
+      if (this.has(key)) return reasonText(this.i18n, reason);
     }
     return this.i18n.translate(`reason.fallback.${cell.state}`, { n: cell.count });
   }
@@ -42,7 +57,7 @@ export class NotesLabelPipe implements PipeTransform {
     const catalog = this.i18n.getTranslation(this.i18n.getActiveLang());
     return (cell.notes ?? [])
       .filter((n) => typeof catalog?.[`reason.${n.code}`] === 'string')
-      .map((n) => this.i18n.translate(`reason.${n.code}`, n.params ?? {}))
+      .map((n) => reasonText(this.i18n, n))
       .join(' · ');
   }
 }

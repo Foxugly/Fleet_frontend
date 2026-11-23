@@ -4,7 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TranslocoService } from '@jsverse/transloco';
 import { MessageService } from '@openng/optimus-ui/api';
 
-import { ProgressEnum, UpdateGroup } from '../../../api';
+import { BlockerKindEnum, ProgressEnum, UpdateGroup } from '../../../api';
 import { authTestProviders } from '../../auth/auth-test-setup.testing';
 import { SharedUpdatesComponent } from './shared-updates.component';
 import { buildPrompt } from './update-prompt';
@@ -189,7 +189,7 @@ describe('SharedUpdatesComponent', () => {
         prs: [{ repo: 'Foxugly/a', number: 1, url: 'javascript:alert(1)', checks: 'pending' }],
         blocked: {
           issues: [{ repo: 'Foxugly/a', number: 2, url: 'http://evil/2' }],
-          by: [{ package: 'drf', version: '3.16.1', newer: null, range: null }],
+          by: [{ kind: BlockerKindEnum.Package, package: 'drf', version: '3.16.1', newer: null, range: null, note: '' }],
         },
       }),
     ]);
@@ -233,7 +233,7 @@ describe('SharedUpdatesComponent', () => {
               url: 'https://github.com/Foxugly/billing_server/issues/12',
             },
           ],
-          by: [{ package: 'djangorestframework', version: '3.16.1', newer: null, range: null }],
+          by: [{ kind: BlockerKindEnum.Package, package: 'djangorestframework', version: '3.16.1', newer: null, range: null, note: '' }],
         },
       }),
     ]);
@@ -261,7 +261,7 @@ describe('SharedUpdatesComponent', () => {
         progress: ProgressEnum.Waiting,
         blocked: {
           issues: [],
-          by: [{ package: '@angular/compiler-cli', version: '22.3.0', newer: null, range: '>=6.0 <6.1' }],
+          by: [{ kind: BlockerKindEnum.Package, package: '@angular/compiler-cli', version: '22.3.0', newer: null, range: '>=6.0 <6.1', note: '' }],
         },
       }),
     ]);
@@ -275,13 +275,47 @@ describe('SharedUpdatesComponent', () => {
     expect(row.querySelector('a.shared-updates__issue')).toBeNull();
   });
 
+  it('held on purpose everywhere: « Gelé volontairement », the note as plain text', async () => {
+    const { el } = await mount([
+      group({
+        ecosystem: 'python',
+        package: 'sentry-sdk',
+        latest: '3.0.0',
+        kind: 'major',
+        branch: 'deps/sentry-sdk-3.0.0',
+        progress: ProgressEnum.Waiting,
+        blocked: {
+          issues: [],
+          by: [
+            {
+              kind: BlockerKindEnum.Hold,
+              package: 'requirements.in',
+              version: '',
+              newer: null,
+              range: '<3',
+              note: 'hold: day-0 major <b>x</b>',
+            },
+          ],
+        },
+      }),
+    ]);
+    const row = rowOf(el, 'sentry-sdk');
+    expect(row.querySelector('.shared-updates__progress')!.textContent).toContain(
+      'Gelé volontairement (requirements.in <3)',
+    );
+    const line = row.querySelector('.shared-updates__blocked-auto')!;
+    expect(line.textContent).toContain('Gelé volontairement par requirements.in (<3)');
+    expect(line.querySelector('.shared-updates__hold-note')!.textContent).toContain('hold: day-0 major <b>x</b>');
+    expect(line.querySelector('b')).toBeNull();
+  });
+
   it('an issue-based block shows no lock-derived line', async () => {
     const { el } = await mount([
       group({
         progress: ProgressEnum.Waiting,
         blocked: {
           issues: [{ repo: 'Foxugly/billing_server', number: 12, url: 'https://github.com/x/12' }],
-          by: [{ package: 'djangorestframework', version: '3.16.1', newer: null, range: null }],
+          by: [{ kind: BlockerKindEnum.Package, package: 'djangorestframework', version: '3.16.1', newer: null, range: null, note: '' }],
         },
       }),
     ]);
@@ -294,7 +328,7 @@ describe('SharedUpdatesComponent', () => {
         progress: ProgressEnum.Retry,
         blocked: {
           issues: [{ repo: 'Foxugly/billing_server', number: 12, url: 'https://github.com/x/12' }],
-          by: [{ package: 'djangorestframework', version: '3.16.1', newer: '3.17.0', range: null }],
+          by: [{ kind: BlockerKindEnum.Package, package: 'djangorestframework', version: '3.16.1', newer: '3.17.0', range: null, note: '' }],
         },
       }),
     ]);

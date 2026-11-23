@@ -191,7 +191,8 @@
       "version": "Version",
       "kind": "Type",
       "blocked_by": "bloqué par {{package}}@{{version}} ({{range}})",
-      "blocked_newer": "{{package}} {{newer}} le débloque"
+      "blocked_newer": "{{package}} {{newer}} le débloque",
+      "held_by": "gelée par {{file}} ({{range}})"
     },
     "edit": "Modifier",
     "archived": "Archivée"
@@ -279,7 +280,8 @@
       "green": "OK",
       "none": "Aucune donnée"
     },
-    "blocked_updates": "{{n}} mise(s) à jour bloquée(s) : {{package}} {{latest}} ← {{by}} {{version}}"
+    "blocked_updates": "{{n}} mise(s) à jour bloquée(s) : {{package}} {{latest}} ← {{by}} {{version}}",
+    "held_updates": "{{n}} mise(s) à jour gelée(s) par {{file}} ({{range}}) : {{package}} {{latest}}"
   },
   "updates": {
     "title": "Mises à jour communes ({{n}})",
@@ -307,7 +309,8 @@
       "possible": "Possible",
       "blocked": "Bloqué",
       "waiting": "En attente de {{package}} > {{version}}",
-      "retry": "À retenter : {{package}} {{newer}} disponible"
+      "retry": "À retenter : {{package}} {{newer}} disponible",
+      "held": "Gelé volontairement ({{file}} {{range}})"
     },
     "copy": "Copier le prompt",
     "copy_anyway": "Copier quand même",
@@ -329,7 +332,8 @@
       "retry_auto": "Nouvelle tentative : {{blocker}} {{newer}} est disponible et accepte {{package}} {{latest}} ; mettez d'abord {{blocker}} à jour si ce n'est pas déjà fait."
     },
     "none": "Aucune mise à jour ne concerne plusieurs apps pour l'instant.",
-    "blocked_auto": "Bloqué par {{package}} {{version}}, qui exige {{range}}"
+    "blocked_auto": "Bloqué par {{package}} {{version}}, qui exige {{range}}",
+    "held_auto": "Gelé volontairement par {{file}} ({{range}})"
   },
   "apps": {
     "title": "Inventaire",

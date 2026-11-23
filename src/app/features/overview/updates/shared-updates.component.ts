@@ -39,10 +39,10 @@ interface Row {
   group: UpdateGroup;
   versions: string | null;
   sites: string[];
-  /** The blocker named by the waiting/retry tag. */
-  blocker: { package: string; version: string; newer: string | null } | null;
-  /** Blockers found in the locks (no [fleet] issue): package, version and declared range. */
-  autoBlockers: { package: string; version: string; range: string }[];
+  /** The blocker named by the waiting/retry tag (`hold`: the projects cap it on purpose). */
+  blocker: { kind: string; package: string; version: string; newer: string | null; range: string | null } | null;
+  /** Blockers found in the locks (no [fleet] issue): kind, package, version, range, hold note. */
+  autoBlockers: { kind: string; package: string; version: string; range: string; note: string }[];
   severity: string | null;
   /** False when an API value failed the prompt checks: a notice replaces the copy button. */
   safe: boolean;
@@ -165,7 +165,9 @@ export class SharedUpdatesComponent {
       blocker,
       autoBlockers:
         g.blocked && !g.blocked.issues.length
-          ? by.flatMap((b) => (b.range ? [{ package: b.package, version: b.version, range: b.range }] : []))
+          ? by.flatMap((b) =>
+              b.range ? [{ kind: b.kind, package: b.package, version: b.version, range: b.range, note: b.note }] : [],
+            )
           : [],
       severity: g.security ? (max && SEVERITIES.includes(max) ? max : 'unknown') : null,
       safe: isPromptSafe(g),
