@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { TagModule } from '@openng/optimus-ui/tag';
 
@@ -10,6 +10,7 @@ export const TLS_WARN_DAYS = 14;
   selector: 'app-health-section',
   imports: [TranslocoPipe, TagModule],
   styleUrl: './section.scss',
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     @let d = data();
     <dl class="facts">

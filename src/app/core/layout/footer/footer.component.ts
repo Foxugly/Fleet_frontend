@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 
 const BUILD_VERSION = '0.1.0';
@@ -19,6 +19,7 @@ function resolveVersion(): string {
   standalone: true,
   imports: [TranslocoPipe],
   templateUrl: './footer.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './footer.component.scss',
 })
 export class FooterComponent {

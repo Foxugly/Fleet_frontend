@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { TagModule } from '@openng/optimus-ui/tag';
 
@@ -6,6 +6,7 @@ import { TagModule } from '@openng/optimus-ui/tag';
 @Component({
   selector: 'app-new-tag',
   imports: [TranslocoPipe, TagModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `<p-tag class="tag-new" severity="info" [value]="'site.new' | transloco" />`,
 })
 export class NewTagComponent {}

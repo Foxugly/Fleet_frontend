@@ -8,6 +8,7 @@ import {
   effect,
   inject,
   signal,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -54,6 +55,7 @@ import { SOURCES, SourceKey, defaultTab } from './site-helpers';
     DepsSectionComponent,
   ],
   templateUrl: './site-detail.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './site-detail.component.scss',
 })
 export class SiteDetailComponent implements OnDestroy {

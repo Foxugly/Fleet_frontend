@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { TagModule } from '@openng/optimus-ui/tag';
 
@@ -11,6 +11,7 @@ import { NewTagComponent } from './new-tag';
   selector: 'app-sentry-section',
   imports: [TranslocoPipe, TagModule, AgePipe, NewTagComponent],
   styleUrl: './section.scss',
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     @let d = data();
     <dl class="facts block">

@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { TooltipModule } from '@openng/optimus-ui/tooltip';
 
@@ -24,6 +24,7 @@ import { OverviewEntry, SOURCES } from './overview-model';
       }
     </ul>
   `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './overview-chips.component.scss',
 })
 export class OverviewChipsComponent {

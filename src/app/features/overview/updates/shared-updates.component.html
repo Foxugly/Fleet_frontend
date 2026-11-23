@@ -13,7 +13,12 @@
               [attr.aria-expanded]="patchesOpen()"
               (click)="togglePatches()"
             >
-              <i class="pi" [class.pi-chevron-down]="patchesOpen()" [class.pi-chevron-right]="!patchesOpen()" aria-hidden="true"></i>
+              <i
+                class="pi"
+                [class.pi-chevron-down]="patchesOpen()"
+                [class.pi-chevron-right]="!patchesOpen()"
+                aria-hidden="true"
+              ></i>
               {{ heading }}
             </button>
           } @else {
@@ -21,7 +26,11 @@
           }
         </h2>
         <!-- Always rendered, so the toggle's aria-controls points at an element. -->
-        <ul class="shared-updates__rows" [id]="'shared-updates-' + section.key" [hidden]="!isOpen(section.key)">
+        <ul
+          class="shared-updates__rows"
+          [id]="'shared-updates-' + section.key"
+          [hidden]="!isOpen(section.key)"
+        >
           @for (row of section.rows; track row.key) {
             @let g = row.group;
             <li class="shared-updates__row">
@@ -42,15 +51,33 @@
                   />
                 }
                 @if (g.kind === 'major') {
-                  <p-tag class="shared-updates__decide" severity="secondary" [value]="'updates.decide' | transloco" />
+                  <p-tag
+                    class="shared-updates__decide"
+                    severity="secondary"
+                    [value]="'updates.decide' | transloco"
+                  />
                 }
                 <span class="shared-updates__progress shared-updates__progress--{{ g.progress }}">
                   @switch (g.progress) {
                     @case (Progress.Waiting) {
-                      {{ 'updates.progress.waiting' | transloco: { package: row.blocker?.package, version: row.blocker?.version } }}
+                      {{
+                        'updates.progress.waiting'
+                          | transloco
+                            : {
+                                package: $safeNavigationMigration(row.blocker?.package),
+                                version: $safeNavigationMigration(row.blocker?.version),
+                              }
+                      }}
                     }
                     @case (Progress.Retry) {
-                      {{ 'updates.progress.retry' | transloco: { package: row.blocker?.package, newer: row.blocker?.newer } }}
+                      {{
+                        'updates.progress.retry'
+                          | transloco
+                            : {
+                                package: $safeNavigationMigration(row.blocker?.package),
+                                newer: $safeNavigationMigration(row.blocker?.newer),
+                              }
+                      }}
                     }
                     @default {
                       {{ 'updates.progress.' + g.progress | transloco }}
@@ -62,7 +89,12 @@
               <ul class="shared-updates__sites" [attr.aria-label]="'updates.sites' | transloco">
                 @for (site of row.sites; track site) {
                   <li>
-                    <a class="shared-updates__site" [routerLink]="['/sites', site]" [queryParams]="{ tab: 'deps' }">{{ site }}</a>
+                    <a
+                      class="shared-updates__site"
+                      [routerLink]="['/sites', site]"
+                      [queryParams]="{ tab: 'deps' }"
+                      >{{ site }}</a
+                    >
                   </li>
                 }
               </ul>
@@ -72,8 +104,14 @@
                   @for (pr of g.prs; track pr.url) {
                     @if (link(pr.url); as href) {
                       <li>
-                        <a class="shared-updates__pr" [href]="href" target="_blank" rel="noopener noreferrer">
-                          <i class="pi pi-arrow-right-arrow-left" aria-hidden="true"></i> {{ pr.repo }}#{{ pr.number }}
+                        <a
+                          class="shared-updates__pr"
+                          [href]="href"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <i class="pi pi-arrow-right-arrow-left" aria-hidden="true"></i>
+                          {{ pr.repo }}#{{ pr.number }}
                         </a>
                       </li>
                     }
@@ -81,8 +119,14 @@
                   @for (issue of g.blocked?.issues ?? []; track issue.url) {
                     @if (link(issue.url); as href) {
                       <li>
-                        <a class="shared-updates__issue" [href]="href" target="_blank" rel="noopener noreferrer">
-                          <i class="pi pi-exclamation-circle" aria-hidden="true"></i> {{ issue.repo }}#{{ issue.number }}
+                        <a
+                          class="shared-updates__issue"
+                          [href]="href"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+                          {{ issue.repo }}#{{ issue.number }}
                         </a>
                       </li>
                     }
@@ -99,7 +143,10 @@
                   [severity]="waiting ? 'secondary' : 'primary'"
                   [outlined]="waiting"
                   [label]="(waiting ? 'updates.copy_anyway' : 'updates.copy') | transloco"
-                  [ariaLabel]="(waiting ? 'updates.copy_anyway_aria' : 'updates.copy_aria') | transloco: { package: g.package }"
+                  [ariaLabel]="
+                    (waiting ? 'updates.copy_anyway_aria' : 'updates.copy_aria')
+                      | transloco: { package: g.package }
+                  "
                   (onClick)="copy(row)"
                 />
               } @else {

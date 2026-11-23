@@ -1,4 +1,12 @@
-import { Component, DestroyRef, computed, inject, signal, viewChild } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  computed,
+  inject,
+  signal,
+  viewChild,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -60,6 +68,7 @@ export type OverviewTab = 'apps' | 'deps';
     AgePipe,
   ],
   templateUrl: './overview.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './overview.component.scss',
 })
 export class OverviewComponent {
