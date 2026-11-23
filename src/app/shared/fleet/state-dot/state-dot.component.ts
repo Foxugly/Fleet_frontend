@@ -4,12 +4,12 @@ import { TooltipModule } from '@openng/optimus-ui/tooltip';
 
 import { Cell } from '../../../api';
 import { AgePipe } from '../age.pipe';
-import { ReasonLabelPipe } from '../reason-label.pipe';
+import { NotesLabelPipe, ReasonLabelPipe, cellTip } from '../reason-label.pipe';
 
 /** Coloured dot + count + age for one dashboard cell. Stale/error are never green. */
 @Component({
   selector: 'app-state-dot',
-  imports: [TranslocoPipe, AgePipe, ReasonLabelPipe, TooltipModule],
+  imports: [TranslocoPipe, AgePipe, ReasonLabelPipe, NotesLabelPipe, TooltipModule],
   templateUrl: './state-dot.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './state-dot.component.scss',
@@ -19,4 +19,6 @@ export class StateDotComponent {
   readonly label = input.required<string>();
   /** Hide the age text (still in the aria label): for tight places like tab labels. */
   readonly compact = input(false);
+
+  protected readonly cellTip = cellTip;
 }

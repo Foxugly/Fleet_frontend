@@ -1,14 +1,16 @@
 @let c = cell();
 @let stateLabel = ('fleet.state.' + c.state) | transloco;
 @let reasonText = c | reasonLabel;
+@let notesText = c | notesLabel;
+@let tip = cellTip(c, reasonText, notesText);
 <span
   class="state-dot state-dot--{{ c.state }}"
   role="img"
   [attr.aria-label]="
     (c.error ? 'fleet.dot.aria_error' : 'fleet.dot.aria')
-      | transloco: { label: label(), state: stateLabel, count: c.count, age: (c.collected_at | age), error: c.error, reason: reasonText }
+      | transloco: { label: label(), state: stateLabel, count: c.count, age: (c.collected_at | age), error: c.error, reason: c.error ? reasonText : tip }
   "
-  [pTooltip]="c.error || reasonText"
+  [pTooltip]="tip"
 >
   @switch (c.state) {
     @case ('stale') {
@@ -26,6 +28,9 @@
   }
   @if (c.state !== 'none') {
     <span class="state-dot__count" aria-hidden="true">{{ c.count }}</span>
+  }
+  @if (notesText) {
+    <i class="pi pi-lock state-dot__note" aria-hidden="true"></i>
   }
   @if (!compact()) {
     <span class="state-dot__age" aria-hidden="true">{{ c.collected_at | age }}</span>

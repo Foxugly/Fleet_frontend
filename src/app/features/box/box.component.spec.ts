@@ -40,6 +40,7 @@ const box = (d: BoxData | null, extra: Partial<Box> = {}): Box => ({
     collected_at: '2026-11-21T11:55:00Z',
     error: '',
     reason: null,
+    notes: [],
   },
   data: d,
   collected_at: d ? '2026-11-21T11:50:00Z' : null,

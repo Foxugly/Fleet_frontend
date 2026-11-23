@@ -13,5 +13,6 @@ export interface UpdateBlocker {
     'package': string;
     version: string;
     newer: string | null;
+    range: string | null;
 }
 

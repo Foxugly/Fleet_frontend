@@ -40,3 +40,9 @@
   color: var(--p-text-muted-color);
   font-size: 0.8rem;
 }
+
+// A note (e.g. an update blocked by an installed package): visible even on a green cell.
+.state-dot__note {
+  color: var(--p-text-muted-color);
+  font-size: 0.75rem;
+}

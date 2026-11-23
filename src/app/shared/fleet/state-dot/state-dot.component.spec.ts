@@ -29,6 +29,7 @@ const cell = (state: StateEnum, extra: Partial<Cell> = {}): Cell => ({
   collected_at: FIVE_MIN_AGO,
   error: '',
   reason: null,
+  notes: [],
   ...extra,
 });
 const root = (el: HTMLElement) => el.querySelector<HTMLElement>('.state-dot')!;

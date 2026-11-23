@@ -189,7 +189,9 @@
       "up_to_date": "Everything is up to date",
       "name": "Package",
       "version": "Version",
-      "kind": "Kind"
+      "kind": "Kind",
+      "blocked_by": "blocked by {{package}}@{{version}} ({{range}})",
+      "blocked_newer": "{{package}} {{newer}} lifts it"
     },
     "edit": "Edit",
     "archived": "Archived"
@@ -276,7 +278,8 @@
       "orange": "{{n}} warning(s)",
       "green": "OK",
       "none": "No data"
-    }
+    },
+    "blocked_updates": "{{n}} blocked update(s): {{package}} {{latest}} ← {{by}} {{version}}"
   },
   "updates": {
     "title": "Shared updates ({{n}})",
@@ -322,9 +325,11 @@
       "major": "Major upgrade: read the release notes and list the breaking changes before changing anything.",
       "angular": "Fleet policy: Angular majors are done together, on Renaud's decision.",
       "failure": "If the update is impossible in a repository: do not open a PR (close it if its CI stays red despite your fixes) and open an issue titled `[fleet] {{package}} {{latest}} blocked` whose body contains the line `Fleet-Update: {{package}} {{latest}}`, one line `Fleet-Blocked-By: <package> <version>` per blocking package, then the reason in plain words. When an update goes through, add `Fixes #<number>` to the PR if a `[fleet]` issue existed.",
-      "retry": "New attempt: {{blocker}} {{newer}} is available. The issues {{issues}} describe the previous failure."
+      "retry": "New attempt: {{blocker}} {{newer}} is available. The issues {{issues}} describe the previous failure.",
+      "retry_auto": "New attempt: {{blocker}} {{newer}} is available and accepts {{package}} {{latest}}; update {{blocker}} first if it is not already done."
     },
-    "none": "No update concerns several apps for now."
+    "none": "No update concerns several apps for now.",
+    "blocked_auto": "Blocked by {{package}} {{version}}, which requires {{range}}"
   },
   "apps": {
     "title": "Inventory",

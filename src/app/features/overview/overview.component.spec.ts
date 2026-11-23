@@ -23,6 +23,7 @@ const cell = (state: string, count = 0, reason: Cell['reason'] = null): Cell => 
   collected_at: '2026-11-21T11:55:00Z',
   error: '',
   reason,
+  notes: [],
 });
 const allGreen = {
   health: cell('green'),

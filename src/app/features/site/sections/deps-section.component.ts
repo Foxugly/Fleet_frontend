@@ -34,8 +34,25 @@ import { DepsData } from '../../../shared/fleet/source-data';
         </thead>
         <tbody>
           @for (o of d.outdated; track o.name) {
-            <tr>
-              <td>{{ o.name }}</td>
+            <tr [class.deps-blocked]="o.blocked_by?.length">
+              <td>
+                {{ o.name }}
+                @for (b of o.blocked_by ?? []; track b.package + b.version) {
+                  <p-tag
+                    class="deps-blocked-by"
+                    severity="secondary"
+                    icon="pi pi-lock"
+                    [value]="'site.deps.blocked_by' | transloco: { package: b.package, version: b.version, range: b.range }"
+                  />
+                  @if (b.newer) {
+                    <p-tag
+                      class="deps-blocked-newer"
+                      severity="success"
+                      [value]="'site.deps.blocked_newer' | transloco: { package: b.package, newer: b.newer }"
+                    />
+                  }
+                }
+              </td>
               <td>{{ o.current }} → {{ o.latest ?? '?' }}</td>
               <td>
                 <p-tag

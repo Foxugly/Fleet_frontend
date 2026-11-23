@@ -189,7 +189,9 @@
       "up_to_date": "Tout est à jour",
       "name": "Paquet",
       "version": "Version",
-      "kind": "Type"
+      "kind": "Type",
+      "blocked_by": "bloqué par {{package}}@{{version}} ({{range}})",
+      "blocked_newer": "{{package}} {{newer}} le débloque"
     },
     "edit": "Modifier",
     "archived": "Archivée"
@@ -276,7 +278,8 @@
       "orange": "{{n}} point(s) d'attention",
       "green": "OK",
       "none": "Aucune donnée"
-    }
+    },
+    "blocked_updates": "{{n}} mise(s) à jour bloquée(s) : {{package}} {{latest}} ← {{by}} {{version}}"
   },
   "updates": {
     "title": "Mises à jour communes ({{n}})",
@@ -322,9 +325,11 @@
       "major": "Montée majeure : lis les notes de version et liste les changements cassants avant de modifier quoi que ce soit.",
       "angular": "Politique de flotte : les majeures Angular se font ensemble, sur décision de Renaud.",
       "failure": "Si la mise à jour est impossible dans un dépôt : n'ouvre pas de PR (ferme-la si sa CI reste rouge malgré tes corrections) et ouvre une issue titrée `[fleet] {{package}} {{latest}} bloqué` dont le corps contient la ligne `Fleet-Update: {{package}} {{latest}}`, une ligne `Fleet-Blocked-By: <paquet> <version>` par paquet bloquant, puis la raison en clair. Quand une mise à jour passe, ajoute `Fixes #<numéro>` à la PR si une issue `[fleet]` existait.",
-      "retry": "Nouvelle tentative : {{blocker}} {{newer}} est disponible. Les issues {{issues}} décrivent l'échec précédent."
+      "retry": "Nouvelle tentative : {{blocker}} {{newer}} est disponible. Les issues {{issues}} décrivent l'échec précédent.",
+      "retry_auto": "Nouvelle tentative : {{blocker}} {{newer}} est disponible et accepte {{package}} {{latest}} ; mettez d'abord {{blocker}} à jour si ce n'est pas déjà fait."
     },
-    "none": "Aucune mise à jour ne concerne plusieurs apps pour l'instant."
+    "none": "Aucune mise à jour ne concerne plusieurs apps pour l'instant.",
+    "blocked_auto": "Bloqué par {{package}} {{version}}, qui exige {{range}}"
   },
   "apps": {
     "title": "Inventaire",

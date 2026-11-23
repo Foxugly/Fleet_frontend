@@ -83,9 +83,25 @@ export interface SentryData {
   issues: SentryIssue[];
 }
 
+/** An installed package whose constraint accepts the current version but not the latest. */
+export interface DepsBlocker {
+  package: string;
+  version: string;
+  range: string;
+  /** Its latest release, when that one lifts the block; null when unknown or still blocking. */
+  newer: string | null;
+}
+
 export interface DepsData {
   ecosystem: 'python' | 'npm';
-  outdated: { name: string; current: string; latest: string | null; kind: 'major' | 'minor' | 'patch' | 'unknown' }[];
+  outdated: {
+    name: string;
+    current: string;
+    latest: string | null;
+    kind: 'major' | 'minor' | 'patch' | 'unknown';
+    /** Absent when nothing holds the update back. */
+    blocked_by?: DepsBlocker[];
+  }[];
   checked: number;
 }
 

@@ -28,3 +28,27 @@ export class ReasonLabelPipe implements PipeTransform {
     return typeof catalog?.[key] === 'string';
   }
 }
+
+/**
+ * Cell -> its `notes` (information that does not change the colour, e.g. updates
+ * blocked by an installed package), translated and joined; '' when there are none.
+ * Codes this UI does not know are skipped, never shown as raw keys.
+ */
+@Pipe({ name: 'notesLabel', standalone: true, pure: false })
+export class NotesLabelPipe implements PipeTransform {
+  private readonly i18n = inject(TranslocoService);
+
+  transform(cell: Cell): string {
+    const catalog = this.i18n.getTranslation(this.i18n.getActiveLang());
+    return (cell.notes ?? [])
+      .filter((n) => typeof catalog?.[`reason.${n.code}`] === 'string')
+      .map((n) => this.i18n.translate(`reason.${n.code}`, n.params ?? {}))
+      .join(' · ');
+  }
+}
+
+/** The tooltip of a cell: the error, else the reason, plus the notes the reason does not already say. */
+export function cellTip(cell: Cell, reason: string, notes: string): string {
+  if (cell.error) return cell.error;
+  return notes && notes !== reason ? `${reason} · ${notes}` : reason;
+}

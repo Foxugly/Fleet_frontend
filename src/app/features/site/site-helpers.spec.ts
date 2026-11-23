@@ -1,7 +1,7 @@
 import { Cell } from '../../api';
 import { defaultTab, isNewer, newestFirst, safeUrl } from './site-helpers';
 
-const c = (state: string): Cell => ({ state: state as Cell['state'], count: 0, collected_at: null, error: '', reason: null });
+const c = (state: string): Cell => ({ state: state as Cell['state'], count: 0, collected_at: null, error: '', reason: null, notes: [] });
 
 describe('site helpers', () => {
   it('safeUrl keeps only https URLs', () => {

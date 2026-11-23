@@ -64,3 +64,15 @@ a.row-title {
     border-bottom: 1px solid var(--p-content-border-color, rgba(128, 128, 128, 0.2));
   }
 }
+
+// An update held back by an installed package: muted, with its blocker tags.
+.deps-blocked td {
+  color: var(--p-text-muted-color);
+}
+
+.deps-blocked-by,
+.deps-blocked-newer {
+  margin-left: 0.4rem;
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}

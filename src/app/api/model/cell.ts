@@ -17,6 +17,7 @@ export interface Cell {
     collected_at: string | null;
     error: string;
     reason: Reason | null;
+    notes: Array<Reason>;
 }
 
 

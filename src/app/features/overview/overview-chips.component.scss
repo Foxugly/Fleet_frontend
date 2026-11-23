@@ -49,3 +49,17 @@
   border-style: dashed;
   color: var(--p-text-muted-color);
 }
+
+// A green chip with a note (an update blocked by an installed package) must not
+// look like a plain green one: lock icon + dotted border.
+.overview-chip--noted {
+  border-style: dotted;
+  border-left-style: solid;
+}
+
+.overview-chip__note {
+  flex: none;
+  align-self: center;
+  font-size: 0.7rem;
+  color: var(--p-text-muted-color);
+}
