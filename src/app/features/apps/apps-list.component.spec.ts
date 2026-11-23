@@ -208,8 +208,12 @@ describe('AppsListComponent', () => {
         { detail: ['This app is already archived.'] },
         { status: 400, statusText: 'Bad Request' },
       );
-    await settle();
-    expect(codeInput()).toBeNull();
+    // The dialog's leave transition now runs for real under jsdom 31 (computed
+    // styles resolve the theme's duration): wait for it rather than one tick.
+    await vi.waitFor(async () => {
+      await settle();
+      expect(codeInput()).toBeNull();
+    });
     expect(toast).toHaveBeenCalledWith(
       expect.objectContaining({ severity: 'error', detail: 'This app is already archived.' }),
     );
