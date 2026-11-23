@@ -194,8 +194,12 @@ describe('AppFormComponent', () => {
           { npm_locks: ["Invalid lock: 'x'."], slug: ['The slug cannot be changed.'] },
           { status: 400, statusText: 'Bad Request' },
         );
-      await settle();
-      expect(dialogOpen()).toBe(false);
+      // The dialog's leave transition now runs for real under jsdom 31 (computed
+      // styles resolve the theme's duration): wait for it rather than one tick.
+      await vi.waitFor(async () => {
+        await settle();
+        expect(dialogOpen()).toBe(false);
+      });
       expect(field(el, 'npm_locks').textContent).toContain("Invalid lock: 'x'.");
       expect(field(el, 'slug').textContent).toContain('The slug cannot be changed.');
       expect(el.querySelector('.app-form__summary')!.textContent).toContain('erreurs');
