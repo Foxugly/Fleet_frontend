@@ -10,15 +10,15 @@ import { TitleStrategy, provideRouter, withComponentInputBinding } from '@angula
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideTransloco } from '@jsverse/transloco';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { providePrimeNG } from 'primeng/config';
-import { definePreset } from '@primeuix/themes';
-import Aura from '@primeuix/themes/aura';
+import { ConfirmationService, MessageService } from '@openng/optimus-ui/api';
+import { provideOptimus } from '@openng/optimus-ui/config';
+import { definePreset } from '@openng/optimus-ui-themes';
+import Aura from '@openng/optimus-ui-themes/aura';
 import * as Sentry from '@sentry/angular';
 import { provideApi } from './api';
 import { runtimeConfig } from './core/runtime-config';
 import { routes } from './app.routes';
-import { PrimeNgI18n } from './core/i18n/primeng-i18n';
+import { OptimusI18n } from './core/i18n/optimus-i18n';
 import { authInterceptor } from './core/auth/auth.interceptor';
 import { AuthService } from './core/auth/auth.service';
 import { FleetTitleStrategy } from './core/title/fleet-title.strategy';
@@ -27,7 +27,7 @@ import { TranslocoHttpLoader } from './core/i18n/transloco-loader';
 // Emerald is the single fleet accent (STANDARD-frontend-layout.md §9). Remap BOTH
 // the `primary` semantic AND the `green` primitive onto Emerald so that
 // `severity="success"` renders in the exact same emerald as `primary` — otherwise
-// `success` falls back to PrimeNG's default green and the UI shows two greens.
+// `success` falls back to Optimus UI's default green and the UI shows two greens.
 const EMERALD_SCALE = {
   50: '{emerald.50}',
   100: '{emerald.100}',
@@ -57,8 +57,8 @@ export const appConfig: ApplicationConfig = {
     // One cookie refresh before the first navigation: a remembered session
     // survives a reload and the guard then decides. Never rejects.
     provideAppInitializer(() => inject(AuthService).restoreSession()),
-    // PrimeNG's own labels (chip « Retirer ») follow the Transloco language.
-    provideAppInitializer(() => inject(PrimeNgI18n).start()),
+    // Optimus UI's own labels (chip « Retirer ») follow the Transloco language.
+    provideAppInitializer(() => inject(OptimusI18n).start()),
     // Read calls use the Bearer token; only auth calls need cookies (set per call).
     provideApi({ basePath: runtimeConfig().apiBaseUrl, withCredentials: false }),
     { provide: TitleStrategy, useClass: FleetTitleStrategy },
@@ -72,7 +72,7 @@ export const appConfig: ApplicationConfig = {
       },
       loader: TranslocoHttpLoader,
     }),
-    providePrimeNG({
+    provideOptimus({
       theme: {
         preset: FleetAura,
         options: {

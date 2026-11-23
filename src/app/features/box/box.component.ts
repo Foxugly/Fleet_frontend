@@ -1,11 +1,11 @@
 import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { ButtonModule } from 'primeng/button';
-import { MessageModule } from 'primeng/message';
-import { PanelModule } from 'primeng/panel';
-import { ProgressBarModule } from 'primeng/progressbar';
-import { SkeletonModule } from 'primeng/skeleton';
-import { TagModule } from 'primeng/tag';
+import { ButtonModule } from '@openng/optimus-ui/button';
+import { MessageModule } from '@openng/optimus-ui/message';
+import { PanelModule } from '@openng/optimus-ui/panel';
+import { ProgressBarModule } from '@openng/optimus-ui/progressbar';
+import { SkeletonModule } from '@openng/optimus-ui/skeleton';
+import { TagModule } from '@openng/optimus-ui/tag';
 
 import { Box, BoxService } from '../../api';
 import { LastVisitService } from '../../core/last-visit/last-visit.service';
@@ -52,7 +52,9 @@ export class BoxComponent implements OnDestroy {
     const apt = this.data()?.apt ?? [];
     return [...apt.filter((p) => p.security), ...apt.filter((p) => !p.security)];
   });
-  protected readonly diskCritical = computed(() => (this.data()?.disk.used_pct ?? 0) >= DISK_CRITICAL_PCT);
+  protected readonly diskCritical = computed(
+    () => (this.data()?.disk.used_pct ?? 0) >= DISK_CRITICAL_PCT,
+  );
 
   constructor() {
     this.reload();

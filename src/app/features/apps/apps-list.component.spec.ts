@@ -2,7 +2,7 @@ import { HttpTestingController } from '@angular/common/http/testing';
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { MessageService } from 'primeng/api';
+import { MessageService } from '@openng/optimus-ui/api';
 
 import { authTestProviders } from '../auth/auth-test-setup.testing';
 import { AppsListComponent } from './apps-list.component';
@@ -29,27 +29,45 @@ async function setup() {
     await harness.fixture.whenStable();
     harness.fixture.detectChanges();
   };
-  return { harness, http, settle, el: harness.routeNativeElement as HTMLElement, messages: TestBed.inject(MessageService) };
+  return {
+    harness,
+    http,
+    settle,
+    el: harness.routeNativeElement as HTMLElement,
+    messages: TestBed.inject(MessageService),
+  };
 }
 
-const rows = (el: HTMLElement) => Array.from(el.querySelectorAll('.apps-list__row')) as HTMLElement[];
+const rows = (el: HTMLElement) =>
+  Array.from(el.querySelectorAll('.apps-list__row')) as HTMLElement[];
 const codeInput = () => document.body.querySelector<HTMLInputElement>('.totp-dialog__code')!;
 
 async function enterCode(settle: () => Promise<void>, code = '123456') {
   codeInput().value = code;
   codeInput().dispatchEvent(new Event('input'));
   await settle();
-  document.body.querySelector<HTMLButtonElement>('.totp-dialog__confirm button, button.totp-dialog__confirm')!.click();
+  document.body
+    .querySelector<HTMLButtonElement>('.totp-dialog__confirm button, button.totp-dialog__confirm')!
+    .click();
   await settle();
 }
 
 describe('AppsListComponent', () => {
   it('lists the active apps with edit and history links, archived ones hidden', async () => {
     const { http, settle, el } = await setup();
-    http.expectOne(isApps).flush([appOut('poker'), appOut('billing'), appOut('old', { archived: true, archived_at: '2026-11-01T00:00:00Z' })]);
+    http
+      .expectOne(isApps)
+      .flush([
+        appOut('poker'),
+        appOut('billing'),
+        appOut('old', { archived: true, archived_at: '2026-11-01T00:00:00Z' }),
+      ]);
     await settle();
     expect(el.querySelector('h1')!.textContent).toContain('Inventaire');
-    expect(rows(el).map((r) => r.querySelector('.apps-list__name')!.textContent!.trim())).toEqual(['billing', 'poker']);
+    expect(rows(el).map((r) => r.querySelector('.apps-list__name')!.textContent!.trim())).toEqual([
+      'billing',
+      'poker',
+    ]);
     const poker = rows(el)[1];
     expect(poker.querySelector('a[href="/apps/poker/edit"]')).not.toBeNull();
     expect(poker.querySelector('a[href="/apps/poker/history"]')).not.toBeNull();
@@ -74,7 +92,9 @@ describe('AppsListComponent', () => {
     const toast = vi.spyOn(messages, 'add');
     http.expectOne(isApps).flush([appOut('poker')]);
     await settle();
-    rows(el)[0].querySelector<HTMLButtonElement>('.apps-list__archive button, button.apps-list__archive')!.click();
+    rows(el)[0]
+      .querySelector<HTMLButtonElement>('.apps-list__archive button, button.apps-list__archive')!
+      .click();
     await settle();
     http.expectNone(() => true);
     await enterCode(settle);
@@ -91,12 +111,18 @@ describe('AppsListComponent', () => {
     const { http, settle, el } = await setup();
     http.expectOne(isApps).flush([appOut('poker')]);
     await settle();
-    rows(el)[0].querySelector<HTMLButtonElement>('.apps-list__archive button, button.apps-list__archive')!.click();
+    rows(el)[0]
+      .querySelector<HTMLButtonElement>('.apps-list__archive button, button.apps-list__archive')!
+      .click();
     await settle();
     await enterCode(settle, '000000');
-    http.expectOne((r) => r.url.endsWith('/archive/')).flush({ code: 'totp_invalid' }, { status: 403, statusText: 'Forbidden' });
+    http
+      .expectOne((r) => r.url.endsWith('/archive/'))
+      .flush({ code: 'totp_invalid' }, { status: 403, statusText: 'Forbidden' });
     await settle();
-    expect(document.body.querySelector('.totp-dialog__error')!.textContent).toContain('Code invalide');
+    expect(document.body.querySelector('.totp-dialog__error')!.textContent).toContain(
+      'Code invalide',
+    );
     expect(codeInput().value).toBe('');
   });
 
@@ -106,7 +132,9 @@ describe('AppsListComponent', () => {
     await settle();
     el.querySelector<HTMLInputElement>('#apps-show-archived')!.click();
     await settle();
-    rows(el)[0].querySelector<HTMLButtonElement>('.apps-list__restore button, button.apps-list__restore')!.click();
+    rows(el)[0]
+      .querySelector<HTMLButtonElement>('.apps-list__restore button, button.apps-list__restore')!
+      .click();
     await settle();
     await enterCode(settle);
     const req = http.expectOne((r) => r.url.endsWith('/api/v1/apps/old/restore/'));
@@ -127,7 +155,9 @@ describe('AppsListComponent', () => {
     const { http, settle, el } = await setup();
     http.expectOne(isApps).flush({}, { status: 500, statusText: 'Server Error' });
     await settle();
-    expect(el.querySelector('p-message')!.textContent).toContain("Impossible de charger l'inventaire");
+    expect(el.querySelector('p-message')!.textContent).toContain(
+      "Impossible de charger l'inventaire",
+    );
     expect(el.querySelector('app-empty-state')).toBeNull();
   });
 
@@ -135,19 +165,27 @@ describe('AppsListComponent', () => {
     const { http, settle, el } = await setup();
     http.expectOne(isApps).flush([appOut('poker')]);
     await settle();
-    rows(el)[0].querySelector<HTMLButtonElement>('.apps-list__archive button, button.apps-list__archive')!.click();
+    rows(el)[0]
+      .querySelector<HTMLButtonElement>('.apps-list__archive button, button.apps-list__archive')!
+      .click();
     await settle();
-    expect(document.body.querySelector('.totp-dialog__subject')!.textContent).toContain('Archiver poker');
+    expect(document.body.querySelector('.totp-dialog__subject')!.textContent).toContain(
+      'Archiver poker',
+    );
   });
 
   it('a network failure keeps the dialog with a neutral retry message', async () => {
     const { http, settle, el } = await setup();
     http.expectOne(isApps).flush([appOut('poker')]);
     await settle();
-    rows(el)[0].querySelector<HTMLButtonElement>('.apps-list__archive button, button.apps-list__archive')!.click();
+    rows(el)[0]
+      .querySelector<HTMLButtonElement>('.apps-list__archive button, button.apps-list__archive')!
+      .click();
     await settle();
     await enterCode(settle);
-    http.expectOne((r) => r.url.endsWith('/archive/')).error(new ProgressEvent('error'), { status: 0, statusText: '' });
+    http
+      .expectOne((r) => r.url.endsWith('/archive/'))
+      .error(new ProgressEvent('error'), { status: 0, statusText: '' });
     await settle();
     const error = document.body.querySelector('.totp-dialog__error')!.textContent!;
     expect(error).toContain('Service indisponible, réessayez');
@@ -159,15 +197,22 @@ describe('AppsListComponent', () => {
     const toast = vi.spyOn(messages, 'add');
     http.expectOne(isApps).flush([appOut('poker')]);
     await settle();
-    rows(el)[0].querySelector<HTMLButtonElement>('.apps-list__archive button, button.apps-list__archive')!.click();
+    rows(el)[0]
+      .querySelector<HTMLButtonElement>('.apps-list__archive button, button.apps-list__archive')!
+      .click();
     await settle();
     await enterCode(settle);
     http
       .expectOne((r) => r.url.endsWith('/archive/'))
-      .flush({ detail: ['This app is already archived.'] }, { status: 400, statusText: 'Bad Request' });
+      .flush(
+        { detail: ['This app is already archived.'] },
+        { status: 400, statusText: 'Bad Request' },
+      );
     await settle();
     expect(codeInput()).toBeNull();
-    expect(toast).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error', detail: 'This app is already archived.' }));
+    expect(toast).toHaveBeenCalledWith(
+      expect.objectContaining({ severity: 'error', detail: 'This app is already archived.' }),
+    );
     http.expectOne(isApps).flush([appOut('poker', { archived: true })]);
     await settle();
     expect(rows(el)).toHaveLength(0);

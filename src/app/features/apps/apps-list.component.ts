@@ -2,12 +2,12 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { MessageService } from 'primeng/api';
-import { ButtonModule } from 'primeng/button';
-import { CheckboxModule } from 'primeng/checkbox';
-import { MessageModule } from 'primeng/message';
-import { SkeletonModule } from 'primeng/skeleton';
-import { TagModule } from 'primeng/tag';
+import { MessageService } from '@openng/optimus-ui/api';
+import { ButtonModule } from '@openng/optimus-ui/button';
+import { CheckboxModule } from '@openng/optimus-ui/checkbox';
+import { MessageModule } from '@openng/optimus-ui/message';
+import { SkeletonModule } from '@openng/optimus-ui/skeleton';
+import { TagModule } from '@openng/optimus-ui/tag';
 
 import { AppOut, AppsService } from '../../api';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
@@ -46,7 +46,9 @@ export class AppsListComponent {
   protected readonly stepUp = new StepUp('apps.error.unavailable_retry');
   protected readonly skeletons = [1, 2, 3];
 
-  protected readonly archivedCount = computed(() => (this.apps() ?? []).filter((a) => a.archived).length);
+  protected readonly archivedCount = computed(
+    () => (this.apps() ?? []).filter((a) => a.archived).length,
+  );
   protected readonly visible = computed(() =>
     (this.apps() ?? [])
       .filter((a) => this.showArchived() || !a.archived)
@@ -78,12 +80,18 @@ export class AppsListComponent {
     this.stepUp.start({
       subject: this.i18n.translate(archive ? 'apps.archive_aria' : 'apps.restore_aria', { slug }),
       send: (code) =>
-        archive ? this.api.appsArchive({ slug, totpOnly: { totp_code: code } }) : this.api.appsRestore({ slug, totpOnly: { totp_code: code } }),
+        archive
+          ? this.api.appsArchive({ slug, totpOnly: { totp_code: code } })
+          : this.api.appsRestore({ slug, totpOnly: { totp_code: code } }),
       done: (updated: AppOut) => {
-        this.apps.update((list) => (list ?? []).map((a) => (a.slug === updated.slug ? updated : a)));
+        this.apps.update((list) =>
+          (list ?? []).map((a) => (a.slug === updated.slug ? updated : a)),
+        );
         this.messages.add({
           severity: 'success',
-          summary: this.i18n.translate(archive ? 'apps.toast.archived' : 'apps.toast.restored', { slug }),
+          summary: this.i18n.translate(archive ? 'apps.toast.archived' : 'apps.toast.restored', {
+            slug,
+          }),
           life: 4000,
         });
       },

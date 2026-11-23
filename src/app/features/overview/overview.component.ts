@@ -3,14 +3,14 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { ButtonModule } from 'primeng/button';
-import { IconFieldModule } from 'primeng/iconfield';
-import { InputIconModule } from 'primeng/inputicon';
-import { InputTextModule } from 'primeng/inputtext';
-import { MessageModule } from 'primeng/message';
-import { SelectModule } from 'primeng/select';
-import { SkeletonModule } from 'primeng/skeleton';
-import { TabsModule } from 'primeng/tabs';
+import { ButtonModule } from '@openng/optimus-ui/button';
+import { IconFieldModule } from '@openng/optimus-ui/iconfield';
+import { InputIconModule } from '@openng/optimus-ui/inputicon';
+import { InputTextModule } from '@openng/optimus-ui/inputtext';
+import { MessageModule } from '@openng/optimus-ui/message';
+import { SelectModule } from '@openng/optimus-ui/select';
+import { SkeletonModule } from '@openng/optimus-ui/skeleton';
+import { TabsModule } from '@openng/optimus-ui/tabs';
 import { Subject, catchError, map, merge, of, switchMap } from 'rxjs';
 
 import { Overview, OverviewService } from '../../api';
@@ -85,13 +85,17 @@ export class OverviewComponent {
     return params ? parseFilter(params) : NO_FILTER;
   });
   /** « Apps » (default) or « Dépendances », kept in the URL like the filters. */
-  protected readonly tab = computed<OverviewTab>(() => (this.query()?.get('tab') === 'deps' ? 'deps' : 'apps'));
+  protected readonly tab = computed<OverviewTab>(() =>
+    this.query()?.get('tab') === 'deps' ? 'deps' : 'apps',
+  );
   protected readonly filtering = computed(() => isFiltering(this.filter()));
   protected readonly shown = computed(() => filterEntries(this.entries(), this.filter()));
   protected readonly buckets: readonly Bucket[] = ['handle', 'watch', 'ok'];
   /** Translated in code: the select also uses the label as each option's accessible name. */
   private readonly sourceLabels = toSignal(
-    inject(TranslocoService).selectTranslate<string[]>(SITE_SOURCES.map((key) => SOURCES.find((s) => s.key === key)!.label)),
+    inject(TranslocoService).selectTranslate<string[]>(
+      SITE_SOURCES.map((key) => SOURCES.find((s) => s.key === key)!.label),
+    ),
     { initialValue: [] as string[] },
   );
   protected readonly sourceOptions = computed(() =>

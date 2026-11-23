@@ -2,8 +2,8 @@ import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { ButtonModule } from 'primeng/button';
-import { TagModule } from 'primeng/tag';
+import { ButtonModule } from '@openng/optimus-ui/button';
+import { TagModule } from '@openng/optimus-ui/tag';
 
 import { StateEnum } from '../../api';
 import { OverviewChipsComponent } from './overview-chips.component';
@@ -15,7 +15,14 @@ import { BOX_KEY, OverviewEntry } from './overview-model';
  */
 @Component({
   selector: 'app-overview-list',
-  imports: [NgTemplateOutlet, RouterLink, TranslocoPipe, ButtonModule, TagModule, OverviewChipsComponent],
+  imports: [
+    NgTemplateOutlet,
+    RouterLink,
+    TranslocoPipe,
+    ButtonModule,
+    TagModule,
+    OverviewChipsComponent,
+  ],
   templateUrl: './overview-list.component.html',
   styleUrl: './overview-list.component.scss',
 })

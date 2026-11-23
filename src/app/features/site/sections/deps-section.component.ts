@@ -1,6 +1,6 @@
 import { Component, input } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { TagModule } from 'primeng/tag';
+import { TagModule } from '@openng/optimus-ui/tag';
 
 import { DepsData } from '../../../shared/fleet/source-data';
 
@@ -39,7 +39,9 @@ import { DepsData } from '../../../shared/fleet/source-data';
               <td>
                 <p-tag
                   [class]="'kind-' + o.kind"
-                  [severity]="o.kind === 'major' ? 'warn' : o.kind === 'unknown' ? 'secondary' : 'info'"
+                  [severity]="
+                    o.kind === 'major' ? 'warn' : o.kind === 'unknown' ? 'secondary' : 'info'
+                  "
                   [value]="o.kind"
                 />
               </td>

@@ -2,7 +2,7 @@ import { HttpTestingController } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { MessageService } from 'primeng/api';
+import { MessageService } from '@openng/optimus-ui/api';
 
 import { Box, Cell } from '../../api';
 import { LastVisitService } from '../../core/last-visit/last-visit.service';
@@ -16,7 +16,13 @@ const NOW = new Date('2026-11-21T12:00:00Z');
 const data = (over: Partial<BoxData> = {}): BoxData => ({
   apt: [
     { package: 'vim', version: '9.1-2', origin: 'noble-updates', security: false },
-    { package: 'openssl', version: '3.0.13-1', origin: 'noble-security', security: true, from_version: '3.0.13-0' },
+    {
+      package: 'openssl',
+      version: '3.0.13-1',
+      origin: 'noble-security',
+      security: true,
+      from_version: '3.0.13-0',
+    },
     { package: 'curl', version: '8.5-1', origin: 'noble-updates', security: false },
   ],
   reboot_required: false,
@@ -28,7 +34,13 @@ const data = (over: Partial<BoxData> = {}): BoxData => ({
 });
 
 const box = (d: BoxData | null, extra: Partial<Box> = {}): Box => ({
-  cell: { state: 'green' as Cell['state'], count: 0, collected_at: '2026-11-21T11:55:00Z', error: '', reason: null },
+  cell: {
+    state: 'green' as Cell['state'],
+    count: 0,
+    collected_at: '2026-11-21T11:55:00Z',
+    error: '',
+    reason: null,
+  },
   data: d,
   collected_at: d ? '2026-11-21T11:50:00Z' : null,
   ok: d ? true : null,
@@ -67,7 +79,8 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
 
 async function loaded(b: Box | 'error') {
   const s = await setup();
-  if (b === 'error') s.http.expectOne(isBox).flush('boom', { status: 500, statusText: 'Server Error' });
+  if (b === 'error')
+    s.http.expectOne(isBox).flush('boom', { status: 500, statusText: 'Server Error' });
   else s.http.expectOne(isBox).flush(b);
   await settle(s.harness.fixture);
   return s;
@@ -85,7 +98,11 @@ describe('BoxComponent', () => {
   it('lists security packages first, with the translated red tag', async () => {
     const { el } = await loaded(box(data()));
     const rows = Array.from(el.querySelectorAll('.apt-table tbody tr'));
-    expect(rows.map((r) => r.querySelector('td')!.textContent!.trim())).toEqual(['openssl', 'vim', 'curl']);
+    expect(rows.map((r) => r.querySelector('td')!.textContent!.trim())).toEqual([
+      'openssl',
+      'vim',
+      'curl',
+    ]);
     expect(rows[0].querySelector('.sev-security')).not.toBeNull();
     expect(rows[0].textContent).toContain('Sécurité');
     expect(rows[1].querySelector('.sev-security')).toBeNull();
@@ -94,7 +111,9 @@ describe('BoxComponent', () => {
 
   it('labels the age line as the last successful collection', async () => {
     const { el } = await loaded(box(data()));
-    expect(el.querySelector('.box__age')!.textContent!.trim()).toBe('dernière collecte réussie il y a 10 min');
+    expect(el.querySelector('.box__age')!.textContent!.trim()).toBe(
+      'dernière collecte réussie il y a 10 min',
+    );
   });
 
   it('keeps the package name and the security tag on one line (only the version wraps)', async () => {
@@ -111,7 +130,9 @@ describe('BoxComponent', () => {
   });
 
   it('shows the reboot block with the packages when a reboot is required', async () => {
-    const { el } = await loaded(box(data({ reboot_required: true, reboot_pkgs: ['linux-image-6.8'] })));
+    const { el } = await loaded(
+      box(data({ reboot_required: true, reboot_pkgs: ['linux-image-6.8'] })),
+    );
     expect(el.querySelector('.box__reboot')!.textContent).toContain('linux-image-6.8');
   });
 

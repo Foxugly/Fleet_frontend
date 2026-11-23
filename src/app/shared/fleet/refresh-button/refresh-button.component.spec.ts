@@ -1,6 +1,6 @@
 import { HttpTestingController } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MessageService } from 'primeng/api';
+import { MessageService } from '@openng/optimus-ui/api';
 
 import { provideApi } from '../../../api';
 import { authTestProviders } from '../../../features/auth/auth-test-setup.testing';
@@ -8,10 +8,15 @@ import { RefreshButtonComponent } from './refresh-button.component';
 
 async function setup() {
   TestBed.configureTestingModule({
-    providers: [...authTestProviders(), provideApi({ basePath: 'http://api.test' }), MessageService],
+    providers: [
+      ...authTestProviders(),
+      provideApi({ basePath: 'http://api.test' }),
+      MessageService,
+    ],
   });
   const add = vi.spyOn(TestBed.inject(MessageService), 'add');
-  const fixture: ComponentFixture<RefreshButtonComponent> = TestBed.createComponent(RefreshButtonComponent);
+  const fixture: ComponentFixture<RefreshButtonComponent> =
+    TestBed.createComponent(RefreshButtonComponent);
   fixture.componentRef.setInput('source', 'github');
   const queued = vi.fn();
   fixture.componentInstance.queued.subscribe(queued);
@@ -61,7 +66,9 @@ describe('RefreshButtonComponent', () => {
   it('already_queued: toasts « Déjà en cours » and still disables', async () => {
     const { fixture, http, add, button } = await setup();
     button().click();
-    http.expectOne((r) => r.url.includes('/refresh/github/')).flush({ queued: 'github', already_queued: true });
+    http
+      .expectOne((r) => r.url.includes('/refresh/github/'))
+      .flush({ queued: 'github', already_queued: true });
     fixture.detectChanges();
     expect(add.mock.calls[0][0]).toMatchObject({ severity: 'info', summary: 'Déjà en cours' });
     expect(button().disabled).toBe(true);
@@ -70,7 +77,9 @@ describe('RefreshButtonComponent', () => {
   it('failure: error toast, no queued event, button stays usable', async () => {
     const { fixture, http, add, queued, button } = await setup();
     button().click();
-    http.expectOne((r) => r.url.includes('/refresh/github/')).flush({}, { status: 500, statusText: 'x' });
+    http
+      .expectOne((r) => r.url.includes('/refresh/github/'))
+      .flush({}, { status: 500, statusText: 'x' });
     fixture.detectChanges();
     expect(add.mock.calls[0][0]).toMatchObject({ severity: 'error' });
     expect(queued).not.toHaveBeenCalled();

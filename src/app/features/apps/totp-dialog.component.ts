@@ -1,9 +1,20 @@
-import { ChangeDetectionStrategy, Component, ElementRef, effect, input, model, output, signal, untracked, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  effect,
+  input,
+  model,
+  output,
+  signal,
+  untracked,
+  viewChild,
+} from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { ButtonModule } from 'primeng/button';
-import { DialogModule } from 'primeng/dialog';
-import { InputTextModule } from 'primeng/inputtext';
-import { MessageModule } from 'primeng/message';
+import { ButtonModule } from '@openng/optimus-ui/button';
+import { DialogModule } from '@openng/optimus-ui/dialog';
+import { InputTextModule } from '@openng/optimus-ui/inputtext';
+import { MessageModule } from '@openng/optimus-ui/message';
 
 const CODE_RE = /^\d{6}$/;
 
@@ -34,7 +45,12 @@ const CODE_RE = /^\d{6}$/;
         }
         <p class="totp-dialog__intro">{{ 'apps.totp.intro' | transloco }}</p>
         @if (errorKey(); as key) {
-          <p-message class="totp-dialog__error" severity="error" [text]="key | transloco" role="alert" />
+          <p-message
+            class="totp-dialog__error"
+            severity="error"
+            [text]="key | transloco"
+            role="alert"
+          />
         }
         <label class="meta-label" for="totp-dialog-code">{{ 'apps.totp.code' | transloco }}</label>
         <input

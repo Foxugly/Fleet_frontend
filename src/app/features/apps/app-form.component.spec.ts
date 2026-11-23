@@ -3,7 +3,7 @@ import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { MessageService } from 'primeng/api';
+import { MessageService } from '@openng/optimus-ui/api';
 
 import { authTestProviders } from '../auth/auth-test-setup.testing';
 import { AppFormComponent } from './app-form.component';
@@ -48,9 +48,12 @@ async function edit(slug = 'poker') {
   return s;
 }
 
-const field = (el: HTMLElement, name: string) => el.querySelector<HTMLElement>(`[data-field="${name}"]`)!;
+const field = (el: HTMLElement, name: string) =>
+  el.querySelector<HTMLElement>(`[data-field="${name}"]`)!;
 const chips = (el: HTMLElement, name: string) =>
-  Array.from(field(el, name).querySelectorAll('.p-autocomplete-chip-item')).map((c) => c.textContent!.trim());
+  Array.from(field(el, name).querySelectorAll('.p-autocomplete-chip-item')).map((c) =>
+    c.textContent!.trim(),
+  );
 const codeInput = () => document.body.querySelector<HTMLInputElement>('.totp-dialog__code');
 const dialogOpen = () => !!codeInput();
 
@@ -71,7 +74,9 @@ async function enterCode(settle: () => Promise<void>, code = '123456') {
   codeInput()!.value = code;
   codeInput()!.dispatchEvent(new Event('input'));
   await settle();
-  document.body.querySelector<HTMLButtonElement>('.totp-dialog__confirm button, button.totp-dialog__confirm')!.click();
+  document.body
+    .querySelector<HTMLButtonElement>('.totp-dialog__confirm button, button.totp-dialog__confirm')!
+    .click();
   await settle();
 }
 
@@ -87,14 +92,20 @@ describe('AppFormComponent', () => {
       expect(chips(el, 'sentry_projects')).toEqual(['poker-backend']);
       expect(chips(el, 'python_locks')).toEqual(['Foxugly/Poker_server:requirements.txt']);
       expect(chips(el, 'npm_locks')).toEqual(['Foxugly/Poker_frontend:package-lock.json']);
-      expect(field(el, 'health_path').querySelector<HTMLInputElement>('input')!.value).toBe('/health/');
+      expect(field(el, 'health_path').querySelector<HTMLInputElement>('input')!.value).toBe(
+        '/health/',
+      );
       expect(field(el, 'deployed').querySelector<HTMLInputElement>('input')!.checked).toBe(true);
-      expect(field(el, 'actions_allowed').querySelector<HTMLInputElement>('input')!.checked).toBe(false);
+      expect(field(el, 'actions_allowed').querySelector<HTMLInputElement>('input')!.checked).toBe(
+        false,
+      );
     });
 
     it('explains under the repos that the fleet-read token must cover them', async () => {
       const { el } = await edit();
-      expect(field(el, 'repos').textContent).toContain('Le token GitHub « fleet-read » doit couvrir ce dépôt');
+      expect(field(el, 'repos').textContent).toContain(
+        'Le token GitHub « fleet-read » doit couvrir ce dépôt',
+      );
     });
 
     it('flags, client-side, a lock whose repo is not listed and does not open the code dialog', async () => {
@@ -140,10 +151,14 @@ describe('AppFormComponent', () => {
       await typeChip(el, 'vhosts', 'poker2.foxugly.com', settle);
       await save(el, settle);
       await enterCode(settle, '000000');
-      http.expectOne(isApp('poker', 'PUT')).flush({ code: 'totp_invalid' }, { status: 403, statusText: 'Forbidden' });
+      http
+        .expectOne(isApp('poker', 'PUT'))
+        .flush({ code: 'totp_invalid' }, { status: 403, statusText: 'Forbidden' });
       await settle();
       expect(dialogOpen()).toBe(true);
-      expect(document.body.querySelector('.totp-dialog__error')!.textContent).toContain('Code invalide');
+      expect(document.body.querySelector('.totp-dialog__error')!.textContent).toContain(
+        'Code invalide',
+      );
       expect(codeInput()!.value).toBe('');
       expect(chips(el, 'vhosts')).toEqual(['poker.foxugly.com', 'poker2.foxugly.com']);
     });
@@ -153,10 +168,14 @@ describe('AppFormComponent', () => {
       await typeChip(el, 'vhosts', 'poker2.foxugly.com', settle);
       await save(el, settle);
       await enterCode(settle);
-      http.expectOne(isApp('poker', 'PUT')).error(new ProgressEvent('error'), { status: 0, statusText: '' });
+      http
+        .expectOne(isApp('poker', 'PUT'))
+        .error(new ProgressEvent('error'), { status: 0, statusText: '' });
       await settle();
       expect(dialogOpen()).toBe(true);
-      expect(document.body.querySelector('.totp-dialog__error')!.textContent).toContain('Service indisponible');
+      expect(document.body.querySelector('.totp-dialog__error')!.textContent).toContain(
+        'Service indisponible',
+      );
       expect(chips(el, 'vhosts')).toContain('poker2.foxugly.com');
       // Retrying sends the same data with the new code.
       await enterCode(settle, '654321');
@@ -171,7 +190,10 @@ describe('AppFormComponent', () => {
       await enterCode(settle);
       http
         .expectOne(isApp('poker', 'PUT'))
-        .flush({ npm_locks: ["Invalid lock: 'x'."], slug: ['The slug cannot be changed.'] }, { status: 400, statusText: 'Bad Request' });
+        .flush(
+          { npm_locks: ["Invalid lock: 'x'."], slug: ['The slug cannot be changed.'] },
+          { status: 400, statusText: 'Bad Request' },
+        );
       await settle();
       expect(dialogOpen()).toBe(false);
       expect(field(el, 'npm_locks').textContent).toContain("Invalid lock: 'x'.");
@@ -182,7 +204,9 @@ describe('AppFormComponent', () => {
     it('the code dialog names the write being confirmed', async () => {
       const { el, settle } = await edit();
       await save(el, settle);
-      expect(document.body.querySelector('.totp-dialog__subject')!.textContent).toContain('Enregistrer poker');
+      expect(document.body.querySelector('.totp-dialog__subject')!.textContent).toContain(
+        'Enregistrer poker',
+      );
     });
 
     it('ties each list input to its hint and errors, without a redundant aria-label', async () => {
@@ -204,7 +228,9 @@ describe('AppFormComponent', () => {
       const { el, settle, http } = await edit();
       await save(el, settle);
       await enterCode(settle);
-      http.expectOne(isApp('poker', 'PUT')).flush({ detail: ['Conflict.'] }, { status: 400, statusText: 'Bad Request' });
+      http
+        .expectOne(isApp('poker', 'PUT'))
+        .flush({ detail: ['Conflict.'] }, { status: 400, statusText: 'Bad Request' });
       await settle();
       expect(el.querySelector('.app-form__summary')!.textContent).toContain('Conflict.');
       await save(el, settle);
@@ -214,7 +240,9 @@ describe('AppFormComponent', () => {
 
     it('shows an empty state for an unknown slug', async () => {
       const s = await setup('/apps/ghost/edit');
-      s.http.expectOne(isApp('ghost')).flush({ detail: 'Not found.' }, { status: 404, statusText: 'Not Found' });
+      s.http
+        .expectOne(isApp('ghost'))
+        .flush({ detail: 'Not found.' }, { status: 404, statusText: 'Not Found' });
       await s.settle();
       expect(s.el.querySelector('app-empty-state')).not.toBeNull();
     });
@@ -233,7 +261,12 @@ describe('AppFormComponent', () => {
       await enterCode(settle);
       const req = http.expectOne((r) => r.url.endsWith('/api/v1/apps/') && r.method === 'POST');
       expect(req.request.body).toEqual(
-        expect.objectContaining({ slug: 'chess', repos: ['Foxugly/foxChess'], health_path: '/health/', totp_code: '123456' }),
+        expect.objectContaining({
+          slug: 'chess',
+          repos: ['Foxugly/foxChess'],
+          health_path: '/health/',
+          totp_code: '123456',
+        }),
       );
     });
 

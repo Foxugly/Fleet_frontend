@@ -3,7 +3,7 @@ import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { MessageService } from 'primeng/api';
+import { MessageService } from '@openng/optimus-ui/api';
 
 import { Cell, SiteDetail } from '../../api';
 import { LastVisitService } from '../../core/last-visit/last-visit.service';
@@ -15,8 +15,17 @@ import { SiteDetailComponent } from './site-detail.component';
 class Stub {}
 
 const NOW = new Date('2026-11-21T12:00:00Z');
-const cell = (state: string, count = 0): Cell => ({ state: state as Cell['state'], count, collected_at: '2026-11-21T11:55:00Z', error: '', reason: null });
-const subj = (data: unknown, extra: Partial<{ ok: boolean | null; error: string; collected_at: string | null }> = {}) => ({
+const cell = (state: string, count = 0): Cell => ({
+  state: state as Cell['state'],
+  count,
+  collected_at: '2026-11-21T11:55:00Z',
+  error: '',
+  reason: null,
+});
+const subj = (
+  data: unknown,
+  extra: Partial<{ ok: boolean | null; error: string; collected_at: string | null }> = {},
+) => ({
   data,
   collected_at: '2026-11-21T11:50:00Z',
   ok: true,
@@ -34,15 +43,37 @@ const detail = (slug = 'poker', archived = false): SiteDetail => ({
   sources: {
     health: {
       cell: cell('green'),
-      items: { 'poker.foxugly.com': subj({ status: 200, latency_ms: 80, error: '', tls_days_left: 40 }) },
+      items: {
+        'poker.foxugly.com': subj({ status: 200, latency_ms: 80, error: '', tls_days_left: 40 }),
+      },
     },
     github: {
       cell: cell('orange', 2),
       items: {
         'Foxugly/Poker_server': subj({
           prs: [
-            { number: 1, title: 'Old PR', url: 'https://github.com/o/r/pull/1', author: 'ann', is_dependabot: false, draft: false, checks: 'success', merge_state: 'clean', created_at: '2026-11-01T00:00:00Z' },
-            { number: 2, title: 'New PR', url: 'https://github.com/o/r/pull/2', author: 'bob', is_dependabot: false, draft: false, checks: 'pending', merge_state: 'clean', created_at: '2026-11-21T00:00:00Z' },
+            {
+              number: 1,
+              title: 'Old PR',
+              url: 'https://github.com/o/r/pull/1',
+              author: 'ann',
+              is_dependabot: false,
+              draft: false,
+              checks: 'success',
+              merge_state: 'clean',
+              created_at: '2026-11-01T00:00:00Z',
+            },
+            {
+              number: 2,
+              title: 'New PR',
+              url: 'https://github.com/o/r/pull/2',
+              author: 'bob',
+              is_dependabot: false,
+              draft: false,
+              checks: 'pending',
+              merge_state: 'clean',
+              created_at: '2026-11-21T00:00:00Z',
+            },
           ],
           issues: [],
           dependabot_alerts: [],
@@ -52,8 +83,14 @@ const detail = (slug = 'poker', archived = false): SiteDetail => ({
         }),
       },
     },
-    sentry: { cell: cell('green'), items: { 'poker-backend': subj({ unresolved: 0, new_24h: 0, issues: [] }) } },
-    deps: { cell: cell('none'), items: { 'requirements.txt': subj({ ecosystem: 'python', checked: 5, outdated: [] }) } },
+    sentry: {
+      cell: cell('green'),
+      items: { 'poker-backend': subj({ unresolved: 0, new_24h: 0, issues: [] }) },
+    },
+    deps: {
+      cell: cell('none'),
+      items: { 'requirements.txt': subj({ ecosystem: 'python', checked: 5, outdated: [] }) },
+    },
   },
 });
 
@@ -93,8 +130,15 @@ async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
 describe('SiteDetailComponent', () => {
   beforeEach(() => {
     vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
-    // jsdom has no ResizeObserver; PrimeNG's tab list observes its scroll container.
-    vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
+    // jsdom has no ResizeObserver; Optimus UI's tab list observes its scroll container.
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      },
+    );
   });
   afterEach(() => {
     vi.restoreAllMocks();
@@ -138,7 +182,8 @@ describe('SiteDetailComponent', () => {
   });
 
   describe('tabs', () => {
-    const activeSource = (el: HTMLElement) => el.querySelector('p-tab.p-tab-active')?.getAttribute('data-source');
+    const activeSource = (el: HTMLElement) =>
+      el.querySelector('p-tab.p-tab-active')?.getAttribute('data-source');
 
     it('?tab=sentry activates the Sentry panel', async () => {
       const { http, harness, el } = await setup('poker', null, '?tab=sentry');
@@ -181,7 +226,14 @@ describe('SiteDetailComponent', () => {
       await settle(harness.fixture);
       const nav = vi.spyOn(router, 'navigate');
       (el.querySelector('p-tab[data-source="deps"]') as HTMLElement).click();
-      expect(nav).toHaveBeenCalledWith([], expect.objectContaining({ queryParams: { tab: 'deps' }, queryParamsHandling: 'merge', replaceUrl: true }));
+      expect(nav).toHaveBeenCalledWith(
+        [],
+        expect.objectContaining({
+          queryParams: { tab: 'deps' },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        }),
+      );
       await settle(harness.fixture);
       expect(activeSource(el)).toBe('deps');
     });
@@ -200,7 +252,10 @@ describe('SiteDetailComponent', () => {
   it('a subject with ok=false shows the warning and still the last good data', async () => {
     const { http, harness, el } = await setup('poker', null, '?tab=health');
     const d = detail();
-    d.sources.health.items['poker.foxugly.com'] = subj({ status: 200, latency_ms: 80, error: '', tls_days_left: 40 }, { ok: false, error: 'GitHub 502' });
+    d.sources.health.items['poker.foxugly.com'] = subj(
+      { status: 200, latency_ms: 80, error: '', tls_days_left: 40 },
+      { ok: false, error: 'GitHub 502' },
+    );
     http.expectOne(isSite('poker')).flush(d);
     await settle(harness.fixture);
     expect(el.querySelector('p-tabpanel p-message')!.textContent).toContain('GitHub 502');

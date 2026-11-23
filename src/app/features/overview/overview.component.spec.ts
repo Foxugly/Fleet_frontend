@@ -2,7 +2,7 @@ import { HttpTestingController } from '@angular/common/http/testing';
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { MessageService } from 'primeng/api';
+import { MessageService } from '@openng/optimus-ui/api';
 
 import { Cell, Overview } from '../../api';
 import { Clock } from '../../shared/fleet/clock';
@@ -24,8 +24,18 @@ const cell = (state: string, count = 0, reason: Cell['reason'] = null): Cell => 
   error: '',
   reason,
 });
-const allGreen = { health: cell('green'), github: cell('green'), sentry: cell('green'), deps: cell('green') };
-const allNone = { health: cell('none'), github: cell('none'), sentry: cell('none'), deps: cell('none') };
+const allGreen = {
+  health: cell('green'),
+  github: cell('green'),
+  sentry: cell('green'),
+  deps: cell('green'),
+};
+const allNone = {
+  health: cell('none'),
+  github: cell('none'),
+  sentry: cell('none'),
+  deps: cell('none'),
+};
 
 // Deliberately not in worst-first order: the SPA sorts (stable) and puts the box first.
 const overview = (): Overview => ({
@@ -47,7 +57,12 @@ const overview = (): Overview => ({
     {
       slug: 'chronos',
       deployed: false,
-      cells: { health: cell('none'), github: cell('error'), sentry: cell('green'), deps: cell('orange', 3) },
+      cells: {
+        health: cell('none'),
+        github: cell('error'),
+        sentry: cell('green'),
+        deps: cell('orange', 3),
+      },
     },
     { slug: 'ical', deployed: true, cells: allGreen },
   ],
@@ -93,8 +108,10 @@ async function loaded(): Promise<Mounted> {
   return m;
 }
 
-const rows = (el: HTMLElement) => Array.from(el.querySelectorAll<HTMLElement>('.overview-list__row'));
-const tiles = (el: HTMLElement) => Array.from(el.querySelectorAll<HTMLElement>('.overview-mosaic__tile'));
+const rows = (el: HTMLElement) =>
+  Array.from(el.querySelectorAll<HTMLElement>('.overview-list__row'));
+const tiles = (el: HTMLElement) =>
+  Array.from(el.querySelectorAll<HTMLElement>('.overview-mosaic__tile'));
 const names = (items: HTMLElement[]) => items.map((r) => r.querySelector('a')!.textContent!.trim());
 const viewButton = (el: HTMLElement, view: string) =>
   el.querySelector<HTMLButtonElement>(`.overview__view button[data-view="${view}"]`)!;
@@ -103,8 +120,15 @@ describe('OverviewComponent', () => {
   beforeEach(() => {
     localStorage.clear();
     vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
-    // jsdom has no ResizeObserver; PrimeNG's tab list observes its scroll container.
-    vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
+    // jsdom has no ResizeObserver; Optimus UI's tab list observes its scroll container.
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      },
+    );
   });
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -124,7 +148,9 @@ describe('OverviewComponent', () => {
     const { el } = await loaded();
     const summary = el.querySelector('.overview__summary')!;
     expect(summary.querySelector('.overview__count--handle')!.textContent).toContain('2 à traiter');
-    expect(summary.querySelector('.overview__count--watch')!.textContent).toContain('1 à surveiller');
+    expect(summary.querySelector('.overview__count--watch')!.textContent).toContain(
+      '1 à surveiller',
+    );
     expect(summary.querySelector('.overview__count--ok')!.textContent).toContain('2 OK');
   });
 
@@ -148,9 +174,16 @@ describe('OverviewComponent', () => {
     const { el } = await loaded();
     const [box, , poker] = rows(el);
     expect(box.querySelectorAll('.overview-chip').length).toBe(1);
-    expect(box.querySelector('.overview-chip--orange')!.textContent).toContain("2 point(s) d'attention");
+    expect(box.querySelector('.overview-chip--orange')!.textContent).toContain(
+      "2 point(s) d'attention",
+    );
     const chips = Array.from(poker.querySelectorAll('.overview-chip'));
-    expect(chips.map((c) => c.className.match(/overview-chip--(\w+)/)![1])).toEqual(['red', 'green', 'stale', 'none']);
+    expect(chips.map((c) => c.className.match(/overview-chip--(\w+)/)![1])).toEqual([
+      'red',
+      'green',
+      'stale',
+      'none',
+    ]);
     expect(chips[0].textContent).toContain('Santé');
     expect(chips[0].textContent).toContain('Répond 502');
   });
@@ -163,7 +196,9 @@ describe('OverviewComponent', () => {
     more.click();
     await settle(fixture);
     expect(names(rows(el))).toEqual(['Box', 'chronos', 'poker', 'quiz', 'ical', 'ghost']);
-    expect(el.querySelector('.overview-list__more button')!.getAttribute('aria-expanded')).toBe('true');
+    expect(el.querySelector('.overview-list__more button')!.getAttribute('aria-expanded')).toBe(
+      'true',
+    );
   });
 
   it('the toggle switches to the mosaic and persists it', async () => {
@@ -212,7 +247,8 @@ describe('OverviewComponent', () => {
     localStorage.setItem(VIEW_STORAGE_KEY, 'mosaic');
     const { el } = await loaded();
     const [box, chronos, poker, quiz, , ghost] = tiles(el);
-    const headline = (t: HTMLElement) => t.querySelector('.overview-mosaic__headline')!.textContent!.trim();
+    const headline = (t: HTMLElement) =>
+      t.querySelector('.overview-mosaic__headline')!.textContent!.trim();
     expect(box.classList).toContain('overview-mosaic__tile--orange');
     expect(headline(box)).toBe("2 point(s) d'attention");
     expect(chronos.classList).toContain('overview-mosaic__tile--error');
@@ -238,8 +274,10 @@ describe('OverviewComponent', () => {
   });
 
   describe('tabs', () => {
-    const panel = (el: HTMLElement, key: string) => el.querySelector<HTMLElement>(`.overview__panel[data-panel="${key}"]`)!;
-    const tabButton = (el: HTMLElement, key: string) => el.querySelector<HTMLElement>(`p-tab[data-tab="${key}"]`)!;
+    const panel = (el: HTMLElement, key: string) =>
+      el.querySelector<HTMLElement>(`.overview__panel[data-panel="${key}"]`)!;
+    const tabButton = (el: HTMLElement, key: string) =>
+      el.querySelector<HTMLElement>(`p-tab[data-tab="${key}"]`)!;
 
     it('opens on « Apps »; the dependencies panel is rendered but hidden', async () => {
       const { http, el } = await loaded();
@@ -253,11 +291,15 @@ describe('OverviewComponent', () => {
     it('?tab=deps opens « Dépendances »; the tab label carries the count', async () => {
       const m = await loaded();
       await TestBed.inject(Router).navigateByUrl('/?tab=deps');
-      m.http.expectOne(isUpdates).flush({ generated_at: '2026-11-21T11:58:00Z', groups: [UPDATE_GROUP] });
+      m.http
+        .expectOne(isUpdates)
+        .flush({ generated_at: '2026-11-21T11:58:00Z', groups: [UPDATE_GROUP] });
       await settle(m.fixture);
       expect(panel(m.el, 'deps').hidden).toBe(false);
       expect(panel(m.el, 'apps').hidden).toBe(true);
-      expect(tabButton(m.el, 'deps').querySelector('.overview__tab-count')!.textContent!.trim()).toBe('1');
+      expect(
+        tabButton(m.el, 'deps').querySelector('.overview__tab-count')!.textContent!.trim(),
+      ).toBe('1');
     });
 
     it('clicking a tab keeps it in the URL (replacing history) and keeps the filters', async () => {
@@ -268,7 +310,14 @@ describe('OverviewComponent', () => {
       const nav = vi.spyOn(TestBed.inject(Router), 'navigate');
       tabButton(m.el, 'deps').click();
       await settle(m.fixture);
-      expect(nav).toHaveBeenCalledWith([], expect.objectContaining({ queryParams: { tab: 'deps' }, queryParamsHandling: 'merge', replaceUrl: true }));
+      expect(nav).toHaveBeenCalledWith(
+        [],
+        expect.objectContaining({
+          queryParams: { tab: 'deps' },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        }),
+      );
       expect(TestBed.inject(Router).url).toBe('/?q=po&tab=deps');
       tabButton(m.el, 'apps').click();
       await settle(m.fixture);
@@ -322,8 +371,10 @@ describe('OverviewComponent', () => {
   });
 
   describe('search and filters', () => {
-    const bucketButton = (el: HTMLElement, b: string) => el.querySelector<HTMLButtonElement>(`.overview__count[data-bucket="${b}"]`)!;
-    const search = (el: HTMLElement) => el.querySelector<HTMLInputElement>('.overview__search-input')!;
+    const bucketButton = (el: HTMLElement, b: string) =>
+      el.querySelector<HTMLButtonElement>(`.overview__count[data-bucket="${b}"]`)!;
+    const search = (el: HTMLElement) =>
+      el.querySelector<HTMLInputElement>('.overview__search-input')!;
     const go = async (m: Mounted, url: string) => {
       await TestBed.inject(Router).navigateByUrl(url);
       await settle(m.fixture);
@@ -370,7 +421,9 @@ describe('OverviewComponent', () => {
       const m = await loaded();
       await go(m, '/?q=zzz&source=sentry');
       expect(rows(m.el)).toEqual([]);
-      expect(m.el.querySelector('.overview__empty')!.textContent).toContain('Aucune app ne correspond');
+      expect(m.el.querySelector('.overview__empty')!.textContent).toContain(
+        'Aucune app ne correspond',
+      );
       m.el.querySelector<HTMLButtonElement>('.overview__clear button')!.click();
       await settle(m.fixture);
       expect(TestBed.inject(Router).url).toBe('/');

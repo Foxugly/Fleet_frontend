@@ -1,11 +1,18 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { ButtonModule } from 'primeng/button';
-import { CheckboxModule } from 'primeng/checkbox';
-import { InputTextModule } from 'primeng/inputtext';
-import { MessageModule } from 'primeng/message';
+import { ButtonModule } from '@openng/optimus-ui/button';
+import { CheckboxModule } from '@openng/optimus-ui/checkbox';
+import { InputTextModule } from '@openng/optimus-ui/inputtext';
+import { MessageModule } from '@openng/optimus-ui/message';
 import { AuthService } from '../../../core/auth/auth.service';
 import { MfaSetup } from '../../../core/auth/auth.models';
 import { AuthCardComponent } from '../../../shared/components/auth-card/auth-card.component';
@@ -24,7 +31,15 @@ type Mode = 'verify' | 'setup';
 @Component({
   selector: 'app-mfa',
   standalone: true,
-  imports: [ReactiveFormsModule, TranslocoPipe, ButtonModule, CheckboxModule, InputTextModule, MessageModule, AuthCardComponent],
+  imports: [
+    ReactiveFormsModule,
+    TranslocoPipe,
+    ButtonModule,
+    CheckboxModule,
+    InputTextModule,
+    MessageModule,
+    AuthCardComponent,
+  ],
   templateUrl: './mfa.component.html',
   styleUrl: './mfa.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -101,7 +116,9 @@ export class MfaComponent implements OnInit {
 
   protected finish(): void {
     if (this.recoveryCodes() && !this.ack.value) return;
-    void this.router.navigateByUrl(safeReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl')));
+    void this.router.navigateByUrl(
+      safeReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl')),
+    );
   }
 
   protected copySecret(): void {
@@ -136,6 +153,8 @@ export class MfaComponent implements OnInit {
 
   private goToLogin(reason: LoginReason): void {
     const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
-    void this.router.navigate(['/login'], { queryParams: { ...(returnUrl ? { returnUrl } : {}), reason } });
+    void this.router.navigate(['/login'], {
+      queryParams: { ...(returnUrl ? { returnUrl } : {}), reason },
+    });
   }
 }

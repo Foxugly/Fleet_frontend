@@ -1,18 +1,18 @@
 import { DestroyRef, Injectable, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslocoService } from '@jsverse/transloco';
-import { PrimeNG } from 'primeng/config';
+import { Optimus } from '@openng/optimus-ui/config';
 import { switchMap } from 'rxjs';
 
 /**
- * Feeds PrimeNG's built-in labels from the Transloco catalog so they follow the
- * active language. Today: `aria.removeLabel`, the name PrimeNG gives a chip's remove
+ * Feeds Optimus UI's built-in labels from the Transloco catalog so they follow the
+ * active language. Today: `aria.removeLabel`, the name Optimus UI gives a chip's remove
  * button (inventory list fields); its English default « Remove » is never shown in French.
  */
 @Injectable({ providedIn: 'root' })
-export class PrimeNgI18n {
+export class OptimusI18n {
   private readonly transloco = inject(TranslocoService);
-  private readonly primeng = inject(PrimeNG);
+  private readonly optimus = inject(Optimus);
   private readonly destroyRef = inject(DestroyRef);
 
   start(): void {
@@ -22,8 +22,8 @@ export class PrimeNgI18n {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((removeLabel: string) => {
-        const aria = this.primeng.getTranslation('aria') ?? {};
-        this.primeng.setTranslation({ aria: { ...aria, removeLabel } });
+        const aria = this.optimus.getTranslation('aria') ?? {};
+        this.optimus.setTranslation({ aria: { ...aria, removeLabel } });
       });
   }
 }
