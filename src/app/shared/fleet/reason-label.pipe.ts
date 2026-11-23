@@ -10,9 +10,20 @@ import { Cell, Reason } from '../../api';
  * the text is later passed as a param of other translations (tooltips, aria-labels),
  * whose interpolation would otherwise read them as placeholders.
  */
+/** Parts of an `open_items` count, in display order (GitHub cell breakdown). */
+export const OPEN_ITEM_PARTS = ['main_ci', 'secrets', 'code_scanning', 'dependabot', 'prs', 'issues'] as const;
+
+/** "2 PR · 5 alerte(s) de code" from the breakdown params; '' when the API sent none. */
+function openItemsText(i18n: TranslocoService, params: Record<string, unknown>): string {
+  return OPEN_ITEM_PARTS.filter((part) => typeof params[part] === 'number' && (params[part] as number) > 0)
+    .map((part) => i18n.translate(`reason.open_items_part.${part}`, { n: params[part] }))
+    .join(' · ');
+}
+
 export function reasonText(i18n: TranslocoService, reason: Reason): string {
   const params = reason.params ?? {};
-  const text = i18n.translate(`reason.${reason.code}`, params);
+  const detailed = reason.code === 'open_items' ? openItemsText(i18n, params) : '';
+  const text = detailed || i18n.translate(`reason.${reason.code}`, params);
   const note = params['note'];
   if (typeof note !== 'string' || !note.trim()) return text;
   return `${text} — ${note.trim().replace(/([{}])(?=[{}])/g, '$1​')}`;

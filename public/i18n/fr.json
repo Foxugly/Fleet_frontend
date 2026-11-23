@@ -262,6 +262,14 @@
     "secret_alert": "{{n}} alerte(s) de secret",
     "high_alert": "{{n}} alerte(s) critique(s)",
     "open_items": "{{n}} ouvert(s)",
+    "open_items_part": {
+      "prs": "{{n}} PR",
+      "issues": "{{n}} ticket(s)",
+      "dependabot": "{{n}} alerte(s) Dependabot",
+      "code_scanning": "{{n}} alerte(s) de code",
+      "secrets": "{{n}} secret(s) exposé(s)",
+      "main_ci": "CI rouge sur main"
+    },
     "unresolved": "{{n}} non résolu(s)",
     "outdated": "{{n}} obsolète(s)",
     "failed_units": "{{n}} unité(s) en échec",
