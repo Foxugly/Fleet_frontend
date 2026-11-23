@@ -83,7 +83,17 @@ export function buildPrompt(g: UpdateGroup, t: Translate): string | null {
   const retryWith = g.progress === ProgressEnum.Retry ? g.blocked?.by.find((b) => b.newer) : undefined;
   if (retryWith) {
     const issues = (g.blocked?.issues ?? []).map((i) => `${i.repo}#${i.number}`).join(', ');
-    parts.push(t('updates.prompt.retry', { blocker: retryWith.package, newer: retryWith.newer, issues }));
+    parts.push(
+      issues
+        ? t('updates.prompt.retry', { blocker: retryWith.package, newer: retryWith.newer, issues })
+        : // Found in the locks (peer dependency / requires_dist), no [fleet] issue to cite.
+          t('updates.prompt.retry_auto', {
+            blocker: retryWith.package,
+            newer: retryWith.newer,
+            package: pkg,
+            latest: g.latest ?? '',
+          }),
+    );
   }
 
   if (g.latest === null) {

@@ -170,3 +170,10 @@
   padding: 1rem 0;
   color: var(--text-muted, var(--p-text-muted-color));
 }
+
+.shared-updates__blocked-auto {
+  margin: 0.25rem 0 0;
+  color: var(--p-text-muted-color);
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}

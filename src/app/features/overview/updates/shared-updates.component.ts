@@ -41,6 +41,8 @@ interface Row {
   sites: string[];
   /** The blocker named by the waiting/retry tag. */
   blocker: { package: string; version: string; newer: string | null } | null;
+  /** Blockers found in the locks (no [fleet] issue): package, version and declared range. */
+  autoBlockers: { package: string; version: string; range: string }[];
   severity: string | null;
   /** False when an API value failed the prompt checks: a notice replaces the copy button. */
   safe: boolean;
@@ -161,6 +163,10 @@ export class SharedUpdatesComponent {
       versions: versionRange(g),
       sites: [...new Set(g.members.map((m) => m.site))],
       blocker,
+      autoBlockers:
+        g.blocked && !g.blocked.issues.length
+          ? by.flatMap((b) => (b.range ? [{ package: b.package, version: b.version, range: b.range }] : []))
+          : [],
       severity: g.security ? (max && SEVERITIES.includes(max) ? max : 'unknown') : null,
       safe: isPromptSafe(g),
     };

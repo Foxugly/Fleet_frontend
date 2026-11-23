@@ -189,7 +189,7 @@ describe('SharedUpdatesComponent', () => {
         prs: [{ repo: 'Foxugly/a', number: 1, url: 'javascript:alert(1)', checks: 'pending' }],
         blocked: {
           issues: [{ repo: 'Foxugly/a', number: 2, url: 'http://evil/2' }],
-          by: [{ package: 'drf', version: '3.16.1', newer: null }],
+          by: [{ package: 'drf', version: '3.16.1', newer: null, range: null }],
         },
       }),
     ]);
@@ -233,7 +233,7 @@ describe('SharedUpdatesComponent', () => {
               url: 'https://github.com/Foxugly/billing_server/issues/12',
             },
           ],
-          by: [{ package: 'djangorestframework', version: '3.16.1', newer: null }],
+          by: [{ package: 'djangorestframework', version: '3.16.1', newer: null, range: null }],
         },
       }),
     ]);
@@ -251,13 +251,50 @@ describe('SharedUpdatesComponent', () => {
     expect(copy.disabled).toBe(false);
   });
 
+  it('waiting from the locks (no issue): names the blocker and its declared range', async () => {
+    const { el } = await mount([
+      group({
+        ecosystem: 'npm',
+        package: 'typescript',
+        latest: '7.0.2',
+        kind: 'major',
+        progress: ProgressEnum.Waiting,
+        blocked: {
+          issues: [],
+          by: [{ package: '@angular/compiler-cli', version: '22.3.0', newer: null, range: '>=6.0 <6.1' }],
+        },
+      }),
+    ]);
+    const row = rowOf(el, 'typescript');
+    expect(row.querySelector('.shared-updates__progress')!.textContent).toContain(
+      'En attente de @angular/compiler-cli > 22.3.0',
+    );
+    expect(row.querySelector('.shared-updates__blocked-auto')!.textContent).toContain(
+      'Bloqué par @angular/compiler-cli 22.3.0, qui exige >=6.0 <6.1',
+    );
+    expect(row.querySelector('a.shared-updates__issue')).toBeNull();
+  });
+
+  it('an issue-based block shows no lock-derived line', async () => {
+    const { el } = await mount([
+      group({
+        progress: ProgressEnum.Waiting,
+        blocked: {
+          issues: [{ repo: 'Foxugly/billing_server', number: 12, url: 'https://github.com/x/12' }],
+          by: [{ package: 'djangorestframework', version: '3.16.1', newer: null, range: null }],
+        },
+      }),
+    ]);
+    expect(rowOf(el, 'django').querySelector('.shared-updates__blocked-auto')).toBeNull();
+  });
+
   it('retry: « À retenter » with the newer blocker version', async () => {
     const { el } = await mount([
       group({
         progress: ProgressEnum.Retry,
         blocked: {
           issues: [{ repo: 'Foxugly/billing_server', number: 12, url: 'https://github.com/x/12' }],
-          by: [{ package: 'djangorestframework', version: '3.16.1', newer: '3.17.0' }],
+          by: [{ package: 'djangorestframework', version: '3.16.1', newer: '3.17.0', range: null }],
         },
       }),
     ]);

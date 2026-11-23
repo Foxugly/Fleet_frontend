@@ -21,6 +21,7 @@ const cell = (state: string, count = 0): Cell => ({
   collected_at: '2026-11-21T11:55:00Z',
   error: '',
   reason: null,
+  notes: [],
 });
 const subj = (
   data: unknown,

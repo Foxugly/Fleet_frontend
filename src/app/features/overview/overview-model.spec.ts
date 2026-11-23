@@ -18,6 +18,7 @@ const cell = (state: string, count = 0): Cell => ({
   collected_at: null,
   error: '',
   reason: null,
+  notes: [],
 });
 const site = (slug: string, states: [string, string, string, string], deployed = true): OverviewSite => ({
   slug,

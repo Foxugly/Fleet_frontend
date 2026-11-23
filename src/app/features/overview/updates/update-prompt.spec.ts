@@ -131,8 +131,8 @@ describe('update-prompt', () => {
           blocked: {
             issues: [{ repo: 'Foxugly/billing_server', number: 12, url: 'https://github.com/x/12' }],
             by: [
-              { package: 'celery', version: '5.5', newer: null },
-              { package: 'djangorestframework', version: '3.16.1', newer: '3.17.0' },
+              { package: 'celery', version: '5.5', newer: null, range: null },
+              { package: 'djangorestframework', version: '3.16.1', newer: '3.17.0', range: null },
             ],
           },
         }),
@@ -141,6 +141,29 @@ describe('update-prompt', () => {
       expect(p!.startsWith('Nouvelle tentative : djangorestframework 3.17.0 est disponible.')).toBe(true);
       expect(p).toContain('Foxugly/billing_server#12');
       expect(p).toContain('Mets à jour `django`');
+    });
+
+    it('retry from the locks (no issue): names the newer blocker and the target, no issue list', () => {
+      const p = buildPrompt(
+        group({
+          ecosystem: 'npm',
+          package: 'typescript',
+          latest: '7.0.2',
+          kind: 'major',
+          progress: ProgressEnum.Retry,
+          blocked: {
+            issues: [],
+            by: [{ package: '@angular/compiler-cli', version: '22.3.0', newer: '23.0.0', range: '>=6.0 <6.1' }],
+          },
+        }),
+        t,
+      );
+      expect(
+        p!.startsWith('Nouvelle tentative : @angular/compiler-cli 23.0.0 est disponible et accepte typescript 7.0.2'),
+      ).toBe(true);
+      expect(p).not.toContain('Les issues');
+      // The declared range is displayed, never put in the prompt.
+      expect(p).not.toContain('>=6.0');
     });
 
     describe('refuses unchecked API data (security)', () => {
@@ -161,7 +184,7 @@ describe('update-prompt', () => {
         ],
         [
           'a blocker version with a backtick',
-          { blocked: { issues: [], by: [{ package: 'drf', version: '3`', newer: null }] } },
+          { blocked: { issues: [], by: [{ package: 'drf', version: '3`', newer: null, range: null }] } },
         ],
       ];
       for (const [name, over] of unsafe) {

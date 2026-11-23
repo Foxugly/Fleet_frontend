@@ -1,7 +1,7 @@
 import { Cell, StateEnum } from '../../api';
 import { STATE_ORDER, worstState } from './state-order';
 
-const cell = (state: StateEnum): Cell => ({ state, count: 0, collected_at: null, error: '', reason: null });
+const cell = (state: StateEnum): Cell => ({ state, count: 0, collected_at: null, error: '', reason: null, notes: [] });
 
 describe('state order', () => {
   it('is worst-first: error, red, stale, orange, green, none', () => {

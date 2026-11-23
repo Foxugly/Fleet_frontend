@@ -144,6 +144,38 @@ describe('DepsSectionComponent', () => {
     expect(el.querySelector('.kind-unknown')).not.toBeNull();
   });
 
+  it('tags a blocked row with its blocker, range and, when known, the release that lifts it', () => {
+    const data: DepsData = {
+      ecosystem: 'npm',
+      checked: 3,
+      outdated: [
+        {
+          name: 'typescript',
+          current: '6.0.3',
+          latest: '7.0.2',
+          kind: 'major',
+          blocked_by: [
+            { package: '@angular/compiler-cli', version: '22.3.0', range: '>=6.0 <6.1', newer: '23.0.0' },
+            { package: '@angular/build', version: '22.3.0', range: '>=6.0 <6.1', newer: null },
+          ],
+        },
+        { name: 'rxjs', current: '7.8.1', latest: '7.8.2', kind: 'patch' },
+      ],
+    };
+    const el = render(DepsSectionComponent, { data });
+    const [blocked, plain] = Array.from(el.querySelectorAll('tbody tr'));
+    expect(blocked.classList).toContain('deps-blocked');
+    const tags = Array.from(blocked.querySelectorAll('.deps-blocked-by')).map((t) => t.textContent);
+    expect(tags).toEqual([
+      expect.stringContaining('bloqué par @angular/compiler-cli@22.3.0 (>=6.0 <6.1)'),
+      expect.stringContaining('bloqué par @angular/build@22.3.0 (>=6.0 <6.1)'),
+    ]);
+    expect(blocked.querySelectorAll('.deps-blocked-newer').length).toBe(1);
+    expect(blocked.querySelector('.deps-blocked-newer')!.textContent).toContain('@angular/compiler-cli 23.0.0 le débloque');
+    expect(plain.classList).not.toContain('deps-blocked');
+    expect(plain.querySelector('.deps-blocked-by')).toBeNull();
+  });
+
   it('says so when everything is up to date', () => {
     const el = render(DepsSectionComponent, { data: { ecosystem: 'python', checked: 10, outdated: [] } });
     expect(el.querySelector('table')).toBeNull();

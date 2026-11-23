@@ -17,6 +17,7 @@ const cell = (state: StateEnum, count: number, reason: Cell['reason']): Cell => 
   collected_at: null,
   error: '',
   reason,
+  notes: [],
 });
 
 describe('ReasonLabelPipe', () => {
