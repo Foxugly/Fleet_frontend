@@ -7,12 +7,17 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { BlockerKindEnum } from './blocker-kind-enum';
 
 
 export interface UpdateBlocker { 
+    kind: BlockerKindEnum;
     'package': string;
     version: string;
     newer: string | null;
     range: string | null;
+    note: string;
 }
+
+
 

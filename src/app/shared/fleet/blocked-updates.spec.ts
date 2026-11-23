@@ -15,6 +15,19 @@ const BLOCKED: Reason = {
   params: { n: 1, package: 'typescript', latest: '7.0.2', by: '@angular/compiler-cli', version: '22.3.0' },
 };
 const BLOCKED_FR = '1 mise(s) à jour bloquée(s) : typescript 7.0.2 ← @angular/compiler-cli 22.3.0';
+/** The same cell when requirements.in holds sentry-sdk on purpose. */
+const HELD: Reason = {
+  code: 'held_updates',
+  params: {
+    n: 1,
+    package: 'sentry-sdk',
+    latest: '3.0.0',
+    file: 'requirements.in',
+    range: '<3',
+    note: 'hold: day-0 major {{n}}',
+  },
+};
+const HELD_FR = '1 mise(s) à jour gelée(s) par requirements.in (<3) : sentry-sdk 3.0.0 — hold: day-0 major {\u200b{n}\u200b}';
 
 const cell = (over: Partial<Cell> = {}): Cell => ({
   state: StateEnum.Green,
@@ -55,6 +68,28 @@ describe('blocked updates (notes)', () => {
     expect(pipe.transform(greenBlocked)).toBe(BLOCKED_FR);
     expect(pipe.transform(cell())).toBe('');
     expect(pipe.transform(cell({ notes: [{ code: 'brand_new', params: {} }] }))).toBe('');
+  });
+
+  it('held notes: the comment is appended, never interpolated (braces defused), absent when empty', async () => {
+    await setup();
+    const pipe = TestBed.runInInjectionContext(() => new NotesLabelPipe());
+    expect(pipe.transform(cell({ reason: HELD, notes: [HELD] }))).toBe(HELD_FR);
+    const bare: Reason = { ...HELD, params: { ...HELD.params, note: '' } };
+    expect(pipe.transform(cell({ notes: [bare] }))).toBe(
+      '1 mise(s) à jour gelée(s) par requirements.in (<3) : sentry-sdk 3.0.0',
+    );
+    expect(pipe.transform(cell({ notes: [BLOCKED, HELD] }))).toBe(`${BLOCKED_FR} · ${HELD_FR}`);
+  });
+
+  it('state dot: a green held cell shows the lock and the held reason', async () => {
+    await setup();
+    const fixture = TestBed.createComponent(StateDotComponent);
+    fixture.componentRef.setInput('cell', cell({ reason: HELD, notes: [HELD] }));
+    fixture.componentRef.setInput('label', 'Dépendances');
+    const el = await render(fixture);
+    expect(el.querySelector('.state-dot--green')).not.toBeNull();
+    expect(el.querySelector('.state-dot__note.pi-lock')).not.toBeNull();
+    expect(el.querySelector('.state-dot')!.getAttribute('aria-label')).toContain(HELD_FR);
   });
 
   it('cellTip: error first, notes appended only when the reason does not say them', () => {

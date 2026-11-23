@@ -25,6 +25,7 @@ model/app-change.ts
 model/app-create.ts
 model/app-out.ts
 model/app-update.ts
+model/blocker-kind-enum.ts
 model/box.ts
 model/cell.ts
 model/login-response.ts

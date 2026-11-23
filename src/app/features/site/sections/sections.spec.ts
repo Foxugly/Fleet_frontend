@@ -176,6 +176,38 @@ describe('DepsSectionComponent', () => {
     expect(plain.querySelector('.deps-blocked-by')).toBeNull();
   });
 
+  it('tags a held row with its file and range, and shows the comment as plain text', () => {
+    const data: DepsData = {
+      ecosystem: 'python',
+      checked: 3,
+      outdated: [
+        {
+          name: 'sentry-sdk',
+          current: '2.76.0',
+          latest: '3.0.0',
+          kind: 'major',
+          blocked_by: [
+            {
+              kind: 'hold',
+              package: 'requirements.in',
+              version: '',
+              range: '<3',
+              newer: null,
+              note: 'hold: day-0 major <img src=x>',
+            },
+          ],
+        },
+      ],
+    };
+    const el = render(DepsSectionComponent, { data });
+    const row = el.querySelector('tbody tr')!;
+    expect(row.classList).toContain('deps-blocked');
+    expect(row.querySelector('.deps-held-by')!.textContent).toContain('gelée par requirements.in (<3)');
+    expect(row.querySelector('.deps-blocked-by')).toBeNull();
+    expect(row.querySelector('.deps-hold-note')!.textContent).toBe('hold: day-0 major <img src=x>');
+    expect(row.querySelector('img')).toBeNull();
+  });
+
   it('says so when everything is up to date', () => {
     const el = render(DepsSectionComponent, { data: { ecosystem: 'python', checked: 10, outdated: [] } });
     expect(el.querySelector('table')).toBeNull();

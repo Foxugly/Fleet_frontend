@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { TranslocoService } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
 
-import { ProgressEnum } from '../../../api';
+import { BlockerKindEnum, ProgressEnum } from '../../../api';
 import { authTestProviders } from '../../auth/auth-test-setup.testing';
 import { Translate, buildPrompt, isPromptSafe, sectionOf, versionRange } from './update-prompt';
 import { group } from './update-test-data.testing';
@@ -131,8 +131,8 @@ describe('update-prompt', () => {
           blocked: {
             issues: [{ repo: 'Foxugly/billing_server', number: 12, url: 'https://github.com/x/12' }],
             by: [
-              { package: 'celery', version: '5.5', newer: null, range: null },
-              { package: 'djangorestframework', version: '3.16.1', newer: '3.17.0', range: null },
+              { kind: BlockerKindEnum.Package, package: 'celery', version: '5.5', newer: null, range: null, note: '' },
+              { kind: BlockerKindEnum.Package, package: 'djangorestframework', version: '3.16.1', newer: '3.17.0', range: null, note: '' },
             ],
           },
         }),
@@ -153,7 +153,7 @@ describe('update-prompt', () => {
           progress: ProgressEnum.Retry,
           blocked: {
             issues: [],
-            by: [{ package: '@angular/compiler-cli', version: '22.3.0', newer: '23.0.0', range: '>=6.0 <6.1' }],
+            by: [{ kind: BlockerKindEnum.Package, package: '@angular/compiler-cli', version: '22.3.0', newer: '23.0.0', range: '>=6.0 <6.1', note: '' }],
           },
         }),
         t,
@@ -184,7 +184,7 @@ describe('update-prompt', () => {
         ],
         [
           'a blocker version with a backtick',
-          { blocked: { issues: [], by: [{ package: 'drf', version: '3`', newer: null, range: null }] } },
+          { blocked: { issues: [], by: [{ kind: BlockerKindEnum.Package, package: 'drf', version: '3`', newer: null, range: null, note: '' }] } },
         ],
       ];
       for (const [name, over] of unsafe) {
@@ -196,6 +196,34 @@ describe('update-prompt', () => {
 
       it('a valid group is safe', () => {
         expect(isPromptSafe(group())).toBe(true);
+      });
+
+      it('a hold (file name, empty version) is safe; an empty package version is not', () => {
+        const held = group({
+            ecosystem: 'python',
+            package: 'sentry-sdk',
+            latest: '3.0.0',
+            kind: 'major',
+            branch: 'deps/sentry-sdk-3.0.0',
+            progress: ProgressEnum.Waiting,
+            blocked: {
+              issues: [],
+              by: [
+                {
+                  kind: BlockerKindEnum.Hold,
+                  package: 'requirements.in',
+                  version: '',
+                  newer: null,
+                  range: '<3',
+                  note: 'hold: day-0 major <b>x</b>',
+                },
+              ],
+            },
+          });
+        expect(isPromptSafe(held)).toBe(true);
+        expect(buildPrompt(held, t)).not.toContain('hold:');
+        const empty = { ...held.blocked!.by[0], kind: BlockerKindEnum.Package };
+        expect(isPromptSafe({ ...held, blocked: { issues: [], by: [empty] } })).toBe(false);
       });
     });
   });

@@ -38,12 +38,24 @@ import { DepsData } from '../../../shared/fleet/source-data';
               <td>
                 {{ o.name }}
                 @for (b of o.blocked_by ?? []; track b.package + b.version) {
-                  <p-tag
-                    class="deps-blocked-by"
-                    severity="secondary"
-                    icon="pi pi-lock"
-                    [value]="'site.deps.blocked_by' | transloco: { package: b.package, version: b.version, range: b.range }"
-                  />
+                  @if (b.kind === 'hold') {
+                    <p-tag
+                      class="deps-held-by"
+                      severity="secondary"
+                      icon="pi pi-lock"
+                      [value]="'site.deps.held_by' | transloco: { file: b.package, range: b.range }"
+                    />
+                    @if (b.note) {
+                      <span class="deps-hold-note">{{ b.note }}</span>
+                    }
+                  } @else {
+                    <p-tag
+                      class="deps-blocked-by"
+                      severity="secondary"
+                      icon="pi pi-lock"
+                      [value]="'site.deps.blocked_by' | transloco: { package: b.package, version: b.version, range: b.range }"
+                    />
+                  }
                   @if (b.newer) {
                     <p-tag
                       class="deps-blocked-newer"

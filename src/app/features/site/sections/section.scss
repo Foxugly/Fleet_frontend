@@ -71,8 +71,14 @@ a.row-title {
 }
 
 .deps-blocked-by,
-.deps-blocked-newer {
+.deps-held-by,
+.deps-blocked-newer,
+.deps-hold-note {
   margin-left: 0.4rem;
   font-size: 0.75rem;
   overflow-wrap: anywhere;
+}
+
+.deps-hold-note {
+  font-style: italic;
 }

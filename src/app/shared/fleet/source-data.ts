@@ -83,13 +83,20 @@ export interface SentryData {
   issues: SentryIssue[];
 }
 
-/** An installed package whose constraint accepts the current version but not the latest. */
+/**
+ * Why an outdated item cannot be updated yet. `package` (absent in snapshots older than
+ * Fleet_server#13): an installed package whose constraint accepts the current version but not
+ * the latest. `hold`: the project's requirements.in caps it on purpose; `package` is then the
+ * file name, `version` is empty and `note` the requirement's comment (untrusted, plain text).
+ */
 export interface DepsBlocker {
+  kind?: 'package' | 'hold';
   package: string;
   version: string;
   range: string;
   /** Its latest release, when that one lifts the block; null when unknown or still blocking. */
   newer: string | null;
+  note?: string;
 }
 
 export interface DepsData {

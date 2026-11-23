@@ -60,14 +60,18 @@
                 <span class="shared-updates__progress shared-updates__progress--{{ g.progress }}">
                   @switch (g.progress) {
                     @case (Progress.Waiting) {
-                      {{
-                        'updates.progress.waiting'
-                          | transloco
-                            : {
-                                package: $safeNavigationMigration(row.blocker?.package),
-                                version: $safeNavigationMigration(row.blocker?.version),
-                              }
-                      }}
+                      @if (row.blocker?.kind === 'hold') {
+                        {{ 'updates.progress.held' | transloco: { file: row.blocker?.package, range: row.blocker?.range } }}
+                      } @else {
+                        {{
+                          'updates.progress.waiting'
+                            | transloco
+                              : {
+                                  package: $safeNavigationMigration(row.blocker?.package),
+                                  version: $safeNavigationMigration(row.blocker?.version),
+                                }
+                        }}
+                      }
                     }
                     @case (Progress.Retry) {
                       {{
@@ -86,10 +90,17 @@
                 </span>
               </div>
 
-              @for (b of row.autoBlockers; track b.package + b.version) {
+              @for (b of row.autoBlockers; track b.kind + b.package + b.version) {
                 <p class="shared-updates__blocked-auto">
                   <i class="pi pi-lock" aria-hidden="true"></i>
-                  {{ 'updates.blocked_auto' | transloco: { package: b.package, version: b.version, range: b.range } }}
+                  @if (b.kind === 'hold') {
+                    {{ 'updates.held_auto' | transloco: { file: b.package, range: b.range } }}
+                    @if (b.note) {
+                      <span class="shared-updates__hold-note">— {{ b.note }}</span>
+                    }
+                  } @else {
+                    {{ 'updates.blocked_auto' | transloco: { package: b.package, version: b.version, range: b.range } }}
+                  }
                 </p>
               }
 

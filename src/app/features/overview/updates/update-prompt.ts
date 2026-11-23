@@ -1,4 +1,4 @@
-import { ProgressEnum, UpdateGroup } from '../../../api';
+import { BlockerKindEnum, ProgressEnum, UpdateGroup } from '../../../api';
 
 export type UpdateSection = 'security' | 'major' | 'updates' | 'patch';
 export const UPDATE_SECTIONS: readonly UpdateSection[] = ['security', 'major', 'updates', 'patch'];
@@ -51,7 +51,13 @@ export function isPromptSafe(g: UpdateGroup): boolean {
     g.members.every((m) => REPO_RE.test(m.repo) && (m.lock === null || safeLockPath(lockPath(m.repo, m.lock)))) &&
     (g.blocked === null ||
       (g.blocked.issues.every((i) => REPO_RE.test(i.repo) && Number.isInteger(i.number)) &&
-        g.blocked.by.every((b) => PACKAGE_RE.test(b.package) && VERSION_RE.test(b.version) && version(b.newer))))
+        g.blocked.by.every(
+          (b) =>
+            PACKAGE_RE.test(b.package) &&
+            // A hold names a file, not a release: its version is empty.
+            (VERSION_RE.test(b.version) || (b.kind === BlockerKindEnum.Hold && b.version === '')) &&
+            version(b.newer),
+        )))
   );
 }
 

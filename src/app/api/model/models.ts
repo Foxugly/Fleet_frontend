@@ -2,6 +2,7 @@ export * from './app-change';
 export * from './app-create';
 export * from './app-out';
 export * from './app-update';
+export * from './blocker-kind-enum';
 export * from './box';
 export * from './cell';
 export * from './login';
