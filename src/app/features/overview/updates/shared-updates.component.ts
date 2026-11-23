@@ -16,7 +16,7 @@ import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { MessageService } from '@openng/optimus-ui/api';
 import { ButtonModule } from '@openng/optimus-ui/button';
 import { TagModule } from '@openng/optimus-ui/tag';
-import { Subject, catchError, map, merge, of, switchMap } from 'rxjs';
+import { Subject, catchError, map, merge, of, switchMap, take } from 'rxjs';
 
 import { ProgressEnum, UpdateGroup, UpdatesService } from '../../../api';
 import { visibleInterval } from '../../../core/polling/visible-interval';
@@ -26,6 +26,7 @@ import {
   SEVERITIES,
   UPDATE_SECTIONS,
   UpdateSection,
+  buildBulkPrompt,
   buildPrompt,
   isPromptSafe,
   sectionOf,
@@ -76,6 +77,10 @@ export class SharedUpdatesComponent {
     })).filter((s) => s.rows.length);
   });
   protected readonly patchesOpen = signal(false);
+  /** True while the « all updates » prompt is being fetched. */
+  protected readonly copyingAll = signal(false);
+  /** Key of the « all updates » prompt in `manual`. */
+  protected readonly ALL = '*all*';
   /** The prompt shown inline after a failed copy, by group key. */
   protected readonly manual = signal<{ key: string; text: string } | null>(null);
   private readonly manualBox = viewChild<ElementRef<HTMLTextAreaElement>>('manualBox');
@@ -117,24 +122,57 @@ export class SharedUpdatesComponent {
     this.patchesOpen.update((open) => !open);
   }
 
+  private readonly translate = (key: string, params?: object) =>
+    this.i18n.translate(key, params as Record<string, unknown>);
+
   protected copy(row: Row): void {
-    const text = buildPrompt(row.group, (key, params) =>
-      this.i18n.translate(key, params as Record<string, unknown>),
-    );
+    const text = buildPrompt(row.group, this.translate);
     if (text === null) return; // unsafe data: the template renders no button then
+    this.write(row.key, text, this.i18n.translate('updates.copied'));
+  }
+
+  /** Every unblocked update of every app (not only the shared ones) in one prompt. */
+  protected copyAll(): void {
+    if (this.copyingAll()) return;
+    this.copyingAll.set(true);
+    this.api
+      .updatesRetrieve({ scope: 'all' })
+      .pipe(take(1))
+      .subscribe({
+        next: ({ groups }) => {
+          this.copyingAll.set(false);
+          const bulk = buildBulkPrompt(groups, this.translate);
+          if (!bulk) {
+            this.messages.add({
+              severity: 'info',
+              summary: this.i18n.translate('updates.nothing_to_copy'),
+              life: 4000,
+            });
+            return;
+          }
+          this.write(this.ALL, bulk.text, this.i18n.translate('updates.copied_all', { n: bulk.count }));
+        },
+        error: () => {
+          this.copyingAll.set(false);
+          this.messages.add({
+            severity: 'error',
+            summary: this.i18n.translate('updates.load_failed'),
+            life: 6000,
+          });
+        },
+      });
+  }
+
+  private write(key: string, text: string, success: string): void {
     // navigator.clipboard is undefined outside a secure context.
     const write = navigator.clipboard?.writeText(text) ?? Promise.reject(new Error('no clipboard'));
     write.then(
       () => {
-        if (this.manual()?.key === row.key) this.manual.set(null);
-        this.messages.add({
-          severity: 'success',
-          summary: this.i18n.translate('updates.copied'),
-          life: 4000,
-        });
+        if (this.manual()?.key === key) this.manual.set(null);
+        this.messages.add({ severity: 'success', summary: success, life: 4000 });
       },
       () => {
-        this.manual.set({ key: row.key, text });
+        this.manual.set({ key, text });
         afterNextRender(
           { write: () => this.manualBox()?.nativeElement.focus() },
           { injector: this.injector },

@@ -7,7 +7,7 @@ import { MessageService } from '@openng/optimus-ui/api';
 import { BlockerKindEnum, ProgressEnum, UpdateGroup } from '../../../api';
 import { authTestProviders } from '../../auth/auth-test-setup.testing';
 import { SharedUpdatesComponent } from './shared-updates.component';
-import { buildPrompt } from './update-prompt';
+import { buildBulkPrompt, buildPrompt } from './update-prompt';
 import { group } from './update-test-data.testing';
 
 @Component({ template: '' })
@@ -382,6 +382,79 @@ describe('SharedUpdatesComponent', () => {
     http.expectOne(isUpdates).flush('boom', { status: 503, statusText: 'Service Unavailable' });
     await settle(fixture);
     expect(rowOf(el, 'django')).toBeDefined();
+  });
+
+  describe('« Copier le prompt : toutes les mises à jour »', () => {
+    const single = group({
+      package: 'pyjwt',
+      latest: '2.10.1',
+      members: [{ site: 'chronos', repo: 'Foxugly/Chronos', lock: 'Foxugly/Chronos:requirements.txt', current: '2.9.0' }],
+    });
+    const waiting = group({ package: 'celery', latest: '6.0.0', progress: ProgressEnum.Waiting });
+    const open = group({ package: 'redis', latest: '6.4.0', progress: ProgressEnum.InProgress });
+    const retry = group({ package: 'stripe', latest: '17.0.0', progress: ProgressEnum.Retry });
+    const allButton = (el: HTMLElement) =>
+      el.querySelector<HTMLButtonElement>('.shared-updates__copy-all button')!;
+    const isAll = (r: { urlWithParams: string }) => r.urlWithParams.endsWith('/api/v1/updates/?scope=all');
+
+    it('is shown even when no update is shared by two apps', async () => {
+      const { el } = await mount([]);
+      expect(allButton(el).textContent).toContain('toutes les mises à jour');
+    });
+
+    it('fetches every app (scope=all) and copies only the unblocked updates, in one prompt', async () => {
+      const { fixture, http, el, messages } = await mount([minor]);
+      const add = vi.spyOn(messages, 'add');
+      allButton(el).click();
+      http.expectOne(isAll).flush({ generated_at: '2026-11-22T10:02:00Z', groups: [minor, single, waiting, open, retry] });
+      await settle(fixture);
+      const i18n = TestBed.inject(TranslocoService);
+      const t = (k: string, p?: object) => i18n.translate(k, p as Record<string, unknown>);
+      const bulk = buildBulkPrompt([minor, single, waiting, open, retry], t)!;
+      expect(bulk.count).toBe(3);
+      expect(writeText).toHaveBeenCalledWith(bulk.text);
+      const text = writeText.mock.calls[0][0] as string;
+      expect(text).toContain('Fais ces 3 mises à jour');
+      expect(text).toContain('1. ' + buildPrompt(minor, t));
+      expect(text).toContain('Mets à jour `pyjwt` vers `2.10.1`');
+      expect(text).toContain('stripe');
+      expect(text).not.toContain('`celery`');
+      expect(text).not.toContain('`redis`');
+      expect(add).toHaveBeenCalledWith(
+        expect.objectContaining({ severity: 'success', summary: expect.stringContaining('3 mise(s) à jour') }),
+      );
+    });
+
+    it('says so, and copies nothing, when everything is blocked or in progress', async () => {
+      const { fixture, http, el, messages } = await mount([minor]);
+      const add = vi.spyOn(messages, 'add');
+      allButton(el).click();
+      http.expectOne(isAll).flush({ generated_at: '2026-11-22T10:02:00Z', groups: [waiting, open] });
+      await settle(fixture);
+      expect(writeText).not.toHaveBeenCalled();
+      expect(add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'info' }));
+    });
+
+    it('an error toast when the updates cannot be loaded', async () => {
+      const { fixture, http, el, messages } = await mount([minor]);
+      const add = vi.spyOn(messages, 'add');
+      allButton(el).click();
+      http.expectOne(isAll).flush('boom', { status: 500, statusText: 'Server Error' });
+      await settle(fixture);
+      expect(writeText).not.toHaveBeenCalled();
+      expect(add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
+    });
+
+    it('falls back to a read-only block when the clipboard rejects', async () => {
+      writeText.mockRejectedValue(new Error('denied'));
+      const { fixture, http, el } = await mount([minor]);
+      allButton(el).click();
+      http.expectOne(isAll).flush({ generated_at: '2026-11-22T10:02:00Z', groups: [single] });
+      await settle(fixture);
+      const box = el.querySelector<HTMLTextAreaElement>('.shared-updates__all textarea.shared-updates__manual')!;
+      expect(box.readOnly).toBe(true);
+      expect(box.value).toContain('pyjwt');
+    });
   });
 
   it('reload() fetches again', async () => {
