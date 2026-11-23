@@ -1,4 +1,11 @@
-import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
+import {
+  Component,
+  OnDestroy,
+  computed,
+  inject,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { ButtonModule } from '@openng/optimus-ui/button';
 import { MessageModule } from '@openng/optimus-ui/message';
@@ -33,6 +40,7 @@ export const DISK_CRITICAL_PCT = 90;
     AgePipe,
   ],
   templateUrl: './box.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './box.component.scss',
 })
 export class BoxComponent implements OnDestroy {

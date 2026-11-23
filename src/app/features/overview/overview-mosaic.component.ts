@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { TagModule } from '@openng/optimus-ui/tag';
@@ -12,6 +12,7 @@ import { BOX_KEY, OverviewEntry, worstCell } from './overview-model';
   selector: 'app-overview-mosaic',
   imports: [RouterLink, TranslocoPipe, TagModule, ReasonLabelPipe, OverviewChipsComponent],
   templateUrl: './overview-mosaic.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './overview-mosaic.component.scss',
 })
 export class OverviewMosaicComponent {

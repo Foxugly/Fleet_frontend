@@ -8,6 +8,7 @@ import {
   inject,
   signal,
   viewChild,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
@@ -50,6 +51,7 @@ interface Row {
   selector: 'app-shared-updates',
   imports: [TranslocoPipe, RouterLink, ButtonModule, TagModule],
   templateUrl: './shared-updates.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './shared-updates.component.scss',
 })
 export class SharedUpdatesComponent {

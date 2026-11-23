@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { TagModule } from '@openng/optimus-ui/tag';
 
@@ -8,6 +8,7 @@ import { DepsData } from '../../../shared/fleet/source-data';
   selector: 'app-deps-section',
   imports: [TranslocoPipe, TagModule],
   styleUrl: './section.scss',
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     @let d = data();
     <dl class="facts block">

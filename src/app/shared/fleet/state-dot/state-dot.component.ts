@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { TooltipModule } from '@openng/optimus-ui/tooltip';
 
@@ -11,6 +11,7 @@ import { ReasonLabelPipe } from '../reason-label.pipe';
   selector: 'app-state-dot',
   imports: [TranslocoPipe, AgePipe, ReasonLabelPipe, TooltipModule],
   templateUrl: './state-dot.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './state-dot.component.scss',
 })
 export class StateDotComponent {

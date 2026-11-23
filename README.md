@@ -1,6 +1,6 @@
 # Fleet_frontend
 
-Angular 21 SPA of `fleet.foxugly.com`: a single-operator dashboard over the Foxugly fleet.
+Angular 22 SPA of `fleet.foxugly.com`: a single-operator dashboard over the Foxugly fleet.
 UI library: Optimus UI (`@openng/optimus-ui`, the MIT fork of PrimeNG 21; PrimeNG >= 22 is banned in the fleet).
 It talks to `Fleet_server` (`/api/v1/`), with a login (username + password + TOTP). Scaffolded from the
 fleet reference app (`foxugly-ops/frontend-reference/foo-app`).

@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, ChangeDetectionStrategy } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { TagModule } from '@openng/optimus-ui/tag';
 
@@ -22,6 +22,7 @@ const severity = (s: string | null): Sev =>
   selector: 'app-github-section',
   imports: [NgTemplateOutlet, TranslocoPipe, TagModule, AgePipe, NewTagComponent],
   styleUrl: './section.scss',
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './github-section.component.html',
 })
 export class GithubSectionComponent {

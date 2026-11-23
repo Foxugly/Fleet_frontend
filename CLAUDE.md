@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Fleet_frontend: Angular 21 SPA (standalone components, signals, Optimus UI 1 Aura/emerald, Transloco).
+Fleet_frontend: Angular 22 SPA (standalone components, signals, Optimus UI 2 Aura/emerald, Transloco).
 Single-operator dashboard over `Fleet_server`. Fleet-wide rules: `~/.claude/CLAUDE.md`, `OPERATIONS.md`.
 
 UI library: **Optimus UI** (`@openng/optimus-ui`, MIT community fork of PrimeNG 21: same components,

@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, computed, input, signal } from '@angular/core';
+import { Component, computed, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { ButtonModule } from '@openng/optimus-ui/button';
@@ -24,6 +24,7 @@ import { BOX_KEY, OverviewEntry } from './overview-model';
     OverviewChipsComponent,
   ],
   templateUrl: './overview-list.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './overview-list.component.scss',
 })
 export class OverviewListComponent {

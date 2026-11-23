@@ -7,7 +7,7 @@ import {
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
 import { TitleStrategy, provideRouter, withComponentInputBinding } from '@angular/router';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideTransloco } from '@jsverse/transloco';
 import { ConfirmationService, MessageService } from '@openng/optimus-ui/api';
@@ -53,7 +53,7 @@ export const appConfig: ApplicationConfig = {
     // Reports unhandled Angular errors; no-op when Sentry.init wasn't called (see main.ts).
     { provide: ErrorHandler, useValue: Sentry.createErrorHandler() },
     provideRouter(routes, withComponentInputBinding()),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(withXhr(), withInterceptors([authInterceptor])),
     // One cookie refresh before the first navigation: a remembered session
     // survives a reload and the guard then decides. Never rejects.
     provideAppInitializer(() => inject(AuthService).restoreSession()),
