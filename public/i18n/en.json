@@ -337,11 +337,20 @@
       "angular": "Fleet policy: Angular majors are done together, on Renaud's decision.",
       "failure": "If the update is impossible in a repository: do not open a PR (close it if its CI stays red despite your fixes) and open an issue titled `[fleet] {{package}} {{latest}} blocked` whose body contains the line `Fleet-Update: {{package}} {{latest}}`, one line `Fleet-Blocked-By: <package> <version>` per blocking package, then the reason in plain words. When an update goes through, add `Fixes #<number>` to the PR if a `[fleet]` issue existed.",
       "retry": "New attempt: {{blocker}} {{newer}} is available. The issues {{issues}} describe the previous failure.",
-      "retry_auto": "New attempt: {{blocker}} {{newer}} is available and accepts {{package}} {{latest}}; update {{blocker}} first if it is not already done."
+      "retry_auto": "New attempt: {{blocker}} {{newer}} is available and accepts {{package}} {{latest}}; update {{blocker}} first if it is not already done.",
+      "bulk_intro": "Make these {{n}} dependency updates across the Foxugly fleet, one at a time, in this order (security first). Each item stands alone: its own branch, one PR per repository, never several packages in the same PR.",
+      "bulk_outro": "At the end, list every PR you opened with its CI state, then the [fleet] issues you opened."
     },
     "none": "No update concerns several apps for now.",
     "blocked_auto": "Blocked by {{package}} {{version}}, which requires {{range}}",
-    "held_auto": "Held on purpose by {{file}} ({{range}})"
+    "held_auto": "Held on purpose by {{file}} ({{range}})",
+    "copy_all": "Copy the prompt: all updates",
+    "copy_all_aria": "Copy the Claude Code prompt for every unblocked update of every app",
+    "copy_all_hint": "All apps, updates with no open PR, blocker or hold.",
+    "copied_all": "Prompt copied: {{n}} update(s). Paste it into Claude Code.",
+    "nothing_to_copy": "No unblocked update for now.",
+    "load_failed": "Could not load the updates.",
+    "manual_all_aria": "Prompt for all the updates, to copy by hand"
   },
   "apps": {
     "title": "Inventory",

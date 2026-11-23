@@ -119,3 +119,32 @@ export function buildPrompt(g: UpdateGroup, t: Translate): string | null {
   parts.push(t('updates.prompt.failure', { package: pkg, latest: g.latest ?? 'security' }));
   return parts.join(' ');
 }
+
+/** Groups the « all updates » prompt covers: nothing open on GitHub yet and nothing holding them back. */
+const BULK_PROGRESS: readonly ProgressEnum[] = [ProgressEnum.None, ProgressEnum.Retry];
+
+/** The groups of `buildBulkPrompt`, in the API order (security first): actionable and safe. */
+export function bulkGroups(groups: readonly UpdateGroup[]): UpdateGroup[] {
+  return groups.filter((g) => BULK_PROGRESS.includes(g.progress) && isPromptSafe(g));
+}
+
+/**
+ * One prompt for every update no blocker, hold or open PR holds back, across all the apps:
+ * each item is the group's own `buildPrompt`, so the same checks and failure convention apply.
+ * Null when there is nothing to do.
+ */
+export function buildBulkPrompt(groups: readonly UpdateGroup[], t: Translate): { text: string; count: number } | null {
+  const items = bulkGroups(groups).flatMap((g) => {
+    const text = buildPrompt(g, t);
+    return text === null ? [] : [text];
+  });
+  if (!items.length) return null;
+  return {
+    text: [
+      t('updates.prompt.bulk_intro', { n: items.length }),
+      ...items.map((text, index) => `${index + 1}. ${text}`),
+      t('updates.prompt.bulk_outro'),
+    ].join('\n\n'),
+    count: items.length,
+  };
+}

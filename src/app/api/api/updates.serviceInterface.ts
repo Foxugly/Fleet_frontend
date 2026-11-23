@@ -17,6 +17,10 @@ import { Updates } from '../model/models';
 import { Configuration }                                     from '../configuration';
 
 
+export interface UpdatesRetrieveRequestParams {
+    scope?: 'all' | 'shared';
+}
+
 
 export interface UpdatesServiceInterface {
     defaultHeaders: HttpHeaders;
@@ -26,7 +30,8 @@ export interface UpdatesServiceInterface {
      * 
      * 
      * @endpoint get /api/v1/updates/
-*/
-    updatesRetrieve(extraHttpRequestParams?: any): Observable<Updates>;
+* @param requestParameters
+     */
+    updatesRetrieve(requestParameters: UpdatesRetrieveRequestParams, extraHttpRequestParams?: any): Observable<Updates>;
 
 }

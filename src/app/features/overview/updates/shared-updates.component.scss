@@ -11,6 +11,23 @@
   margin-bottom: 0.75rem;
 }
 
+.shared-updates__all {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.shared-updates__all-hint {
+  color: var(--p-text-muted-color);
+  font-size: 0.85rem;
+}
+
+.shared-updates__all .shared-updates__manual {
+  flex-basis: 100%;
+}
+
 .shared-updates__section + .shared-updates__section {
   margin-top: 1rem;
 }

@@ -1,3 +1,27 @@
+@if (loaded()) {
+  <div class="shared-updates__all">
+    <p-button
+      class="shared-updates__copy-all"
+      icon="pi pi-copy"
+      size="small"
+      [label]="'updates.copy_all' | transloco"
+      [ariaLabel]="'updates.copy_all_aria' | transloco"
+      [loading]="copyingAll()"
+      (onClick)="copyAll()"
+    />
+    <span class="shared-updates__all-hint">{{ 'updates.copy_all_hint' | transloco }}</span>
+    @if (manual()?.key === ALL) {
+      <textarea
+        #manualBox
+        class="shared-updates__manual"
+        readonly
+        rows="10"
+        [value]="manual()!.text"
+        [attr.aria-label]="'updates.manual_all_aria' | transloco"
+      ></textarea>
+    }
+  </div>
+}
 @if (groups().length) {
   <div class="shared-updates">
     @for (section of sections(); track section.key) {
