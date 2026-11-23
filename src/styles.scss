@@ -3,6 +3,15 @@
 @use 'styles/shell'; // shell partagé main-layout / public-layout
 @use 'styles/forms-meta';
 
+/* Optimus UI 2 made .p-tab a flex container (display:flex + align-items:center); the
+   theme's tab gap (0.5rem) then adds to the margins the tab contents were laid out with
+   (overview « deps » count, site source labels). Keep the Optimus 1 / PrimeNG 21 tab
+   layout (a blockified flex item of the tab list). `p-tab.p-tab` outranks the
+   library's runtime-injected `.p-tab` rule. */
+p-tab.p-tab {
+  display: block;
+}
+
 html,
 body {
   height: 100%;
