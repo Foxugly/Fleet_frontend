@@ -5,6 +5,7 @@
 @let tip = cellTip(c, reasonText, notesText);
 <span
   class="state-dot state-dot--{{ c.state }}"
+  [class.state-dot--pill]="compact()"
   role="img"
   [attr.aria-label]="
     (c.error ? 'fleet.dot.aria_error' : 'fleet.dot.aria')
@@ -23,10 +24,15 @@
       <span aria-hidden="true">—</span>
     }
     @default {
-      <span class="state-dot__dot" aria-hidden="true"></span>
+      @if (compact() && c.state === 'green' && !c.count) {
+        <i class="pi pi-check state-dot__icon" aria-hidden="true"></i>
+      } @else if (!compact()) {
+        <span class="state-dot__dot" aria-hidden="true"></span>
+      }
     }
   }
-  @if (c.state !== 'none') {
+  <!-- In a pill (tab labels) a zero count next to an icon (check, clock, warning) says nothing. -->
+  @if (c.state !== 'none' && !(compact() && !c.count && (c.state === 'green' || c.state === 'stale' || c.state === 'error'))) {
     <span class="state-dot__count" aria-hidden="true">{{ c.count }}</span>
   }
   @if (notesText) {

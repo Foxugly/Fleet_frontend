@@ -172,6 +172,18 @@
   margin-bottom: 1rem;
 }
 
+// The panels sit on the page background, not in a card: the tab strip does too, so it
+// reads as the header of what follows instead of a detached white band.
+:host ::ng-deep .overview__tabs .p-tablist {
+  background: transparent;
+}
+
+.overview__tab-icon {
+  margin-right: 0.45rem;
+  font-size: 0.95rem;
+  opacity: 0.8;
+}
+
 .overview__tab-count {
   margin-left: 0.4rem;
   padding: 0 0.45rem;
