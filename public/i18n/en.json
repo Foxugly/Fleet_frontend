@@ -262,6 +262,14 @@
     "secret_alert": "{{n}} secret alert(s)",
     "high_alert": "{{n}} critical alert(s)",
     "open_items": "{{n}} open",
+    "open_items_part": {
+      "prs": "{{n}} PR(s)",
+      "issues": "{{n}} issue(s)",
+      "dependabot": "{{n}} Dependabot alert(s)",
+      "code_scanning": "{{n}} code alert(s)",
+      "secrets": "{{n}} leaked secret(s)",
+      "main_ci": "main CI red"
+    },
     "unresolved": "{{n}} unresolved",
     "outdated": "{{n}} outdated",
     "failed_units": "{{n}} failed unit(s)",

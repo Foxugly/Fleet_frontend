@@ -37,6 +37,17 @@ describe('ReasonLabelPipe', () => {
     expect(p.transform(cell(StateEnum.Orange, 3, { code: 'open_items', params: { n: 3 } }))).toBe('3 ouvert(s)');
   });
 
+  it('open_items with a breakdown names what is open, zero parts left out', async () => {
+    const p = await pipe();
+    const params = { n: 7, prs: 2, issues: 0, dependabot: 0, code_scanning: 5, secrets: 0, main_ci: 0 };
+    expect(p.transform(cell(StateEnum.Orange, 7, { code: 'open_items', params }))).toBe('5 alerte(s) de code · 2 PR');
+  });
+
+  it('open_items with an all-zero breakdown falls back to the plain count', async () => {
+    const params = { n: 1, prs: 0, issues: 0 };
+    expect((await pipe()).transform(cell(StateEnum.Orange, 1, { code: 'open_items', params }))).toBe('1 ouvert(s)');
+  });
+
   it('unknown code on a red cell falls back to the red text with the count, never a raw key', async () => {
     const text = (await pipe()).transform(cell(StateEnum.Red, 2, { code: 'brand_new', params: {} }));
     expect(text).toContain('2');
